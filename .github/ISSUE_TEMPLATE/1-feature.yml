@@ -1,0 +1,160 @@
+name: Tarefa de desenvolvimento
+description: Implementação de tela ou fluxo do webapp a partir dos artefatos de análise do bios-docs.
+title: '[FEAT] '
+labels: [front-end, feature]
+projects: [odavibatista/15]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Preencha a partir dos artefatos do repositório **bios-docs**, colando a versão **atual** de cada
+        um (Ctrl+V): tabelas HTML dos casos de uso, quadros de requisitos e blocos ` ```mermaid ` são
+        renderizados na issue. O contrato da API vem do OpenAPI do **bios-core-api** (`api/openapi.json`).
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - auth (cadastro, login, sessão e senha)
+        - account (painel da conta)
+        - profile (perfil da empresa)
+        - search (busca, pesquisa e exportação)
+        - sectors (evolução setorial)
+        - api-keys (chaves de API)
+        - admin (administração)
+        - mocks (dados capturados e camada de dados)
+        - layout (casca, navegação e páginas de sistema)
+        - shared (componentes e infraestrutura transversal)
+    validations:
+      required: true
+
+  - type: input
+    id: traceability
+    attributes:
+      label: Rastreabilidade
+      description: IDs dos artefatos atendidos por esta tarefa.
+      placeholder: UC08, RF13, RF14, HU23, HU24, IND02
+    validations:
+      required: true
+
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objetivo
+      description: >-
+        O que esta entrega habilita, em uma ou duas frases, seguido da prioridade, das dependências
+        (FE-xx) e das notas técnicas.
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Caso de uso
+      description: >-
+        Cole a tabela completa e atual do caso de uso (08-Artefatos-de-Análise.md, seção 8.2), da
+        tag <table> até </table>.
+    validations:
+      required: false
+
+  - type: textarea
+    id: requirements
+    attributes:
+      label: Requisitos
+      description: >-
+        Cole os blocos atuais dos requisitos atendidos — título e tabela de cada RF
+        (05-Requisitos-Funcionais.md) e os de RNF (06) e RIN (07) que a tela precisa respeitar.
+    validations:
+      required: true
+
+  - type: textarea
+    id: user-stories
+    attributes:
+      label: Histórias de usuário
+      description: >-
+        Cole as linhas do Quadro 3 (04-Atores-e-Histórias-dos-Usuários.md) abaixo do cabeçalho,
+        que já está preenchido.
+      value: |
+        | ID | Eu como... | Gostaria de... | Para... | Requisitos relacionados |
+        | ------------ | ------------ | ------------ | ------------ | ------------ |
+    validations:
+      required: false
+
+  - type: textarea
+    id: api-contract
+    attributes:
+      label: Contrato da API
+      description: >-
+        Operações do OpenAPI usadas pela tela (método, rota, operationId, modelos de entrada e saída
+        e erros declarados). Na versão de apresentação, a camada de dados mockada responde com o
+        mesmo contrato.
+    validations:
+      required: false
+
+  - type: textarea
+    id: screens
+    attributes:
+      label: Telas e rotas
+      description: Rotas do app, quem acessa cada uma (permissão do 11-Permissões.md) e os estados de cada tela.
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-scope
+    attributes:
+      label: Escopo técnico
+      description: Camadas afetadas pela entrega. Remova as que não se aplicam.
+      value: |
+        - [ ] `src/app/features/<área>/` — páginas e componentes standalone (`OnPush`, signals)
+        - [ ] `src/app/app.routes.ts` — rotas, títulos, guards e carregamento sob demanda
+        - [ ] `src/app/core/api/` — operações do contrato da API usadas pela tela
+        - [ ] `src/app/core/mocks/` — respostas capturadas e comportamento do mock
+        - [ ] `src/app/shared/` — componentes, pipes ou validadores reaproveitáveis
+        - [ ] Formulários tipados (`ReactiveForms`) com as mesmas regras de validação da API
+        - [ ] Testes de componente (`@testing-library/angular`) e e2e (Playwright)
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Critérios de aceite
+      description: >-
+        Um item por fluxo normal, fluxo alternativo e regra de negócio do caso de uso, mais os
+        estados de tela (carregando, vazio, erro) e a acessibilidade.
+      value: |
+        - [ ] Fluxo normal:
+        - [ ] Fluxo alternativo:
+        - [ ] Regra de negócio:
+        - [ ] Estados de tela:
+        - [ ] Acessibilidade:
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: tests
+    attributes:
+      label: Testes previstos
+      description: Tipos de teste da entrega — os mesmos das etiquetas do quadro no GitHub Projects.
+      options:
+        - label: Unitário
+        - label: Componente
+        - label: E2E
+        - label: Funcional
+
+  - type: textarea
+    id: definition-of-done
+    attributes:
+      label: Definição de pronto
+      value: |
+        - [ ] Critérios de aceite atendidos
+        - [ ] Lint, typecheck, testes, build e e2e passando no CI
+        - [ ] Cobertura mínima de 75% mantida (NFPD03)
+        - [ ] Tela navegável só pelo teclado, com rótulos acessíveis e sem violação de acessibilidade no e2e
+        - [ ] Textos em pt-BR, com acentuação, sem afirmar que a empresa "é" ou "não é" sustentável (IND01)
+        - [ ] Nenhum dado pessoal de indivíduo nos dados mockados nem na tela (INL02)
+        - [ ] Artefatos do bios-docs atualizados, caso a implementação tenha divergido deles
+    validations:
+      required: true
