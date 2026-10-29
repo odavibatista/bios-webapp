@@ -1,0 +1,7 @@
+# Fim de linha LF no repositório e na cópia de trabalho, em qualquer sistema: o Prettier exige LF,
+# e o `core.autocrlf` do Windows trocaria por CRLF no checkout.
+* text=auto eol=lf
+
+*.png binary
+*.ico binary
+*.woff2 binary

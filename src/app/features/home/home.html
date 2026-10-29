@@ -1,0 +1,52 @@
+<section class="hero" aria-labelledby="titulo-inicio">
+  <h1 id="titulo-inicio">Sustentabilidade de empresas, evidência por evidência</h1>
+  <p class="lead">
+    A partir de um CNPJ, o BIOS reúne dados públicos de fontes oficiais e calcula, para os ODS 13 e
+    15, um índice de aderência com nível de confiança e a contribuição de cada evidência.
+  </p>
+</section>
+
+<section class="ods" aria-labelledby="titulo-ods">
+  <h2 id="titulo-ods">O que o BIOS calcula</h2>
+  <ul class="ods-list">
+    @for (ods of odsList; track ods.number) {
+      <li>
+        <mat-card appearance="outlined" class="ods-card">
+          <mat-card-header>
+            <mat-icon mat-card-avatar fontSet="material-symbols-outlined" aria-hidden="true">
+              {{ ods.icon }}
+            </mat-icon>
+            <mat-card-title>ODS {{ ods.number }}</mat-card-title>
+            <mat-card-subtitle>{{ ods.title }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <h3 class="sources-title">Fontes de evidência</h3>
+            <ul>
+              @for (source of ods.sources; track source) {
+                <li>{{ source }}</li>
+              }
+            </ul>
+          </mat-card-content>
+        </mat-card>
+      </li>
+    }
+  </ul>
+</section>
+
+<section class="reading" aria-labelledby="titulo-leitura">
+  <h2 id="titulo-leitura">Como ler o índice</h2>
+  <dl>
+    <dt>Índice de aderência</dt>
+    <dd>De −100 a 100, por ODS. Não existe índice geral, e os dois ODS não se comparam.</dd>
+    <dt>Confiança</dt>
+    <dd>
+      De 0 a 1: quanto das fontes esperadas respondeu e com que qualidade. Fica sempre ao lado do
+      índice, nunca combinada com ele.
+    </dd>
+    <dt>Sem dado</dt>
+    <dd>
+      Fonte que não respondeu deixa a evidência como desconhecida: reduz a confiança, mas não vira
+      nota baixa.
+    </dd>
+  </dl>
+</section>

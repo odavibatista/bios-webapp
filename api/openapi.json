@@ -1,0 +1,4102 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "checkHealth",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Verifica a API, o banco, o Redis e a configuração opcional da CGU",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/accounts": {
+      "post": {
+        "description": "A conta nasce inativa e só entra em uso depois da confirmação. A resposta é a mesma para um e-mail novo e para um já cadastrado.",
+        "operationId": "registerAccount",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Pedido de cadastro recebido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Cadastra uma conta e envia o link de confirmação por e-mail",
+        "tags": [
+          "Contas"
+        ]
+      }
+    },
+    "/accounts/confirm-email": {
+      "post": {
+        "operationId": "confirmEmail",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conta ativada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Confirma o e-mail e ativa a conta a partir do token do link",
+        "tags": [
+          "Contas"
+        ]
+      }
+    },
+    "/accounts/resend-confirmation": {
+      "post": {
+        "description": "O link anterior deixa de valer. A resposta é a mesma para qualquer e-mail.",
+        "operationId": "resendEmailConfirmation",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResendEmailConfirmationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Pedido de reenvio recebido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Pede um novo link de confirmação para uma conta ainda inativa",
+        "tags": [
+          "Contas"
+        ]
+      }
+    },
+    "/accounts/me": {
+      "get": {
+        "description": "E-mail e endereço são decifrados apenas nesta resposta, ao próprio titular.",
+        "operationId": "getOwnAccount",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Dados da conta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Devolve os dados da própria conta",
+        "tags": [
+          "Contas"
+        ]
+      },
+      "patch": {
+        "description": "Ao menos um campo é obrigatório; `address: null` remove o endereço. O e-mail tem fluxo próprio, com confirmação.",
+        "operationId": "updateOwnAccount",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Conta atualizada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Edita o nome e/ou o endereço da própria conta",
+        "tags": [
+          "Contas"
+        ]
+      },
+      "delete": {
+        "description": "Confirmada com a senha. Remove a conta, as sessões, as chaves de API e os tokens; as tentativas de login ficam desvinculadas do titular. Não há remoção lógica.",
+        "operationId": "deleteOwnAccount",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Conta excluída"
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Exclui a própria conta",
+        "tags": [
+          "Contas"
+        ]
+      }
+    },
+    "/accounts/me/email-change": {
+      "post": {
+        "description": "Exige a senha atual e envia o link de confirmação ao novo endereço; o e-mail atual vale até o link ser aberto. A resposta é a mesma quando o novo e-mail já pertence a outra conta.",
+        "operationId": "requestEmailChange",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Pedido de troca recebido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Pede a troca do e-mail da conta",
+        "tags": [
+          "Contas"
+        ]
+      }
+    },
+    "/accounts/confirm-email-change": {
+      "post": {
+        "operationId": "confirmEmailChange",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "E-mail atualizado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "BAD_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Efetiva a troca de e-mail a partir do token do link",
+        "tags": [
+          "Contas"
+        ]
+      }
+    },
+    "/admin/blocked-email-domains": {
+      "get": {
+        "description": "Exclusivo de administrador. Traz os domínios bloqueados agora, em ordem alfabética e paginados; os removidos não aparecem. A origem diz se o domínio veio da carga inicial (SEED) ou de um administrador (ADMIN).",
+        "operationId": "listBlockedEmailDomains",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Página solicitada (a partir de 1)",
+            "schema": {
+              "default": 1,
+              "description": "Página solicitada (a partir de 1)",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "page_size",
+            "required": false,
+            "in": "query",
+            "description": "Quantidade de itens por página (máximo de 100)",
+            "schema": {
+              "default": 20,
+              "description": "Quantidade de itens por página (máximo de 100)",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Página de domínios bloqueados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockedEmailDomainList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Lista os domínios de e-mail bloqueados",
+        "tags": [
+          "Administração"
+        ]
+      },
+      "post": {
+        "description": "Exclusivo de administrador. O domínio é validado e gravado em minúsculas, sem @, e passa a valer no cadastro e na troca de e-mail seguintes, sem novo deploy. Um domínio removido antes é restaurado (não duplicado). Contas que já existem não são afetadas. Domínio já bloqueado responde 409.",
+        "operationId": "addBlockedEmailDomain",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddBlockedEmailDomainRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Domínio bloqueado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockedEmailDomain"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Bloqueia um domínio de e-mail",
+        "tags": [
+          "Administração"
+        ]
+      }
+    },
+    "/admin/blocked-email-domains/{id}": {
+      "delete": {
+        "description": "Exclusivo de administrador. Remoção lógica, com efeito imediato: o domínio volta a ser aceito no cadastro seguinte. Identificador inexistente ou de domínio já removido responde 404.",
+        "operationId": "removeBlockedEmailDomain",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Identificador do domínio bloqueado",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Domínio removido"
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Remove um domínio da blacklist",
+        "tags": [
+          "Administração"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "description": "Devolve um access token JWT de vida curta e um refresh token opaco de uso único. Cinco senhas incorretas seguidas bloqueiam o IP ou a conta por 15 minutos.",
+        "operationId": "login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sessão aberta",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "FORBIDDEN",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Autentica com e-mail e senha e abre uma sessão",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "description": "O refresh token é de uso único: a renovação o invalida e devolve outro. Reapresentar um refresh token já usado derruba todas as sessões do usuário e avisa o titular por e-mail. Toda recusa tem a mesma resposta.",
+        "operationId": "refreshSession",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Sessão renovada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Troca o refresh token por um novo par de tokens",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "description": "Revoga a sessão do dispositivo: o access token deixa de ser aceito de imediato, sem esperar o vencimento, e o refresh token deixa de renovar. As sessões dos outros dispositivos não são afetadas.",
+        "operationId": "logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Sessão encerrada"
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Encerra a sessão do dispositivo atual",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/auth/logout-all": {
+      "post": {
+        "description": "Revoga todas as sessões ativas do usuário, inclusive a atual, com efeito imediato sobre os tokens já emitidos.",
+        "operationId": "logoutAllDevices",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Sessões encerradas"
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Encerra as sessões de todos os dispositivos do usuário",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/auth/change-password": {
+      "post": {
+        "description": "Exige a senha atual. Ao concluir, todas as sessões do usuário, inclusive a atual, são encerradas e é preciso entrar de novo com a senha nova.",
+        "operationId": "changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Senha trocada"
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Troca a senha do usuário autenticado",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/auth/forgot-password": {
+      "post": {
+        "description": "O link vale por tempo limitado e só pode ser usado uma vez; pedir outro invalida o anterior. A resposta é a mesma para qualquer e-mail.",
+        "operationId": "forgotPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Pedido de recuperação recebido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountMessageResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Envia o link de recuperação de senha por e-mail",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "description": "Gasta o token do link e encerra todas as sessões da conta. Depois, é preciso entrar com a senha nova.",
+        "operationId": "resetPassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "Senha redefinida"
+          },
+          "400": {
+            "description": "BAD_REQUEST",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Define a nova senha a partir do link de recuperação",
+        "tags": [
+          "Autenticação"
+        ]
+      }
+    },
+    "/api-keys": {
+      "post": {
+        "description": "O valor completo da chave aparece **somente nesta resposta**: guarde-o agora. O sistema guarda apenas o resumo (hash) e não consegue exibir a chave de novo; se perdê-la, revogue e gere outra.",
+        "operationId": "createApiKey",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKeyRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Chave gerada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedApiKeyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Gera uma chave de API",
+        "tags": [
+          "Chaves de API"
+        ]
+      },
+      "get": {
+        "description": "Traz nome, prefixo, data de criação e data do último uso. O valor da chave não é reexibido. Chaves revogadas não aparecem.",
+        "operationId": "listApiKeys",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Chaves ativas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKeyListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Lista as chaves de API ativas do usuário",
+        "tags": [
+          "Chaves de API"
+        ]
+      }
+    },
+    "/api-keys/{id}": {
+      "delete": {
+        "description": "A chave é invalidada imediatamente: toda chamada com ela passa a ser recusada. Identificador inexistente, já revogado ou de outro usuário responde igual (404).",
+        "operationId": "revokeApiKey",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "description": "Identificador da chave",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Chave revogada"
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Revoga uma chave de API",
+        "tags": [
+          "Chaves de API"
+        ]
+      }
+    },
+    "/companies/{cnpj}/scores/{odsNumber}/explanation": {
+      "get": {
+        "description": "Lê o índice já calculado, sem coletar ou recalcular. Lista as evidências que contribuíram, com fonte, estado no cálculo, estado atual, peso, sinal e pontos. A soma dos pontos reproduz o índice. Índice nulo retorna UNAVAILABLE com lista vazia. Sem score responde 404; se uma evidência contribuinte deixou de ser auditável, responde 409. O índice não é um veredito de sustentabilidade.",
+        "operationId": "getScoreExplanation",
+        "parameters": [
+          {
+            "name": "cnpj",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "example": "11222333000181"
+            },
+            "description": "CNPJ válido da empresa"
+          },
+          {
+            "name": "odsNumber",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^\\d+$"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "example": 15
+            },
+            "description": "Número do ODS"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Índice, confiança e contribuições auditáveis do ODS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoreExplanationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Explica as contribuições do índice de um ODS",
+        "tags": [
+          "Índices por ODS"
+        ]
+      }
+    },
+    "/ods": {
+      "get": {
+        "description": "Devolve os ODS ativos no cálculo de índices (hoje o 13 e o 15), com número, título e descrição, em ordem crescente. É o conjunto aceito em `ods` na pesquisa (`GET /companies`) e na exportação: qualquer outro número responde 422 com a lista dos válidos. ODS desativado não aparece.",
+        "operationId": "listOds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "ODS ativos no cálculo de índices",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OdsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Lista os ODS que o BIOS calcula",
+        "tags": [
+          "Índices por ODS"
+        ]
+      }
+    },
+    "/sectors": {
+      "get": {
+        "description": "Divisões CNAE (2 dígitos) com ao menos uma janela de agregados, com a descrição oficial do IBGE, em ordem crescente. É o seletor de setor da evolução setorial; só setores, nunca empresas (IA05).",
+        "operationId": "listSectors",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Setores com evolução registrada",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Lista os setores com evolução registrada",
+        "tags": [
+          "Setores"
+        ]
+      }
+    },
+    "/sectors/{cnae}/evolution": {
+      "get": {
+        "description": "Janelas mensais, da mais antiga à mais recente, com o índice médio, a confiança média e as contagens do setor (divisão CNAE: os 2 primeiros dígitos do CNAE informado, que precisa existir na CNAE 2.3). Sempre por setor, nunca por empresa (IA05); setor com poucas empresas tem as médias omitidas (nulas). Com menos de duas janelas, history_status é INSUFFICIENT. ODS que o BIOS não calcula responde 422 ODS_NOT_AVAILABLE, com os válidos.",
+        "operationId": "getSectorEvolution",
+        "parameters": [
+          {
+            "name": "cnae",
+            "required": true,
+            "in": "path",
+            "description": "CNAE do setor: divisão (2 dígitos), grupo, classe ou subclasse, com ou sem máscara",
+            "schema": {
+              "type": "string",
+              "description": "CNAE do setor: divisão (2 dígitos), grupo, classe ou subclasse, com ou sem máscara",
+              "example": "62"
+            }
+          },
+          {
+            "name": "ods",
+            "required": true,
+            "in": "query",
+            "description": "Número do ODS (obrigatório; um dos calculados pelo BIOS)",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 17,
+              "description": "Número do ODS (obrigatório; um dos calculados pelo BIOS)"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evolução do setor no ODS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SectorEvolution"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Evolução do índice médio de um ODS num setor",
+        "tags": [
+          "Setores"
+        ]
+      }
+    },
+    "/companies": {
+      "get": {
+        "description": "Procura entre as empresas já consultadas pelo BIOS (nenhuma fonte cadastral oferece busca): devolve as que atendem a todos os critérios informados, e ao menos um é obrigatório. `name`: uma palavra começando por cada palavra digitada, na razão social ou no nome fantasia, em qualquer ordem; quem começa pela frase digitada vem primeiro. `uf`: sigla. `city`: nome inteiro do município, sem distinguir acento, caixa ou pontuação. `cnae`: código de 2 a 7 dígitos, casado como prefixo com o CNAE principal ou algum secundário. `ods`: seleciona um ODS e devolve, em cada empresa, o índice e a confiança dele (`ods_score`); `min_score` e `min_confidence` filtram por esse ODS e exigem `ods`, e empresa sem índice calculado no ODS não passa por mínimo algum. `order` (`asc` ou `desc`, exige `ods`) ordena pelo índice do ODS selecionado: empresa sem índice calculado vem sempre ao fim, nos dois sentidos, e entre índices iguais a de maior confiança vem primeiro. Sem ordem pedida, a lista vem pela proximidade com o nome digitado e, depois, por razão social. Para abrir o perfil, use `GET /companies/{cnpj}`. Sem resultados, responde 200 com a lista vazia. Limite próprio por IP (padrão: 60 pesquisas por minuto, `THROTTLE_COMPANY_SEARCH_LIMIT`), no lugar do limite global.",
+        "operationId": "searchCompanies",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Página solicitada (a partir de 1)",
+            "schema": {
+              "default": 1,
+              "description": "Página solicitada (a partir de 1)",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "page_size",
+            "required": false,
+            "in": "query",
+            "description": "Quantidade de itens por página (máximo de 100)",
+            "schema": {
+              "default": 20,
+              "description": "Quantidade de itens por página (máximo de 100)",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "description": "Razão social ou nome fantasia, inteiro ou em parte; acentos e caixa são ignorados. Exige ao menos uma palavra com 3 letras ou mais",
+            "schema": {
+              "description": "Razão social ou nome fantasia, inteiro ou em parte; acentos e caixa são ignorados. Exige ao menos uma palavra com 3 letras ou mais",
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "uf",
+            "required": false,
+            "in": "query",
+            "description": "Sigla da unidade da federação (ex.: SP)",
+            "schema": {
+              "description": "Sigla da unidade da federação (ex.: SP)",
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "description": "Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado",
+            "schema": {
+              "description": "Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado",
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "cnae",
+            "required": false,
+            "in": "query",
+            "description": "Código CNAE de 2 a 7 dígitos (divisão, grupo, classe ou subclasse), pontuação opcional. Casa o CNAE principal ou algum secundário",
+            "schema": {
+              "description": "Código CNAE de 2 a 7 dígitos (divisão, grupo, classe ou subclasse), pontuação opcional. Casa o CNAE principal ou algum secundário",
+              "type": "string"
+            }
+          },
+          {
+            "name": "ods",
+            "required": false,
+            "in": "query",
+            "description": "Número do ODS selecionado; devolve o índice e a confiança dele em cada empresa",
+            "schema": {
+              "description": "Número do ODS selecionado; devolve o índice e a confiança dele em cada empresa",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 17
+            }
+          },
+          {
+            "name": "min_score",
+            "required": false,
+            "in": "query",
+            "description": "Índice mínimo no ODS selecionado (de -100 a 100); exige `ods`",
+            "schema": {
+              "description": "Índice mínimo no ODS selecionado (de -100 a 100); exige `ods`",
+              "type": "number",
+              "minimum": -100,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "min_confidence",
+            "required": false,
+            "in": "query",
+            "description": "Confiança mínima no ODS selecionado (de 0 a 1); exige `ods`",
+            "schema": {
+              "description": "Confiança mínima no ODS selecionado (de 0 a 1); exige `ods`",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Ordena pelo índice do ODS selecionado, do menor para o maior (`asc`) ou do maior para o menor (`desc`); exige `ods`. Empresa sem índice calculado vem sempre ao fim, nos dois sentidos",
+            "schema": {
+              "description": "Ordena pelo índice do ODS selecionado, do menor para o maior (`asc`) ou do maior para o menor (`desc`); exige `ods`. Empresa sem índice calculado vem sempre ao fim, nos dois sentidos",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Página de empresas encontradas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchCompaniesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Pesquisa e ordena empresas por nome, UF, município, CNAE e ODS",
+        "tags": [
+          "Empresas"
+        ]
+      }
+    },
+    "/companies/export/xlsx": {
+      "get": {
+        "description": "Aceita os mesmos critérios e a mesma ordenação de `GET /companies` (`name`, `uf`, `city`, `cnae`, `ods`, `min_score`, `min_confidence`, `order`), sem paginação: o arquivo traz a lista inteira, na ordem da pesquisa. Uma linha por empresa, com os dados cadastrais (CNPJ, razão social, nome fantasia, situação cadastral, UF, município e CNAE principal) e, em colunas separadas para cada ODS ativo, o índice e a confiança, vazios quando não calculados. Não leva dado pessoal nem de contato de indivíduo. Sem empresa que atenda aos critérios, responde 404 `NO_RESULTS_TO_EXPORT`; acima do teto de empresas (padrão 5000, `EXPORT_MAX_COMPANIES`), 422 `EXPORT_TOO_LARGE` com `details.total` e `details.max`. Limite próprio por IP (padrão: 10 exportações por minuto, `THROTTLE_COMPANY_EXPORT_LIMIT`), no lugar do limite global.",
+        "operationId": "exportCompaniesXlsx",
+        "parameters": [
+          {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "description": "Razão social ou nome fantasia, inteiro ou em parte; acentos e caixa são ignorados. Exige ao menos uma palavra com 3 letras ou mais",
+            "schema": {
+              "description": "Razão social ou nome fantasia, inteiro ou em parte; acentos e caixa são ignorados. Exige ao menos uma palavra com 3 letras ou mais",
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "uf",
+            "required": false,
+            "in": "query",
+            "description": "Sigla da unidade da federação (ex.: SP)",
+            "schema": {
+              "description": "Sigla da unidade da federação (ex.: SP)",
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "description": "Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado",
+            "schema": {
+              "description": "Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado",
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "cnae",
+            "required": false,
+            "in": "query",
+            "description": "Código CNAE de 2 a 7 dígitos (divisão, grupo, classe ou subclasse), pontuação opcional. Casa o CNAE principal ou algum secundário",
+            "schema": {
+              "description": "Código CNAE de 2 a 7 dígitos (divisão, grupo, classe ou subclasse), pontuação opcional. Casa o CNAE principal ou algum secundário",
+              "type": "string"
+            }
+          },
+          {
+            "name": "ods",
+            "required": false,
+            "in": "query",
+            "description": "Número do ODS selecionado; devolve o índice e a confiança dele em cada empresa",
+            "schema": {
+              "description": "Número do ODS selecionado; devolve o índice e a confiança dele em cada empresa",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 17
+            }
+          },
+          {
+            "name": "min_score",
+            "required": false,
+            "in": "query",
+            "description": "Índice mínimo no ODS selecionado (de -100 a 100); exige `ods`",
+            "schema": {
+              "description": "Índice mínimo no ODS selecionado (de -100 a 100); exige `ods`",
+              "type": "number",
+              "minimum": -100,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "min_confidence",
+            "required": false,
+            "in": "query",
+            "description": "Confiança mínima no ODS selecionado (de 0 a 1); exige `ods`",
+            "schema": {
+              "description": "Confiança mínima no ODS selecionado (de 0 a 1); exige `ods`",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Ordena pelo índice do ODS selecionado, do menor para o maior (`asc`) ou do maior para o menor (`desc`); exige `ods`. Empresa sem índice calculado vem sempre ao fim, nos dois sentidos",
+            "schema": {
+              "description": "Ordena pelo índice do ODS selecionado, do menor para o maior (`asc`) ou do maior para o menor (`desc`); exige `ods`. Empresa sem índice calculado vem sempre ao fim, nos dois sentidos",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Planilha XLSX com a lista de empresas",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Exporta em XLSX a lista da pesquisa de empresas",
+        "tags": [
+          "Empresas"
+        ]
+      }
+    },
+    "/companies/{cnpj}/evidences": {
+      "get": {
+        "description": "Exige perfil cadastral local; sem ele, responde 404 sem iniciar coletas. Limite próprio por IP (padrão: 20 consultas por minuto, `THROTTLE_COMPANY_EVIDENCES_LIMIT`, NFSE04), no lugar do limite global. Reúne IBAMA local, CGU e GHG com degradação independente e agrupa por categoria. Mostra o mesmo retrato do perfil completo (GET /companies/{cnpj}): com as evidências em cache (até 5 minutos, apagadas quando o índice da empresa é recalculado), responde sem coletar nem recalcular. source é o nome público do catálogo. source_reference identifica o registro; source_url é um link HTTPS original, inclusive para o recurso oficial quando não existe link individual. O acesso ao recurso CGU pode exigir credencial do próprio órgão. Sem referência ou link rastreável, uma evidência guardada como CONFIRMED é apresentada como UNKNOWN, sem sinal, resumo ou detalhes confirmatórios. Não inventa links, não altera o histórico e não calcula score. UNKNOWN e NOT_FOUND podem ter referências nulas. Aceita CNPJ numérico ou alfanumérico; omita a barra de formatação na URL.",
+        "operationId": "getCompanyEvidences",
+        "parameters": [
+          {
+            "name": "cnpj",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "example": "11222333000181"
+            },
+            "description": "CNPJ válido da empresa"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evidências agrupadas com fonte e proveniência auditável",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyEnvironmentalEvidencesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "INTERNAL_SERVER_ERROR",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Consulta evidências e referências às fontes originais",
+        "tags": [
+          "Evidências"
+        ]
+      }
+    },
+    "/companies/{cnpj}": {
+      "get": {
+        "description": "Compõe o cadastro (cache, banco ou provedores BrasilAPI, OpenCNPJ e Minha Receita), as evidências ambientais do IBAMA, da CGU e do GHG Protocol, agrupadas por categoria e com a referência da fonte original, e, por ODS, o índice de aderência, a confiança e a explicação do score, lado a lado e nunca combinados. Cada fonte degrada por conta própria: fonte fora do ar vira evidência `UNKNOWN`, nunca nota baixa. `ods_scores[].calculation_status = PENDING` indica índice ainda não calculado. Com os provedores cadastrais indisponíveis, serve o último cadastro guardado, se houver; sem ele, responde 503. Limite próprio por IP (padrão: 60 consultas por minuto, `THROTTLE_COMPANY_PROFILE_LIMIT`), no lugar do limite global. Aceita CNPJ numérico e alfanumérico; os separadores `.` `-` são ignorados (a barra deve ser omitida, pois separa segmentos da URL).",
+        "operationId": "getCompanyProfile",
+        "parameters": [
+          {
+            "name": "cnpj",
+            "required": true,
+            "in": "path",
+            "description": "CNPJ da empresa, com 14 caracteres",
+            "schema": {
+              "example": "11222333000181",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil completo da empresa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyFullProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Consulta o perfil completo de uma empresa pelo CNPJ",
+        "tags": [
+          "Empresas"
+        ]
+      }
+    },
+    "/v1/companies/{cnpj}": {
+      "get": {
+        "description": "Autentica pela chave de API no cabeçalho `x-api-key` (gerada no painel, UC11). O limite de requisições é por chave: excedido, responde 429 com `Retry-After`. Devolve o mesmo perfil do painel: cadastro, evidências ambientais agrupadas por categoria (com a referência da fonte original) e, por ODS, índice, confiança e explicação. Diferente do painel, **não espera a coleta nas fontes externas nem o recálculo**: serve o que está guardado e válido, publica a atualização do que falta e marca em `provenance` o que está pendente (`origin = PENDING`, `scores_pending`, `retry_after_seconds`). Para um CNPJ ainda não consultado, as fontes ambientais e os índices chegam nas consultas seguintes, depois de `retry_after_seconds`; só o cadastro é aguardado, porque o perfil não existe sem ele. O índice não é um veredito de sustentabilidade e os ODS não são combinados em índice geral.",
+        "operationId": "getPublicCompanyProfile",
+        "parameters": [
+          {
+            "name": "cnpj",
+            "required": true,
+            "in": "path",
+            "description": "CNPJ da empresa, com 14 caracteres",
+            "schema": {
+              "example": "11222333000181",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Perfil completo da empresa",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyFullProfileResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "api-key": []
+          }
+        ],
+        "summary": "Consulta o perfil completo de uma empresa pelo CNPJ (API pública)",
+        "tags": [
+          "API pública"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "BIOS API",
+    "description": "Business Intelligence on Sustainability — consulta de empresas por CNPJ, evidências ambientais públicas e índices de aderência aos ODS 13 e 15.",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "jwt": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      },
+      "api-key": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key"
+      }
+    },
+    "schemas": {
+      "HealthCheckResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "ok"
+            ],
+            "description": "Situação geral da API"
+          },
+          "uptime_seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Tempo desde o início do processo, em segundos"
+          },
+          "checks": {
+            "type": "object",
+            "properties": {
+              "database": {
+                "type": "string",
+                "enum": [
+                  "up"
+                ],
+                "description": "Situação do banco de dados"
+              },
+              "redis": {
+                "type": "string",
+                "enum": [
+                  "up"
+                ],
+                "description": "Situação do Redis (filas e cache)"
+              },
+              "cgu_credentials": {
+                "type": "string",
+                "enum": [
+                  "configured",
+                  "missing"
+                ],
+                "description": "Credencial CGU opcional: ausência não bloqueia a API"
+              }
+            },
+            "required": [
+              "database",
+              "redis",
+              "cgu_credentials"
+            ],
+            "additionalProperties": false,
+            "description": "Situação de cada dependência"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "Momento da verificação (ISO 8601)"
+          }
+        },
+        "required": [
+          "status",
+          "uptime_seconds",
+          "checks",
+          "timestamp"
+        ],
+        "additionalProperties": false,
+        "description": "Situação da API e de suas dependências"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Código de status HTTP"
+          },
+          "code": {
+            "type": "string",
+            "description": "Código estável do erro (ex.: VALIDATION_FAILED, NOT_FOUND)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Descrição legível do erro"
+          },
+          "details": {
+            "description": "Detalhes adicionais (ex.: campos inválidos)"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "Momento do erro (ISO 8601)"
+          },
+          "path": {
+            "type": "string",
+            "description": "Caminho da requisição que originou o erro"
+          }
+        },
+        "required": [
+          "statusCode",
+          "code",
+          "message",
+          "timestamp",
+          "path"
+        ],
+        "additionalProperties": false,
+        "description": "Resposta de erro padronizada"
+      },
+      "RegisterUserRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "description": "Nome de exibição"
+          },
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "E-mail de acesso, que será confirmado por link"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "allOf": [
+              {
+                "type": "string",
+                "pattern": "\\p{L}"
+              },
+              {
+                "type": "string",
+                "pattern": "\\d"
+              }
+            ],
+            "description": "Senha de acesso (8 a 128 caracteres, com letra e número)"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ],
+        "description": "Dados para criar uma conta"
+      },
+      "AccountMessageResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Mensagem para exibir ao usuário"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "additionalProperties": false,
+        "description": "Mensagem de resultado"
+      },
+      "ConfirmEmailRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Token do link de confirmação enviado por e-mail"
+          }
+        },
+        "required": [
+          "token"
+        ],
+        "description": "Token para confirmar o e-mail"
+      },
+      "ResendEmailConfirmationRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "E-mail com o qual a conta foi criada"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "description": "E-mail que receberá um novo link de confirmação"
+      },
+      "AccountResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador do usuário"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome de exibição"
+          },
+          "email": {
+            "type": "string",
+            "description": "E-mail da conta"
+          },
+          "address": {
+            "nullable": true,
+            "description": "Endereço do titular; nulo quando não informado",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ]
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "USER",
+              "ADMIN"
+            ],
+            "description": "Papel de acesso"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "address",
+          "role"
+        ],
+        "additionalProperties": false,
+        "description": "Dados da conta do usuário autenticado"
+      },
+      "Address": {
+        "type": "object",
+        "properties": {
+          "postal_code": {
+            "type": "string",
+            "pattern": "^\\d{5}-?\\d{3}$",
+            "description": "CEP, com ou sem hífen"
+          },
+          "street": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 150,
+            "description": "Logradouro"
+          },
+          "number": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20,
+            "description": "Número (ou \"s/n\")"
+          },
+          "complement": {
+            "description": "Complemento",
+            "type": "string",
+            "maxLength": 60
+          },
+          "neighborhood": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "description": "Bairro"
+          },
+          "city": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100,
+            "description": "Cidade"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "AC",
+              "AL",
+              "AP",
+              "AM",
+              "BA",
+              "CE",
+              "DF",
+              "ES",
+              "GO",
+              "MA",
+              "MT",
+              "MS",
+              "MG",
+              "PA",
+              "PB",
+              "PR",
+              "PE",
+              "PI",
+              "RJ",
+              "RN",
+              "RS",
+              "RO",
+              "RR",
+              "SC",
+              "SP",
+              "SE",
+              "TO"
+            ],
+            "description": "Unidade da federação (sigla)"
+          }
+        },
+        "required": [
+          "postal_code",
+          "street",
+          "number",
+          "neighborhood",
+          "city",
+          "state"
+        ],
+        "additionalProperties": false,
+        "description": "Endereço do titular da conta"
+      },
+      "UpdateAccountRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "Novo nome de exibição",
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 100
+          },
+          "address": {
+            "description": "Novo endereço; null remove o endereço",
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Address"
+              }
+            ]
+          }
+        },
+        "description": "Dados da conta a alterar"
+      },
+      "ChangeEmailRequest": {
+        "type": "object",
+        "properties": {
+          "new_email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "Novo e-mail, que receberá o link de confirmação"
+          },
+          "current_password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "Senha atual da conta"
+          }
+        },
+        "required": [
+          "new_email",
+          "current_password"
+        ],
+        "description": "Novo e-mail e senha atual"
+      },
+      "DeleteAccountRequest": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "Senha da conta, para confirmar a exclusão"
+          }
+        },
+        "required": [
+          "password"
+        ],
+        "description": "Confirmação da exclusão da conta"
+      },
+      "BlockedEmailDomainList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BlockedEmailDomain"
+            },
+            "description": "Itens da página"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "additionalProperties": false,
+        "description": "Domínios bloqueados, em ordem alfabética"
+      },
+      "BlockedEmailDomain": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador do domínio bloqueado"
+          },
+          "domain": {
+            "type": "string",
+            "description": "Domínio bloqueado, em minúsculas e sem @ (ex.: mailinator.com)"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "SEED",
+              "ADMIN"
+            ],
+            "description": "SEED: veio da carga inicial; ADMIN: incluído (ou reincluído) por administrador"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "Quando o domínio foi incluído pela primeira vez"
+          }
+        },
+        "required": [
+          "id",
+          "domain",
+          "origin",
+          "created_at"
+        ],
+        "additionalProperties": false,
+        "description": "Domínio de e-mail bloqueado para cadastro"
+      },
+      "PaginationMeta": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Página devolvida"
+          },
+          "page_size": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Itens por página"
+          },
+          "total": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Total de itens que atendem à consulta"
+          },
+          "total_pages": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Total de páginas (0 quando não há itens)"
+          }
+        },
+        "required": [
+          "page",
+          "page_size",
+          "total",
+          "total_pages"
+        ],
+        "additionalProperties": false,
+        "description": "Paginação"
+      },
+      "AddBlockedEmailDomainRequest": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "pattern": "^(?=.{1,253}$)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+(?:[a-z]{2,63}|xn--[a-z0-9-]{1,59})$",
+            "description": "Domínio a bloquear, sem @ (ex.: mailinator.com); gravado em minúsculas"
+          }
+        },
+        "required": [
+          "domain"
+        ],
+        "description": "Domínio a incluir na blacklist"
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "E-mail da conta"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "Senha da conta"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ],
+        "description": "Credenciais de acesso"
+      },
+      "SessionResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "JWT de vida curta, enviado em `Authorization: Bearer`"
+          },
+          "refresh_token": {
+            "type": "string",
+            "description": "Token opaco de uso único para renovar a sessão"
+          },
+          "token_type": {
+            "type": "string",
+            "enum": [
+              "Bearer"
+            ],
+            "description": "Esquema do access token"
+          },
+          "expires_in": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "description": "Vida do access token, em segundos"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Identificador do usuário"
+              },
+              "name": {
+                "type": "string",
+                "description": "Nome de exibição"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "USER",
+                  "ADMIN"
+                ],
+                "description": "Papel de acesso"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "role"
+            ],
+            "additionalProperties": false,
+            "description": "Dono da sessão"
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token",
+          "token_type",
+          "expires_in",
+          "user"
+        ],
+        "additionalProperties": false,
+        "description": "Sessão com o par de tokens"
+      },
+      "RefreshSessionRequest": {
+        "type": "object",
+        "properties": {
+          "refresh_token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Refresh token vigente, de uso único"
+          }
+        },
+        "required": [
+          "refresh_token"
+        ],
+        "description": "Refresh token a trocar por um novo par de tokens"
+      },
+      "ChangePasswordRequest": {
+        "type": "object",
+        "properties": {
+          "current_password": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "description": "Senha atual da conta"
+          },
+          "new_password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "allOf": [
+              {
+                "type": "string",
+                "pattern": "\\p{L}"
+              },
+              {
+                "type": "string",
+                "pattern": "\\d"
+              }
+            ],
+            "description": "Nova senha (8 a 128 caracteres, com letra e número)"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "description": "Senha atual e nova senha"
+      },
+      "ForgotPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "maxLength": 254,
+            "format": "email",
+            "pattern": "^(?:[A-Za-z0-9_'+\\-]+\\.)*[A-Za-z0-9_'+\\-]*[A-Za-z0-9_+-]@(?:[A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$",
+            "description": "E-mail da conta"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "description": "E-mail que receberá o link de recuperação"
+      },
+      "ResetPasswordRequest": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "Token do link de recuperação enviado por e-mail"
+          },
+          "new_password": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "allOf": [
+              {
+                "type": "string",
+                "pattern": "\\p{L}"
+              },
+              {
+                "type": "string",
+                "pattern": "\\d"
+              }
+            ],
+            "description": "Nova senha (8 a 128 caracteres, com letra e número)"
+          }
+        },
+        "required": [
+          "token",
+          "new_password"
+        ],
+        "description": "Token do link e nova senha"
+      },
+      "CreateApiKeyRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 60,
+            "description": "Nome de identificação da chave (ex.: \"integração com o CRM\")"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "description": "Dados para gerar uma chave de API"
+      },
+      "CreatedApiKeyResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador, usado para revogar a chave"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome de identificação"
+          },
+          "prefix": {
+            "type": "string",
+            "description": "Prefixo público da chave"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "Quando a chave foi gerada"
+          },
+          "last_used_at": {
+            "nullable": true,
+            "description": "Último uso; nulo se nunca foi usada",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "key": {
+            "type": "string",
+            "description": "Valor completo da chave. Exibido uma única vez: guarde-o agora, pois não poderá ser consultado depois"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefix",
+          "created_at",
+          "last_used_at",
+          "key"
+        ],
+        "additionalProperties": false,
+        "description": "Chave de API recém-gerada"
+      },
+      "ApiKeyListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiKeyResponse"
+            },
+            "description": "Chaves ativas"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false,
+        "description": "Chaves de API ativas do usuário"
+      },
+      "ApiKeyResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Identificador, usado para revogar a chave"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome de identificação"
+          },
+          "prefix": {
+            "type": "string",
+            "description": "Prefixo público da chave"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "Quando a chave foi gerada"
+          },
+          "last_used_at": {
+            "nullable": true,
+            "description": "Último uso; nulo se nunca foi usada",
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "prefix",
+          "created_at",
+          "last_used_at"
+        ],
+        "additionalProperties": false,
+        "description": "Chave de API"
+      },
+      "ScoreExplanationResponse": {
+        "type": "object",
+        "properties": {
+          "cnpj": {
+            "type": "string"
+          },
+          "ods_number": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991
+          },
+          "index_status": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "UNAVAILABLE"
+            ]
+          },
+          "score_value": {
+            "nullable": true,
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "confidence_value": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "evidence_count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "coverage_status": {
+            "nullable": true,
+            "type": "string",
+            "enum": [
+              "HAS_RECORDS",
+              "NO_RECORDS_IN_ALL_SOURCES",
+              "NO_RECORDS_IN_SOME_SOURCES",
+              "NO_DATA"
+            ]
+          },
+          "sources_without_records": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "rules_version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "calculated_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "contributions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScoreContribution"
+            }
+          }
+        },
+        "required": [
+          "cnpj",
+          "ods_number",
+          "index_status",
+          "score_value",
+          "confidence_value",
+          "evidence_count",
+          "coverage_status",
+          "sources_without_records",
+          "rules_version",
+          "calculated_at",
+          "contributions"
+        ],
+        "additionalProperties": false,
+        "description": "Índice de um ODS com a explicação do cálculo"
+      },
+      "ScoreContribution": {
+        "type": "object",
+        "properties": {
+          "evidence": {
+            "$ref": "#/components/schemas/ScoreContributionEvidence"
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "weight_reason": {
+            "nullable": true,
+            "type": "string",
+            "enum": [
+              "CGU_SANCTION_EXPIRED",
+              "IBAMA_EMBARGO_LIFTED"
+            ]
+          },
+          "signal": {
+            "type": "string",
+            "enum": [
+              "POSITIVE",
+              "NEGATIVE"
+            ]
+          },
+          "points": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          }
+        },
+        "required": [
+          "evidence",
+          "weight",
+          "weight_reason",
+          "signal",
+          "points"
+        ],
+        "additionalProperties": false,
+        "description": "Contribuição de uma evidência ao índice"
+      },
+      "ScoreContributionEvidence": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{24}$"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "INFRACAO_AMBIENTAL",
+              "CONDUTA_ADMINISTRATIVA",
+              "EMISSAO_GEE"
+            ]
+          },
+          "source_slug": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "CONFIRMED"
+            ],
+            "description": "Estado da evidência quando contribuiu para o índice"
+          },
+          "current_state": {
+            "type": "string",
+            "enum": [
+              "CONFIRMED",
+              "NOT_FOUND",
+              "UNKNOWN",
+              "OUTDATED"
+            ]
+          },
+          "source_reference": {
+            "nullable": true,
+            "type": "string",
+            "minLength": 1
+          },
+          "source_url": {
+            "nullable": true,
+            "type": "string",
+            "pattern": "^https:\\/\\/",
+            "format": "uri"
+          },
+          "collected_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "valid_until": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "source_slug",
+          "source",
+          "state",
+          "current_state",
+          "source_reference",
+          "source_url",
+          "collected_at",
+          "valid_until"
+        ],
+        "additionalProperties": false,
+        "description": "Evidência que contribuiu para o índice"
+      },
+      "OdsListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdsReference"
+            },
+            "description": "ODS ativos, em ordem crescente de número"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false,
+        "description": "ODS que o BIOS calcula e aceita na pesquisa e na exportação"
+      },
+      "OdsReference": {
+        "type": "object",
+        "properties": {
+          "ods_number": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "description": "Número oficial do ODS"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Título oficial do ODS"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Descrição do ODS"
+          }
+        },
+        "required": [
+          "ods_number",
+          "title",
+          "description"
+        ],
+        "additionalProperties": false,
+        "description": "ODS de referência ativo no cálculo de índices"
+      },
+      "SectorListResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SectorReference"
+            },
+            "description": "Setores com ao menos uma janela, em ordem crescente de divisão"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false,
+        "description": "Setores que a evolução setorial pode mostrar"
+      },
+      "SectorReference": {
+        "type": "object",
+        "properties": {
+          "cnae_division": {
+            "type": "string",
+            "description": "Divisão CNAE (2 dígitos)"
+          },
+          "description": {
+            "type": "string",
+            "description": "Descrição oficial da divisão CNAE (IBGE)"
+          }
+        },
+        "required": [
+          "cnae_division",
+          "description"
+        ],
+        "additionalProperties": false,
+        "description": "Setor (divisão CNAE) com evolução registrada"
+      },
+      "SectorEvolution": {
+        "type": "object",
+        "properties": {
+          "cnae_division": {
+            "type": "string",
+            "description": "Divisão CNAE (2 dígitos) agregada"
+          },
+          "cnae_division_description": {
+            "type": "string",
+            "description": "Descrição oficial da divisão CNAE (IBGE)"
+          },
+          "ods_number": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Número do ODS"
+          },
+          "history_status": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "INSUFFICIENT"
+            ],
+            "description": "INSUFFICIENT: menos de duas janelas, ainda não há evolução a mostrar"
+          },
+          "windows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SectorScoreWindow"
+            },
+            "description": "Janelas da mais antiga à mais recente"
+          }
+        },
+        "required": [
+          "cnae_division",
+          "cnae_division_description",
+          "ods_number",
+          "history_status",
+          "windows"
+        ],
+        "additionalProperties": false,
+        "description": "Evolução do índice médio de um ODS num setor (UC10)"
+      },
+      "SectorScoreWindow": {
+        "type": "object",
+        "properties": {
+          "window_start": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "Início da janela (mês, UTC)"
+          },
+          "window_end": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "Fim da janela, exclusivo"
+          },
+          "average_score": {
+            "nullable": true,
+            "description": "Índice médio das empresas do setor com índice; nulo quando elas são menos que o mínimo",
+            "type": "number"
+          },
+          "average_confidence": {
+            "nullable": true,
+            "description": "Confiança média das empresas do setor; nula quando elas são menos que o mínimo",
+            "type": "number"
+          },
+          "company_count": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Empresas do setor com índice calculado no ODS"
+          },
+          "scored_company_count": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Empresas do setor com índice não nulo"
+          },
+          "rules_version": {
+            "type": "string",
+            "description": "Versão das regras de pontuação"
+          }
+        },
+        "required": [
+          "window_start",
+          "window_end",
+          "average_score",
+          "average_confidence",
+          "company_count",
+          "scored_company_count",
+          "rules_version"
+        ],
+        "additionalProperties": false,
+        "description": "Agregado do setor numa janela de tempo"
+      },
+      "SearchCompaniesResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanySearchItem"
+            },
+            "description": "Itens da página"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "additionalProperties": false,
+        "description": "Página de empresas encontradas"
+      },
+      "CompanySearchItem": {
+        "type": "object",
+        "properties": {
+          "cnpj": {
+            "type": "string",
+            "description": "CNPJ, sem pontuação"
+          },
+          "legal_name": {
+            "type": "string",
+            "description": "Razão social"
+          },
+          "trade_name": {
+            "nullable": true,
+            "description": "Nome fantasia",
+            "type": "string"
+          },
+          "registration_status": {
+            "$ref": "#/components/schemas/RegistrationStatus"
+          },
+          "city": {
+            "type": "string",
+            "description": "Município"
+          },
+          "uf": {
+            "type": "string",
+            "description": "Unidade da federação (sigla)"
+          },
+          "main_cnae": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Código CNAE"
+              },
+              "description": {
+                "type": "string",
+                "description": "Descrição textual do CNAE"
+              }
+            },
+            "required": [
+              "code",
+              "description"
+            ],
+            "additionalProperties": false,
+            "description": "CNAE principal"
+          },
+          "ods_score": {
+            "nullable": true,
+            "description": "Índice e confiança no ODS selecionado; nulo quando a pesquisa não seleciona ODS",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CompanySearchOdsScore"
+              }
+            ]
+          }
+        },
+        "required": [
+          "cnpj",
+          "legal_name",
+          "trade_name",
+          "registration_status",
+          "city",
+          "uf",
+          "main_cnae",
+          "ods_score"
+        ],
+        "additionalProperties": false,
+        "description": "Empresa encontrada"
+      },
+      "RegistrationStatus": {
+        "type": "string",
+        "enum": [
+          "ATIVA",
+          "SUSPENSA",
+          "INAPTA",
+          "BAIXADA",
+          "NULA",
+          "NAO_RECONHECIDA"
+        ],
+        "description": "Situação cadastral na Receita Federal: uma das cinco da Receita ou, quando o provedor informa outra, o valor de situação não reconhecida (o texto do provedor vem em registration_status_unrecognized)"
+      },
+      "CompanySearchOdsScore": {
+        "type": "object",
+        "properties": {
+          "ods_number": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "ODS selecionado"
+          },
+          "score_value": {
+            "nullable": true,
+            "description": "Índice de aderência; nulo sem índice calculado ou conclusivo",
+            "type": "number"
+          },
+          "confidence_value": {
+            "nullable": true,
+            "description": "Confiança (RF11), separada do índice; nula sem cálculo",
+            "type": "number"
+          }
+        },
+        "required": [
+          "ods_number",
+          "score_value",
+          "confidence_value"
+        ],
+        "additionalProperties": false,
+        "description": "Índice e confiança no ODS selecionado"
+      },
+      "CompanyEnvironmentalEvidencesResponse": {
+        "type": "object",
+        "properties": {
+          "cnpj": {
+            "type": "string"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceCategoryGroup"
+            }
+          }
+        },
+        "required": [
+          "cnpj",
+          "categories"
+        ],
+        "additionalProperties": false,
+        "description": "Evidências ambientais da empresa, agrupadas por categoria"
+      },
+      "EvidenceCategoryGroup": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "enum": [
+              "INFRACAO_AMBIENTAL",
+              "CONDUTA_ADMINISTRATIVA",
+              "EMISSAO_GEE"
+            ]
+          },
+          "evidences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyEvidence"
+            }
+          }
+        },
+        "required": [
+          "category",
+          "evidences"
+        ],
+        "additionalProperties": false,
+        "description": "Evidências de uma categoria"
+      },
+      "CompanyEvidence": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source_slug": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Nome público do órgão/programa no catálogo de fontes"
+          },
+          "ods_number": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "CONFIRMED",
+              "NOT_FOUND",
+              "UNKNOWN",
+              "OUTDATED"
+            ]
+          },
+          "signal": {
+            "nullable": true,
+            "type": "string",
+            "enum": [
+              "POSITIVE",
+              "NEGATIVE"
+            ]
+          },
+          "summary": {
+            "nullable": true,
+            "type": "string"
+          },
+          "source_reference": {
+            "nullable": true,
+            "type": "string",
+            "minLength": 1
+          },
+          "source_url": {
+            "nullable": true,
+            "description": "Link HTTPS original; pode exigir autenticação no órgão",
+            "type": "string",
+            "pattern": "^https:\\/\\/",
+            "format": "uri"
+          },
+          "details": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/JsonValue"
+              }
+            ]
+          },
+          "published_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "collected_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "valid_until": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          }
+        },
+        "required": [
+          "id",
+          "source_slug",
+          "source",
+          "ods_number",
+          "state",
+          "signal",
+          "summary",
+          "source_reference",
+          "source_url",
+          "details",
+          "published_at",
+          "collected_at",
+          "valid_until"
+        ],
+        "additionalProperties": false,
+        "description": "Evidência ambiental com a referência da fonte original"
+      },
+      "JsonValue": {
+        "description": "Valor JSON livre",
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "number"
+          },
+          {
+            "type": "boolean"
+          },
+          {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              null
+            ]
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/JsonValue"
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            }
+          }
+        ]
+      },
+      "CompanyFullProfileResponse": {
+        "type": "object",
+        "properties": {
+          "cnpj": {
+            "type": "string",
+            "description": "CNPJ, sem pontuação"
+          },
+          "legal_name": {
+            "type": "string",
+            "description": "Razão social"
+          },
+          "trade_name": {
+            "nullable": true,
+            "description": "Nome fantasia",
+            "type": "string"
+          },
+          "registration_status": {
+            "$ref": "#/components/schemas/RegistrationStatus"
+          },
+          "registration_status_unrecognized": {
+            "nullable": true,
+            "description": "Situação informada pelo provedor, como veio, quando ela não é uma das cinco da Receita; null nas demais",
+            "type": "string"
+          },
+          "company_size": {
+            "nullable": true,
+            "description": "Porte",
+            "type": "string"
+          },
+          "address": {
+            "$ref": "#/components/schemas/CompanyAddress"
+          },
+          "main_cnae": {
+            "description": "CNAE principal",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Cnae"
+              }
+            ]
+          },
+          "secondary_cnaes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Cnae"
+            },
+            "description": "CNAEs secundários"
+          },
+          "refreshed_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "Quando o cadastro foi atualizado pela última vez na fonte"
+          },
+          "evidences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EvidenceCategoryGroup"
+            },
+            "description": "Evidências ambientais agrupadas por categoria, com a referência da fonte original"
+          },
+          "ods_scores": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyOdsScore"
+            },
+            "description": "Índice, confiança e explicação por ODS, em ordem de número"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/CompanyProfileProvenance"
+          }
+        },
+        "required": [
+          "cnpj",
+          "legal_name",
+          "trade_name",
+          "registration_status",
+          "registration_status_unrecognized",
+          "company_size",
+          "address",
+          "main_cnae",
+          "secondary_cnaes",
+          "refreshed_at",
+          "evidences",
+          "ods_scores",
+          "provenance"
+        ],
+        "additionalProperties": false,
+        "description": "Perfil completo da empresa: cadastro, evidências e índices por ODS"
+      },
+      "CompanyAddress": {
+        "type": "object",
+        "properties": {
+          "street": {
+            "nullable": true,
+            "description": "Logradouro",
+            "type": "string"
+          },
+          "number": {
+            "nullable": true,
+            "description": "Número",
+            "type": "string"
+          },
+          "complement": {
+            "nullable": true,
+            "description": "Complemento",
+            "type": "string"
+          },
+          "neighborhood": {
+            "nullable": true,
+            "description": "Bairro",
+            "type": "string"
+          },
+          "city": {
+            "type": "string",
+            "description": "Município"
+          },
+          "city_ibge_code": {
+            "nullable": true,
+            "description": "Código IBGE do município",
+            "type": "string"
+          },
+          "uf": {
+            "type": "string",
+            "description": "Unidade da federação (sigla)"
+          },
+          "zipcode": {
+            "nullable": true,
+            "description": "CEP",
+            "type": "string"
+          }
+        },
+        "required": [
+          "street",
+          "number",
+          "complement",
+          "neighborhood",
+          "city",
+          "city_ibge_code",
+          "uf",
+          "zipcode"
+        ],
+        "additionalProperties": false,
+        "description": "Endereço da empresa"
+      },
+      "Cnae": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Código CNAE"
+          },
+          "description": {
+            "type": "string",
+            "description": "Descrição textual do CNAE"
+          }
+        },
+        "required": [
+          "code",
+          "description"
+        ],
+        "additionalProperties": false,
+        "description": "Atividade econômica"
+      },
+      "CompanyOdsScore": {
+        "type": "object",
+        "properties": {
+          "ods_number": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991
+          },
+          "calculation_status": {
+            "type": "string",
+            "enum": [
+              "CALCULATED",
+              "PENDING"
+            ],
+            "description": "PENDING: o índice deste ODS ainda não pôde ser exibido"
+          },
+          "index_status": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "UNAVAILABLE"
+            ]
+          },
+          "score_value": {
+            "nullable": true,
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "confidence_value": {
+            "nullable": true,
+            "description": "Confiança (RF11), sempre separada do índice",
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "evidence_count": {
+            "nullable": true,
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "coverage_status": {
+            "nullable": true,
+            "type": "string",
+            "enum": [
+              "HAS_RECORDS",
+              "NO_RECORDS_IN_ALL_SOURCES",
+              "NO_RECORDS_IN_SOME_SOURCES",
+              "NO_DATA"
+            ]
+          },
+          "sources_without_records": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "rules_version": {
+            "nullable": true,
+            "type": "string",
+            "minLength": 1
+          },
+          "calculated_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "contributions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScoreContribution"
+            },
+            "description": "Explicação do índice (RF12): evidências que o compuseram, com peso e sinal"
+          }
+        },
+        "required": [
+          "ods_number",
+          "calculation_status",
+          "index_status",
+          "score_value",
+          "confidence_value",
+          "evidence_count",
+          "coverage_status",
+          "sources_without_records",
+          "rules_version",
+          "calculated_at",
+          "contributions"
+        ],
+        "additionalProperties": false,
+        "description": "Índice de aderência e confiança de um ODS"
+      },
+      "CompanyProfileProvenance": {
+        "type": "object",
+        "properties": {
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanySourceProvenance"
+            }
+          },
+          "scores_pending": {
+            "type": "boolean"
+          },
+          "retry_after_seconds": {
+            "nullable": true,
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "sources",
+          "scores_pending",
+          "retry_after_seconds"
+        ],
+        "additionalProperties": false
+      },
+      "CompanySourceProvenance": {
+        "type": "object",
+        "properties": {
+          "source_slug": {
+            "type": "string",
+            "enum": [
+              "IBAMA",
+              "CGU_CEIS",
+              "CGU_CNEP",
+              "GHG_PROTOCOL"
+            ]
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "COLLECTION",
+              "PERSISTED",
+              "PENDING",
+              "UNAVAILABLE"
+            ]
+          },
+          "evidence_state": {
+            "nullable": true,
+            "type": "string",
+            "enum": [
+              "CONFIRMED",
+              "NOT_FOUND",
+              "UNKNOWN",
+              "OUTDATED"
+            ]
+          }
+        },
+        "required": [
+          "source_slug",
+          "origin",
+          "evidence_state"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}
