@@ -1,0 +1,40 @@
+// Tema do BIOS sobre o Angular Material 3. As paletas (`styles/_theme-colors.scss`) foram geradas
+// com `ng generate @angular/material:theme-color` a partir das cores da apresentação do projeto
+// (bios-docs/assets/BIOS - PPTX.pptx): primária #2C5F2D, terciária #97BC62 e neutra #5B6B5B.
+@use '@angular/material' as mat;
+@use './styles/theme-colors' as bios;
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: bios.$primary-palette,
+        tertiary: bios.$tertiary-palette,
+      ),
+      typography: 'Inter Variable',
+      density: 0,
+    )
+  );
+
+  // Cores exatas da apresentação, para a marca e os gráficos; os componentes usam as do tema.
+  --bios-brand-green: #2c5f2d;
+  --bios-brand-leaf: #97bc62;
+  --bios-brand-moss: #5b6b5b;
+  --bios-brand-ink: #1a1a1a;
+  --bios-brand-paper: #f5f5f5;
+
+  @media (prefers-contrast: more) {
+    @include bios.high-contrast-overrides(light);
+  }
+}
+
+body {
+  // O app usa só o tema claro por enquanto; `light dark` passaria a seguir o sistema.
+  color-scheme: light;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  height: 100%;
+}

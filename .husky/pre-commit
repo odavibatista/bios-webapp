@@ -1,0 +1,4 @@
+# Barreira de qualidade do commit (RNF NFSE09): lint e formatação dos arquivos em stage
+# (ver lint-staged.config.js). Lotes de até 6000 caracteres: o limite do cmd.exe no Windows
+# (8191) não conta as aspas dos caminhos com espaço.
+npx --no -- lint-staged --concurrent false --max-arg-length 6000

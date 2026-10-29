@@ -1,0 +1,4 @@
+# Verificação antes de publicar: tipos, lint do projeto inteiro e os testes unitários. A
+# cobertura mínima de 75% (NFPD03), o build de produção e os e2e rodam no CI, em toda pull
+# request, e protegem o merge (NFSE11); `npm run verify` roda tudo localmente.
+npm run typecheck && npm run lint && npm test

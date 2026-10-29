@@ -1,0 +1,12 @@
+# Gerados: tipos da API e documento OpenAPI copiado do bios-core-api.
+src/app/core/api/generated/
+api/openapi.json
+
+# Saídas de build, cache e testes.
+dist/
+coverage/
+.angular/
+playwright-report/
+test-results/
+
+package-lock.json
