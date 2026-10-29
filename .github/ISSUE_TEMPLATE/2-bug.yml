@@ -1,0 +1,110 @@
+name: Bug
+description: Comportamento do webapp diferente do especificado nos artefatos de análise ou nos testes.
+title: '[BUG] '
+labels: [front-end, bugs]
+projects: [odavibatista/15]
+
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Área
+      options:
+        - auth (cadastro, login, sessão e senha)
+        - account (painel da conta)
+        - profile (perfil da empresa)
+        - search (busca, pesquisa e exportação)
+        - sectors (evolução setorial)
+        - api-keys (chaves de API)
+        - admin (administração)
+        - mocks (dados capturados e camada de dados)
+        - layout (casca, navegação e páginas de sistema)
+        - shared (componentes e infraestrutura transversal)
+        - Não identificada
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severidade
+      options:
+        - Crítica — app não abre, dado pessoal exposto ou falha de segurança
+        - Alta — fluxo normal de um caso de uso não funciona
+        - Média — fluxo alternativo, regra de negócio ou acessibilidade incorreta
+        - Baixa — texto, layout ou detalhe sem impacto funcional
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Ambiente
+      options:
+        - Local
+        - develop
+        - pre-prod
+        - main
+    validations:
+      required: true
+
+  - type: input
+    id: affected-flow
+    attributes:
+      label: Tela ou fluxo afetado
+      placeholder: /pesquisa — UC08, regra de negócio 7
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Versão e navegador
+      description: Branch, commit e navegador em que o problema foi observado.
+      placeholder: develop @ 1a2b3c4 — Chrome 141, Windows 11
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Comportamento esperado
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Comportamento atual
+    validations:
+      required: true
+
+  - type: textarea
+    id: violated-requirement
+    attributes:
+      label: Requisito violado
+      description: >-
+        Cole o bloco do RF, RNF ou RIN, ou a regra de negócio do caso de uso, que o comportamento
+        atual descumpre.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Saída do console do navegador ou do terminal. Formatada automaticamente como código.
+      render: shell
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidências
+      description: Prints, gravação da tela ou trace do Playwright.
