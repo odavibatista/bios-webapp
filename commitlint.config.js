@@ -28,7 +28,9 @@ export default {
         'profile',
         'sectors',
         'auth',
+        'account',
         'api-keys',
+        'admin',
         'mocks',
         'api',
         // áreas transversais
