@@ -1,0 +1,8 @@
+/* Testes e2e (Playwright) e configurações de ferramentas, fora do build do Angular. */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "include": ["e2e/**/*.ts", "playwright.config.ts", "openapi-ts.config.ts"]
+}

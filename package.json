@@ -1,0 +1,78 @@
+{
+  "name": "bios-webapp",
+  "version": "0.1.0",
+  "description": "Front-end do BIOS (Business Intelligence on Sustainability), em Angular, para a versão de apresentação com dados capturados da API",
+  "type": "module",
+  "scripts": {
+    "ng": "ng",
+    "start": "ng serve",
+    "build": "ng build",
+    "watch": "ng build --watch --configuration development",
+    "test": "node scripts/unit-test.mjs",
+    "test:watch": "node scripts/unit-test.mjs --watch",
+    "test:cov": "node scripts/unit-test.mjs --coverage",
+    "test:e2e": "playwright test",
+    "lint": "ng lint --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.spec.json && tsc --noEmit -p tsconfig.e2e.json",
+    "api:types": "openapi-ts",
+    "verify": "npm run typecheck && npm run lint && npm run test:cov && npm run build",
+    "prepare": "husky"
+  },
+  "private": true,
+  "packageManager": "npm@11.21.1",
+  "engines": {
+    "node": "^22.22.3 || ^24.15.0 || >=26.0.0"
+  },
+  "dependencies": {
+    "@angular/cdk": "^22.2.5",
+    "@angular/common": "^22.2.0",
+    "@angular/compiler": "^22.2.0",
+    "@angular/core": "^22.2.0",
+    "@angular/forms": "^22.2.0",
+    "@angular/material": "^22.2.5",
+    "@angular/platform-browser": "^22.2.0",
+    "@angular/router": "^22.2.0",
+    "@fontsource-variable/inter": "^5.3.0",
+    "echarts": "^6.1.0",
+    "material-symbols": "^0.48.2",
+    "ngx-echarts": "^22.0.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.3.0"
+  },
+  "devDependencies": {
+    "@angular/build": "^22.2.5",
+    "@angular/cli": "^22.2.5",
+    "@angular/compiler-cli": "^22.2.0",
+    "@commitlint/cli": "^21.2.4",
+    "@commitlint/config-conventional": "^21.2.4",
+    "@eslint/js": "^10.0.1",
+    "@hey-api/openapi-ts": "0.99.0",
+    "@playwright/test": "^1.64.1",
+    "@testing-library/angular": "^19.6.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/user-event": "^14.6.8",
+    "@types/node": "^22.20.5",
+    "@vitest/coverage-v8": "^5.0.5",
+    "angular-eslint": "22.6.0",
+    "eslint": "^10.12.0",
+    "husky": "^9.1.7",
+    "jsdom": "^30.0.0",
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.8.1",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "8.71.0",
+    "vitest": "^5.0.0"
+  },
+  "volta": {
+    "node": "22.23.4",
+    "npm": "11.21.1"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "@parcel/watcher": false,
+    "lmdb": false,
+    "msgpackr-extract": false
+  }
+}
