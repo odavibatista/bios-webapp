@@ -27,7 +27,7 @@ export default {
         "message": "CNAE inválido: informe a divisão (2 dígitos), o grupo, a classe ou a subclasse."
       }
     ],
-    "timestamp": "2026-10-30T13:37:17.741Z",
+    "timestamp": "2026-10-30T16:49:30.045Z",
     "path": "/sectors/abc/evolution?ods=13"
   }
 } satisfies CapturedResponse<GetSectorEvolutionErrors, 422>;

@@ -67,6 +67,26 @@ teste. O `npm test` contorna isso sozinho (`scripts/unit-test.mjs`: monta a past
 temporária com `subst` e desmonta no fim). Fora do Windows, ou sem esses caracteres no caminho, roda
 direto.
 
+## Camada de dados
+
+As telas falam só com o contrato `BiosApi` (`src/app/core/api/bios-api.ts`): um método por operação do
+OpenAPI usada pelo app, com entrada e saída dos tipos gerados. Falhas chegam como `ApiError` (`status`,
+`code`, `message`, `details`), com o texto da API. O provedor é escolhido em `app.config.ts`; integrar
+com a API real é trocar só ele.
+
+Na versão de apresentação, o provedor é o `MockBiosApi` (`src/app/core/mocks/`):
+
+- **Leitura** vem das respostas capturadas (perfis, explicações, setores, ODS); a pesquisa é refeita
+  sobre os perfis capturados, e um teste confere que ela dá o mesmo resultado de cada pesquisa real
+  capturada. As capturas carregam sob demanda (chunk `mock-data`), fora do bundle inicial.
+- **O que a demo altera** (contas, sessões, links de e-mail, chaves de API, blacklist) vive em memória e
+  recomeça ao recarregar. Contas prontas: `apresentacao@example.com` (`USER`) e
+  `administracao@example.com` (`ADMIN`), senha `Apresentacao2026`. Os links que os e-mails trariam ficam
+  em `MockMailbox`.
+- **Determinismo:** latência e cenários de falha (`forcedErrors`) vêm de `MOCK_API_CONFIG`, nunca de
+  sorteio. O que a apresentação não reproduz (uma exportação não capturada, um setor fora da lista)
+  responde `422 NOT_AVAILABLE_IN_PRESENTATION`, em vez de inventar dado.
+
 ## Dados da versão de apresentação
 
 As respostas vêm de uma API local com empresas reais, capturadas por `scripts/capture-api.mjs`, e não
