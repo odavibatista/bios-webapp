@@ -6,6 +6,9 @@
     <span class="brand-name">BIOS</span>
   </a>
   <span class="brand-tagline">Business Intelligence on Sustainability</span>
+  @if (signedIn()) {
+    <bios-user-menu class="user-menu" />
+  }
 </mat-toolbar>
 
 <main id="conteudo" class="content" tabindex="-1">

@@ -1,7 +1,10 @@
+import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { render, screen } from '@testing-library/angular';
+import { render, screen, within } from '@testing-library/angular';
 import { App } from './app';
+import { BiosApi } from './core/api/bios-api';
 import { PRESENTATION_MODE } from './core/presentation-mode';
+import { SessionStore } from './core/session/session-store';
 
 describe('App', () => {
   async function renderApp() {
@@ -43,5 +46,33 @@ describe('App', () => {
     await renderApp();
 
     expect(screen.getByRole('contentinfo').textContent).not.toContain('Versão de apresentação');
+  });
+
+  it('sem sessão, a barra não mostra o menu da conta', async () => {
+    await renderApp();
+
+    expect(screen.getByRole('banner').querySelector('bios-user-menu')).toBeNull();
+  });
+
+  it('com sessão, a barra mostra quem entrou', async () => {
+    await render(App, {
+      providers: [
+        provideRouter([]),
+        { provide: BiosApi, useValue: { getOwnAccount: () => new Promise(() => undefined) } },
+      ],
+      configureTestBed: () => {
+        TestBed.inject(SessionStore).store({
+          access_token: 'a',
+          refresh_token: 'r',
+          token_type: 'Bearer',
+          expires_in: 900,
+          user: { id: '1', name: 'Conta de Demonstração', role: 'USER' },
+        });
+      },
+    });
+
+    expect(
+      within(screen.getByRole('banner')).getByRole('button', { name: /Usuário/ }),
+    ).toBeTruthy();
   });
 });
