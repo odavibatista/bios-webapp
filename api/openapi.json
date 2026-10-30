@@ -3131,7 +3131,8 @@
               "HAS_RECORDS",
               "NO_RECORDS_IN_ALL_SOURCES",
               "NO_RECORDS_IN_SOME_SOURCES",
-              "NO_DATA"
+              "NO_DATA",
+              null
             ]
           },
           "sources_without_records": {
@@ -3189,7 +3190,8 @@
             "type": "string",
             "enum": [
               "CGU_SANCTION_EXPIRED",
-              "IBAMA_EMBARGO_LIFTED"
+              "IBAMA_EMBARGO_LIFTED",
+              null
             ]
           },
           "signal": {
@@ -3678,7 +3680,8 @@
             "type": "string",
             "enum": [
               "POSITIVE",
-              "NEGATIVE"
+              "NEGATIVE",
+              null
             ]
           },
           "summary": {
@@ -3986,7 +3989,8 @@
               "HAS_RECORDS",
               "NO_RECORDS_IN_ALL_SOURCES",
               "NO_RECORDS_IN_SOME_SOURCES",
-              "NO_DATA"
+              "NO_DATA",
+              null
             ]
           },
           "sources_without_records": {
@@ -4086,7 +4090,8 @@
               "CONFIRMED",
               "NOT_FOUND",
               "UNKNOWN",
-              "OUTDATED"
+              "OUTDATED",
+              null
             ]
           }
         },
