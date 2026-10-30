@@ -1,7 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { capturedError, capturedFieldMessage, notInPresentation } from './mock-captures';
 import { DEFAULT_MOCK_API_CONFIG, MOCK_API_CONFIG } from './mock-config';
+import { PRESENTATION_MODE } from '../presentation-mode';
 import { MockFiles } from './mock-files';
+import { provideMockBiosApi } from './provide-mock-bios-api';
 
 describe('apoio do mock', () => {
   afterEach(() => {
@@ -34,6 +36,15 @@ describe('apoio do mock', () => {
         TestBed.inject(MockFiles).load('exportCompaniesXlsx', 'x.xlsx', 'a'),
       ).rejects.toThrow('Arquivo capturado ausente: exportCompaniesXlsx/x.xlsx');
     });
+  });
+
+  it('o provedor mockado liga o modo apresentação; sem ele, o modo fica desligado', () => {
+    expect(TestBed.inject(PRESENTATION_MODE)).toBe(false);
+
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideMockBiosApi()] });
+
+    expect(TestBed.inject(PRESENTATION_MODE)).toBe(true);
   });
 
   it('sem configuração própria, vale a padrão, com o relógio real e latência', () => {
