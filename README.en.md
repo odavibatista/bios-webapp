@@ -49,6 +49,11 @@ npm start            # http://localhost:4200
 **API types.** The bios-core-api CI publishes the OpenAPI document as an artifact (`openapi`). To update,
 replace `api/openapi.json` with it and run `npm run api:types`.
 
+**Accents in the texts (NFIN04).** `src/app/shared/portuguese-accents.spec.ts` reads the visible text of
+the templates (and the attributes announced by screen readers, such as `aria-label`) and the sentences
+in the code, and fails on a word from the `UNACCENTED` list written without its accent (`nao`, `indice`,
+`pagina`...). Found a new misspelling without accent? Add it to the list.
+
 **Path with parentheses on Windows.** Angular's test builder passes Vitest the absolute path of each spec
 without escaping it, and a folder such as `7-SEM (2026-2)` makes Vitest find no tests. `npm test` works
 around it on its own (`scripts/unit-test.mjs`: it mounts the parent folder on a temporary drive with
