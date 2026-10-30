@@ -1,6 +1,7 @@
 import { provideRouter } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
 import { App } from './app';
+import { PRESENTATION_MODE } from './core/presentation-mode';
 
 describe('App', () => {
   async function renderApp() {
@@ -28,5 +29,19 @@ describe('App', () => {
     expect(screen.getByRole('contentinfo').textContent).toContain(
       'Ausência de dado não é evidência negativa',
     );
+  });
+
+  it('na versão de apresentação, o rodapé avisa que os dados são capturados', async () => {
+    await render(App, {
+      providers: [provideRouter([]), { provide: PRESENTATION_MODE, useValue: true }],
+    });
+
+    expect(screen.getByRole('contentinfo').textContent).toContain('Versão de apresentação');
+  });
+
+  it('com a API real, o rodapé não fala em apresentação', async () => {
+    await renderApp();
+
+    expect(screen.getByRole('contentinfo').textContent).not.toContain('Versão de apresentação');
   });
 });
