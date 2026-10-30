@@ -1,9 +1,18 @@
-import { Routes } from '@angular/router';
+import { Route, Routes } from '@angular/router';
 import { privateByDefault } from './core/session/private-by-default.guard';
+import { requireRole, withSession } from './core/session/role.guards';
+import { PanelLayout } from './layout/panel-layout/panel-layout';
+
+const notFound: Route = {
+  path: '**',
+  title: 'Página não encontrada — BIOS',
+  loadComponent: () => import('./features/not-found/not-found').then((m) => m.NotFound),
+};
 
 /**
  * Todas as rotas ficam sob `privateByDefault` (#15): uma rota nova nasce privada, e as públicas
- * se declaram com `data: { public: true }`.
+ * se declaram com `data: { public: true }`. As privadas moram na casca do painel (#18); as da
+ * administração pedem o papel `ADMIN` ([P12]).
  */
 export const routes: Routes = [
   {
@@ -12,16 +21,38 @@ export const routes: Routes = [
     children: [
       {
         path: '',
+        pathMatch: 'full',
         title: 'BIOS',
         data: { public: true },
         loadComponent: () => import('./features/home/home').then((m) => m.Home),
       },
       {
-        path: '**',
-        title: 'Página não encontrada — BIOS',
-        data: { public: true },
-        loadComponent: () => import('./features/not-found/not-found').then((m) => m.NotFound),
+        path: '',
+        component: PanelLayout,
+        children: [
+          {
+            path: 'painel',
+            title: 'Painel — BIOS',
+            loadComponent: () =>
+              import('./features/panel-home/panel-home').then((m) => m.PanelHome),
+          },
+          {
+            path: 'acesso-negado',
+            title: 'Acesso negado — BIOS',
+            loadComponent: () =>
+              import('./features/access-denied/access-denied').then((m) => m.AccessDenied),
+          },
+          {
+            path: 'admin',
+            canActivateChild: [requireRole('ADMIN')],
+            children: [notFound],
+          },
+          // Endereço desconhecido com sessão: o "não encontrado" fica dentro do painel.
+          { ...notFound, canMatch: [withSession] },
+        ],
       },
+      // Sem sessão, o endereço desconhecido cai aqui, fora do painel, sem pedir login.
+      { ...notFound, data: { public: true } },
     ],
   },
 ];
