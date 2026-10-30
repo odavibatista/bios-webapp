@@ -75,6 +75,13 @@ operation used by the app, with input and output from the generated types. Failu
 `ApiError` (`status`, `code`, `message`, `details`), with the API's text. The provider is chosen in
 `app.config.ts`; integrating with the real API means swapping only that provider.
 
+**Session** (`src/app/core/session/`): `SessionStore` keeps the session in memory only (reloading the
+page ends the local session) and provides the token to the provider. The `BiosApi` that screens receive
+renews the access token on its own: a `401 NOT_AUTHENTICATED` with an open session triggers a single
+`refreshSession` (simultaneous calls wait for the same one) and repeats the operation; if renewal
+fails, the session is cleared and the app goes to `/entrar?voltar=<route>&sessao=encerrada`. Every route
+is private by default (`privateByDefault`); public ones declare `data: { public: true }`.
+
 In the presentation version, the provider is `MockBiosApi` (`src/app/core/mocks/`):
 
 - **Reads** come from the captured responses (profiles, explanations, sectors, SDGs); search is redone
