@@ -30,6 +30,11 @@
               {
                 "glob": "**/*",
                 "input": "public"
+              },
+              {
+                "glob": "**/*.xlsx",
+                "input": "src/app/core/mocks/fixtures",
+                "output": "mocks"
               }
             ],
             "styles": [

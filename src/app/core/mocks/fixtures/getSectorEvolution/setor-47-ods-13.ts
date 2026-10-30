@@ -5,7 +5,7 @@ import type { CapturedResponse } from '../../capture';
 export default {
   "operationId": "getSectorEvolution",
   "scenario": "setor-47-ods-13",
-  "description": "Comércio varejista: amostra abaixo do mínimo",
+  "description": "COMÉRCIO VAREJISTA, ODS 13",
   "request": {
     "method": "GET",
     "path": "/sectors/47/evolution",

@@ -1206,9 +1206,21 @@ async function phaseSectors() {
         ...(status.length ? status : [200]),
       ),
     );
-  await evolution('setor-24-ods-13', 'Metalurgia, ODS 13', '24', 13);
-  await evolution('setor-24-ods-15', 'Metalurgia, ODS 15', '24', 15);
-  await evolution('setor-47-ods-13', 'Comércio varejista: amostra abaixo do mínimo', '47', 13);
+  // Todo setor da lista em todo ODS ativo: a tela escolhe o setor entre os de `listSectors`, e o
+  // mock não inventa série para combinação que não foi capturada.
+  const sectors = expectStatus(await call('GET', '/sectors', auth), 200).body.data;
+  const ods = expectStatus(await call('GET', '/ods', auth), 200).body.data;
+  for (const { cnae_division, description } of sectors) {
+    for (const { ods_number } of ods) {
+      await evolution(
+        `setor-${cnae_division}-ods-${ods_number}`,
+        `${description}, ODS ${ods_number}`,
+        cnae_division,
+        ods_number,
+      );
+    }
+  }
+  await evolution('setor-sem-empresas', 'Divisão válida sem empresa na base', '01', 13);
   await evolution('cnae-invalido', 'CNAE fora do formato', 'abc', 13, 422);
   await evolution('ods-nao-calculado', 'ODS fora dos calculados', '24', 7, 422);
 }

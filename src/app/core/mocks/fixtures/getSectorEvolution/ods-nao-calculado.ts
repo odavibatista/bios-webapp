@@ -28,7 +28,7 @@ export default {
         15
       ]
     },
-    "timestamp": "2026-10-30T13:37:17.753Z",
+    "timestamp": "2026-10-30T16:49:30.055Z",
     "path": "/sectors/24/evolution?ods=7"
   }
 } satisfies CapturedResponse<GetSectorEvolutionErrors, 422>;
