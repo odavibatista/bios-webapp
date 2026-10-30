@@ -1,3 +1,4 @@
+import { InjectionToken } from '@angular/core';
 import type * as Api from './generated';
 
 /** Entrada de uma operação: o corpo, o caminho e a busca do tipo gerado, sem a URL. */
@@ -97,6 +98,12 @@ export abstract class BiosApi {
     input: ApiInput<Api.GetSectorEvolutionData>,
   ): Promise<Api.GetSectorEvolutionResponse>;
 }
+
+/**
+ * O provedor cru do contrato (mockado ou HTTP), sem a renovação automática da sessão. As telas
+ * injetam `BiosApi`; só a sessão usa este token, para entrar e renovar sem passar por si mesma.
+ */
+export const BIOS_API_IMPLEMENTATION = new InjectionToken<BiosApi>('BIOS_API_IMPLEMENTATION');
 
 /** Nome de uma operação do contrato (`login`, `getCompanyProfile`...). */
 export type BiosOperation = {
