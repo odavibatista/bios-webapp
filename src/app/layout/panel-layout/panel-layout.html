@@ -1,0 +1,48 @@
+<mat-sidenav-container class="panel">
+  <mat-sidenav
+    id="menu-do-painel"
+    class="panel-menu"
+    [mode]="narrow() ? 'over' : 'side'"
+    [opened]="!narrow() || drawerOpen()"
+    (closedStart)="closeDrawer()"
+  >
+    <nav aria-label="Áreas do painel">
+      <mat-nav-list>
+        @for (item of items(); track item.path) {
+          <a
+            mat-list-item
+            [routerLink]="item.path"
+            routerLinkActive
+            #active="routerLinkActive"
+            [routerLinkActiveOptions]="{ exact: item.exact ?? false }"
+            ariaCurrentWhenActive="page"
+            [activated]="active.isActive"
+            (click)="closeDrawer()"
+          >
+            <mat-icon matListItemIcon fontSet="material-symbols-outlined" aria-hidden="true">
+              {{ item.icon }}
+            </mat-icon>
+            <span matListItemTitle>{{ item.label }}</span>
+          </a>
+        }
+      </mat-nav-list>
+    </nav>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="panel-content">
+    @if (narrow()) {
+      <button
+        mat-stroked-button
+        type="button"
+        class="menu-toggle"
+        aria-controls="menu-do-painel"
+        [attr.aria-expanded]="drawerOpen()"
+        (click)="toggleDrawer()"
+      >
+        <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">menu</mat-icon>
+        Menu do painel
+      </button>
+    }
+    <router-outlet />
+  </mat-sidenav-content>
+</mat-sidenav-container>
