@@ -467,7 +467,7 @@ export type ScoreExplanationResponse = {
     score_value: number | null;
     confidence_value: number;
     evidence_count: number;
-    coverage_status: 'HAS_RECORDS' | 'NO_RECORDS_IN_ALL_SOURCES' | 'NO_RECORDS_IN_SOME_SOURCES' | 'NO_DATA';
+    coverage_status: 'HAS_RECORDS' | 'NO_RECORDS_IN_ALL_SOURCES' | 'NO_RECORDS_IN_SOME_SOURCES' | 'NO_DATA' | null;
     sources_without_records: Array<string>;
     rules_version: string;
     calculated_at: string;
@@ -480,7 +480,7 @@ export type ScoreExplanationResponse = {
 export type ScoreContribution = {
     evidence: ScoreContributionEvidence;
     weight: number;
-    weight_reason: 'CGU_SANCTION_EXPIRED' | 'IBAMA_EMBARGO_LIFTED';
+    weight_reason: 'CGU_SANCTION_EXPIRED' | 'IBAMA_EMBARGO_LIFTED' | null;
     signal: 'POSITIVE' | 'NEGATIVE';
     points: number;
 };
@@ -722,7 +722,7 @@ export type CompanyEvidence = {
     source: string;
     ods_number: number;
     state: 'CONFIRMED' | 'NOT_FOUND' | 'UNKNOWN' | 'OUTDATED';
-    signal: 'POSITIVE' | 'NEGATIVE';
+    signal: 'POSITIVE' | 'NEGATIVE' | null;
     summary: string | null;
     source_reference: string | null;
     /**
@@ -859,7 +859,7 @@ export type CompanyOdsScore = {
      */
     confidence_value: number | null;
     evidence_count: number | null;
-    coverage_status: 'HAS_RECORDS' | 'NO_RECORDS_IN_ALL_SOURCES' | 'NO_RECORDS_IN_SOME_SOURCES' | 'NO_DATA';
+    coverage_status: 'HAS_RECORDS' | 'NO_RECORDS_IN_ALL_SOURCES' | 'NO_RECORDS_IN_SOME_SOURCES' | 'NO_DATA' | null;
     sources_without_records: Array<string>;
     rules_version: string | null;
     calculated_at: string | null;
@@ -878,7 +878,7 @@ export type CompanyProfileProvenance = {
 export type CompanySourceProvenance = {
     source_slug: 'IBAMA' | 'CGU_CEIS' | 'CGU_CNEP' | 'GHG_PROTOCOL';
     origin: 'COLLECTION' | 'PERSISTED' | 'PENDING' | 'UNAVAILABLE';
-    evidence_state: 'CONFIRMED' | 'NOT_FOUND' | 'UNKNOWN' | 'OUTDATED';
+    evidence_state: 'CONFIRMED' | 'NOT_FOUND' | 'UNKNOWN' | 'OUTDATED' | null;
 };
 
 export type CheckHealthData = {

@@ -9,7 +9,7 @@ o índice de aderência aos **ODS 13 e 15**, a confiança e as evidências que o
 referência à fonte oficial.
 
 > **Versão de apresentação:** o app roda sem a API no ar. Os dados vêm de respostas reais do
-> [bios-core-api](https://github.com/odavibatista/bios-core-api), capturadas e guardadas como JSON, atrás
+> [bios-core-api](https://github.com/odavibatista/bios-core-api), capturadas e guardadas no repositório, atrás
 > de um serviço com a mesma interface da API: integrar de verdade é trocar só esse serviço. Só dados de
 > pessoa jurídica (INL02).
 
@@ -53,6 +53,33 @@ absoluto de cada spec sem escapar, e uma pasta como `7-SEM (2026-2)` faz o Vites
 teste. O `npm test` contorna isso sozinho (`scripts/unit-test.mjs`: monta a pasta-mãe numa unidade
 temporária com `subst` e desmonta no fim). Fora do Windows, ou sem esses caracteres no caminho, roda
 direto.
+
+## Dados da versão de apresentação
+
+As respostas vêm de uma API local com empresas reais, capturadas por `scripts/capture-api.mjs`, e não
+de dados inventados: a demonstração mostra o comportamento verdadeiro da API, inclusive os erros.
+
+- **Uma captura por arquivo:** `src/app/core/mocks/fixtures/<operationId>/<cenário>.ts`, com
+  `satisfies CapturedResponse<...>` sobre o tipo gerado da operação e do status. Se a API mudar a forma
+  de uma resposta, o `typecheck` recusa a captura antiga. A planilha XLSX fica ao lado, como arquivo.
+- **Manifesto** (`fixtures/manifest.json`): commit do bios-core-api, data de cada fase, conta de
+  demonstração e as empresas, com o motivo de cada uma.
+- **Nada secreto nem pessoal:** senhas, tokens e o segredo das chaves de API viram marcadores antes de
+  gravar; a conta de demonstração usa o domínio reservado `example.com`. O `fixtures.spec.ts` recusa
+  CPF, e-mail de outro domínio, JWT e segredo de chave (INL02).
+
+Para capturar de novo: API local (`develop` do bios-core-api) com banco limpo, carga inicial, ingestão
+do IBAMA e sincronização do GHG, e os e-mails da API indo para um Mailpit (`SMTP_HOST=localhost`,
+`SMTP_PORT=1025` no ambiente de quem sobe a API), de onde o roteiro lê os links. Depois:
+
+```bash
+BIOS_CAPTURE_PASSWORD=<senha> BIOS_CORE_DIR=<pasta do bios-core-api> \
+  node scripts/capture-api.mjs contas admin empresas setores limites
+```
+
+As fases e os cenários estão no cabeçalho do script. A fase `limites` bloqueia o login do IP por 15
+minutos (RF20) e por isso é a última; a `setores` se repete em outro mês para a série da evolução
+setorial ter duas janelas reais.
 
 ## Tema
 
