@@ -48,6 +48,11 @@ npm start            # http://localhost:4200
 **Tipos da API.** O CI do bios-core-api publica o documento OpenAPI como artefato (`openapi`). Para
 atualizar, substitua `api/openapi.json` por ele e rode `npm run api:types`.
 
+**Acentuação dos textos (NFIN04).** `src/app/shared/portuguese-accents.spec.ts` lê o texto visível dos
+templates (e os atributos que o leitor de tela anuncia, como `aria-label`) e as frases do código, e
+reprova palavra sem acento da lista `UNACCENTED` (`nao`, `indice`, `pagina`...). Achou uma grafia nova
+sem acento? Acrescente-a à lista.
+
 **Caminho com parênteses no Windows.** O builder de testes do Angular passa ao Vitest o caminho
 absoluto de cada spec sem escapar, e uma pasta como `7-SEM (2026-2)` faz o Vitest não achar nenhum
 teste. O `npm test` contorna isso sozinho (`scripts/unit-test.mjs`: monta a pasta-mãe numa unidade
