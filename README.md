@@ -94,6 +94,19 @@ Na versão de apresentação, o provedor é o `MockBiosApi` (`src/app/core/mocks
   sorteio. O que a apresentação não reproduz (uma exportação não capturada, um setor fora da lista)
   responde `422 NOT_AVAILABLE_IN_PRESENTATION`, em vez de inventar dado.
 
+## Estados de tela e erros
+
+Toda tela que carrega dados usa os mesmos estados (`src/app/shared/`, NFIN03):
+
+- `bios-async-state` junta carregando (`bios-loading`, anunciado ao leitor de tela), erro
+  (`bios-error-state`) e vazio (`bios-empty-state`, com a explicação própria da lista), e marca a região
+  com `aria-busy` enquanto espera.
+- `describeError` decide como mostrar uma falha: a mensagem é sempre a da API (falha que não veio da API
+  vira uma mensagem genérica em português); `429` mostra quando será possível repetir e bloqueia "Tentar
+  de novo" até lá; `503` é indisponibilidade temporária, com o botão.
+- Formulários: `applyApiErrors` marca cada campo pelo `details[].path` de um 422 (`apiErrorOf` lê a
+  mensagem no `mat-error`), e `bios-form-error-summary` mostra no topo o que não é de um campo.
+
 ## Dados da versão de apresentação
 
 As respostas vêm de uma API local com empresas reais, capturadas por `scripts/capture-api.mjs`, e não
