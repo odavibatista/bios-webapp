@@ -21,6 +21,13 @@ h2 {
   color: var(--bios-brand-moss);
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
 .ods-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
