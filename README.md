@@ -74,6 +74,13 @@ OpenAPI usada pelo app, com entrada e saída dos tipos gerados. Falhas chegam co
 `code`, `message`, `details`), com o texto da API. O provedor é escolhido em `app.config.ts`; integrar
 com a API real é trocar só ele.
 
+**Sessão** (`src/app/core/session/`): o `SessionStore` guarda a sessão só em memória (recarregar a
+página encerra a sessão local) e fornece o token ao provedor. O `BiosApi` que as telas recebem renova o
+access token sozinho: um `401 NOT_AUTHENTICATED` com sessão aberta dispara um único `refreshSession`
+(chamadas simultâneas esperam o mesmo) e repete a operação; se a renovação falhar, a sessão é apagada e
+o app vai para `/entrar?voltar=<rota>&sessao=encerrada`. Toda rota é privada por padrão
+(`privateByDefault`); as públicas se declaram com `data: { public: true }`.
+
 Na versão de apresentação, o provedor é o `MockBiosApi` (`src/app/core/mocks/`):
 
 - **Leitura** vem das respostas capturadas (perfis, explicações, setores, ODS); a pesquisa é refeita
