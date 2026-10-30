@@ -3,7 +3,11 @@ import { defineConfig, devices } from '@playwright/test';
 const PORT = 4300;
 const isCI = !!process.env['CI'];
 
-/** Testes e2e: o app sobe sozinho (`ng serve`) e roda no Chromium. */
+/**
+ * Testes e2e: o app sobe sozinho (`ng serve`) e roda no Chromium, em duas larguras (NFIN02):
+ * 1280 px (desktop) e 390 px (celular). Todo teste termina com a análise de acessibilidade e a
+ * checagem de rolagem horizontal (`e2e/support/test.ts`).
+ */
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
@@ -15,7 +19,21 @@ export default defineConfig({
     locale: 'pt-BR',
     trace: 'on-first-retry',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'desktop',
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 720 } },
+    },
+    {
+      name: 'celular',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
+  ],
   webServer: {
     command: `npx ng serve --port ${PORT}`,
     url: `http://localhost:${PORT}`,
