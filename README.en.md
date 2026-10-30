@@ -114,7 +114,9 @@ and the exact colors are CSS variables for the brand and the charts:
 ## Contribution flow
 
 Branch from `develop`, a PR back into it with a Conventional Commits title, and promotion
-`develop` → `pre-prod` → `main` through PRs, with the CI's **Lint** and **Testes** checks.
+`develop` → `pre-prod` → `main` through PRs, with the CI's **Lint** and **Testes** checks. Branch
+protection (NFSE11) is versioned in [`.github/rulesets/`](.github/rulesets/README.md), with the steps
+to apply it on GitHub.
 
 ---
 

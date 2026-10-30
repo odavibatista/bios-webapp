@@ -111,7 +111,9 @@ cores exatas ficam como variáveis CSS para a marca e os gráficos:
 ## Fluxo de contribuição
 
 Branch a partir do `develop`, PR de volta para ele com título em Conventional Commits, e promoção
-`develop` → `pre-prod` → `main` por PR, com os checks **Lint** e **Testes** do CI.
+`develop` → `pre-prod` → `main` por PR, com os checks **Lint** e **Testes** do CI. A proteção dos
+branches (NFSE11) está versionada em [`.github/rulesets/`](.github/rulesets/README.md), com o passo
+para aplicá-la no GitHub.
 
 ---
 
