@@ -2,9 +2,10 @@ import { formatDate, formatNumber } from '@angular/common';
 import { inject, Injectable, LOCALE_ID } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { appConfig } from './app.config';
-import { ApiCredentials, InMemoryApiCredentials } from './core/api/api-credentials';
-import { BiosApi } from './core/api/bios-api';
+import { ApiCredentials } from './core/api/api-credentials';
+import { BIOS_API_IMPLEMENTATION, BiosApi } from './core/api/bios-api';
 import { MockBiosApi } from './core/mocks/mock-bios-api';
+import { SessionStore } from './core/session/session-store';
 
 /** Um consumidor qualquer do contrato, como as telas serão. */
 @Injectable({ providedIn: 'root' })
@@ -32,9 +33,11 @@ describe('appConfig', () => {
     expect(formatDate('2026-10-29T12:00:00Z', 'dd/MM/yyyy', locale, 'UTC')).toBe('29/10/2026');
   });
 
-  it('a versão de apresentação liga o contrato à implementação mockada', () => {
-    expect(TestBed.inject(BiosApi)).toBeInstanceOf(MockBiosApi);
-    expect(TestBed.inject(ApiCredentials)).toBe(TestBed.inject(InMemoryApiCredentials));
+  it('a versão de apresentação liga o contrato à implementação mockada, com a sessão', () => {
+    expect(TestBed.inject(BIOS_API_IMPLEMENTATION)).toBeInstanceOf(MockBiosApi);
+    // As telas recebem o contrato com a renovação da sessão por fora do provedor.
+    expect(TestBed.inject(BiosApi)).not.toBe(TestBed.inject(BIOS_API_IMPLEMENTATION));
+    expect(TestBed.inject(ApiCredentials)).toBe(TestBed.inject(SessionStore));
   });
 });
 
