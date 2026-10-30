@@ -95,6 +95,19 @@ In the presentation version, the provider is `MockBiosApi` (`src/app/core/mocks/
   from randomness. What the presentation does not reproduce (an export that was not captured, a sector
   outside the list) answers `422 NOT_AVAILABLE_IN_PRESENTATION` instead of making data up.
 
+## Screen states and errors
+
+Every screen that loads data uses the same states (`src/app/shared/`, NFIN03):
+
+- `bios-async-state` combines loading (`bios-loading`, announced to screen readers), error
+  (`bios-error-state`) and empty (`bios-empty-state`, with the list's own explanation), and marks the
+  region with `aria-busy` while waiting.
+- `describeError` decides how to show a failure: the message is always the API's (a failure that did not
+  come from the API becomes a generic message in Portuguese); `429` shows when it can be retried and
+  blocks "Tentar de novo" until then; `503` is a temporary unavailability, with the button.
+- Forms: `applyApiErrors` marks each field by the `details[].path` of a 422 (`apiErrorOf` reads the
+  message in `mat-error`), and `bios-form-error-summary` shows at the top what does not belong to a field.
+
 ## Presentation data
 
 The responses come from a local API with real companies, captured by `scripts/capture-api.mjs`, not
