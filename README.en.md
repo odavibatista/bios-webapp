@@ -68,6 +68,26 @@ around it on its own (`scripts/unit-test.mjs`: it mounts the parent folder on a 
 `subst` and unmounts it at the end). Outside Windows, or without those characters in the path, it runs
 directly.
 
+## Data layer
+
+Screens talk only to the `BiosApi` contract (`src/app/core/api/bios-api.ts`): one method per OpenAPI
+operation used by the app, with input and output from the generated types. Failures arrive as
+`ApiError` (`status`, `code`, `message`, `details`), with the API's text. The provider is chosen in
+`app.config.ts`; integrating with the real API means swapping only that provider.
+
+In the presentation version, the provider is `MockBiosApi` (`src/app/core/mocks/`):
+
+- **Reads** come from the captured responses (profiles, explanations, sectors, SDGs); search is redone
+  over the captured profiles, and a test checks that it gives the same result as each real captured
+  search. Captures load on demand (`mock-data` chunk), outside the initial bundle.
+- **What the demo changes** (accounts, sessions, e-mail links, API keys, blacklist) lives in memory and
+  resets on reload. Ready-made accounts: `apresentacao@example.com` (`USER`) and
+  `administracao@example.com` (`ADMIN`), password `Apresentacao2026`. The links the e-mails would carry
+  are kept in `MockMailbox`.
+- **Determinism:** latency and failure scenarios (`forcedErrors`) come from `MOCK_API_CONFIG`, never
+  from randomness. What the presentation does not reproduce (an export that was not captured, a sector
+  outside the list) answers `422 NOT_AVAILABLE_IN_PRESENTATION` instead of making data up.
+
 ## Presentation data
 
 The responses come from a local API with real companies, captured by `scripts/capture-api.mjs`, not
