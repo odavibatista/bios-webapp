@@ -77,6 +77,12 @@ import getSectorEvolutionOdsNaoCalculado from './getSectorEvolution/ods-nao-calc
 import getSectorEvolutionSetor24Ods13 from './getSectorEvolution/setor-24-ods-13';
 import getSectorEvolutionSetor24Ods15 from './getSectorEvolution/setor-24-ods-15';
 import getSectorEvolutionSetor47Ods13 from './getSectorEvolution/setor-47-ods-13';
+import getSectorEvolutionSetor47Ods15 from './getSectorEvolution/setor-47-ods-15';
+import getSectorEvolutionSetor71Ods13 from './getSectorEvolution/setor-71-ods-13';
+import getSectorEvolutionSetor71Ods15 from './getSectorEvolution/setor-71-ods-15';
+import getSectorEvolutionSetor85Ods13 from './getSectorEvolution/setor-85-ods-13';
+import getSectorEvolutionSetor85Ods15 from './getSectorEvolution/setor-85-ods-15';
+import getSectorEvolutionSetorSemEmpresas from './getSectorEvolution/setor-sem-empresas';
 import listApiKeysAposRevogacao from './listApiKeys/apos-revogacao';
 import listApiKeysComChaves from './listApiKeys/com-chaves';
 import listBlockedEmailDomainsPrimeiraPagina from './listBlockedEmailDomains/primeira-pagina';
@@ -207,6 +213,12 @@ export const CAPTURES = {
   'getSectorEvolution/setor-24-ods-13': getSectorEvolutionSetor24Ods13,
   'getSectorEvolution/setor-24-ods-15': getSectorEvolutionSetor24Ods15,
   'getSectorEvolution/setor-47-ods-13': getSectorEvolutionSetor47Ods13,
+  'getSectorEvolution/setor-47-ods-15': getSectorEvolutionSetor47Ods15,
+  'getSectorEvolution/setor-71-ods-13': getSectorEvolutionSetor71Ods13,
+  'getSectorEvolution/setor-71-ods-15': getSectorEvolutionSetor71Ods15,
+  'getSectorEvolution/setor-85-ods-13': getSectorEvolutionSetor85Ods13,
+  'getSectorEvolution/setor-85-ods-15': getSectorEvolutionSetor85Ods15,
+  'getSectorEvolution/setor-sem-empresas': getSectorEvolutionSetorSemEmpresas,
   'listApiKeys/apos-revogacao': listApiKeysAposRevogacao,
   'listApiKeys/com-chaves': listApiKeysComChaves,
   'listBlockedEmailDomains/primeira-pagina': listBlockedEmailDomainsPrimeiraPagina,

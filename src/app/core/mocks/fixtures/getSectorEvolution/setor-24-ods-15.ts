@@ -5,7 +5,7 @@ import type { CapturedResponse } from '../../capture';
 export default {
   "operationId": "getSectorEvolution",
   "scenario": "setor-24-ods-15",
-  "description": "Metalurgia, ODS 15",
+  "description": "METALURGIA, ODS 15",
   "request": {
     "method": "GET",
     "path": "/sectors/24/evolution",
