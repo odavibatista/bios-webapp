@@ -4,6 +4,9 @@
   min-height: 100%;
 }
 
+// Fora da tela até receber o foco. Focado, entra no fluxo acima da barra, em vez de se
+// sobrepor ao link da marca: alvos sobrepostos reprovam o tamanho mínimo de alvo das WCAG 2.2
+// (critério 2.5.8, NFIN01).
 .skip-link {
   position: absolute;
   left: 1rem;
@@ -15,7 +18,9 @@
   color: var(--mat-sys-on-primary);
 
   &:focus {
-    top: 0.5rem;
+    position: static;
+    align-self: flex-start;
+    margin: 0.5rem 1rem;
   }
 }
 

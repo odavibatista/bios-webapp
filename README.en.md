@@ -49,6 +49,14 @@ npm start            # http://localhost:4200
 **API types.** The bios-core-api CI publishes the OpenAPI document as an artifact (`openapi`). To update,
 replace `api/openapi.json` with it and run `npm run api:types`.
 
+**Accessibility and widths in the E2E tests (NFIN01, NFIN02).** The E2E tests run at 1280 px (`desktop`)
+and 390 px (`celular`), and every test ends with the axe analysis (WCAG 2.0, 2.1 and 2.2, levels A and
+AA) and with a check that the page does not scroll horizontally. Tests import `test` and `expect` from
+`e2e/support/test.ts`, which does this on its own; an intermediate screen calls `expectAccessible` in
+the test itself. A failure lists rule, impact and elements; the full result of each analysis is attached
+as "acessibilidade (axe)" in the Playwright report (`npx playwright show-report` locally; in CI, the
+`playwright-report` artifact).
+
 **Accents in the texts (NFIN04).** `src/app/shared/portuguese-accents.spec.ts` reads the visible text of
 the templates (and the attributes announced by screen readers, such as `aria-label`) and the sentences
 in the code, and fails on a word from the `UNACCENTED` list written without its accent (`nao`, `indice`,

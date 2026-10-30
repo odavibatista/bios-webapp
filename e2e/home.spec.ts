@@ -1,4 +1,5 @@
-import { expect, test } from '@playwright/test';
+import { expectAccessible, expectNoHorizontalScroll } from './support/accessibility';
+import { expect, test } from './support/test';
 
 test.describe('página inicial', () => {
   test('abre em português, com a marca e os ODS calculados', async ({ page }) => {
@@ -20,10 +21,15 @@ test.describe('página inicial', () => {
   });
 });
 
-test('rota inexistente mostra a página de não encontrado e volta ao início', async ({ page }) => {
+test('rota inexistente mostra a página de não encontrado e volta ao início', async ({
+  page,
+}, testInfo) => {
   await page.goto('/rota-que-nao-existe');
 
   await expect(page).toHaveTitle('Página não encontrada — BIOS');
+  await expectAccessible(page, testInfo, 'não encontrado');
+  await expectNoHorizontalScroll(page, 'não encontrado');
+
   await page.getByRole('link', { name: 'Voltar ao início' }).click();
   await expect(page).toHaveURL('/');
 });

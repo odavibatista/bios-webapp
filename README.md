@@ -48,6 +48,14 @@ npm start            # http://localhost:4200
 **Tipos da API.** O CI do bios-core-api publica o documento OpenAPI como artefato (`openapi`). Para
 atualizar, substitua `api/openapi.json` por ele e rode `npm run api:types`.
 
+**Acessibilidade e larguras nos e2e (NFIN01, NFIN02).** Os e2e rodam em 1280 px (`desktop`) e 390 px
+(`celular`), e todo teste termina com a análise do axe (WCAG 2.0, 2.1 e 2.2, níveis A e AA) e com a
+checagem de que a página não rola na horizontal. Os testes importam `test` e `expect` de
+`e2e/support/test.ts`, que faz isso sozinho; uma tela intermediária pede `expectAccessible` no próprio
+teste. A falha lista regra, impacto e elementos; o resultado completo de cada análise vai como anexo
+"acessibilidade (axe)" no relatório do Playwright (`npx playwright show-report` localmente; no CI, o
+artefato `playwright-report`).
+
 **Acentuação dos textos (NFIN04).** `src/app/shared/portuguese-accents.spec.ts` lê o texto visível dos
 templates (e os atributos que o leitor de tela anuncia, como `aria-label`) e as frases do código, e
 reprova palavra sem acento da lista `UNACCENTED` (`nao`, `indice`, `pagina`...). Achou uma grafia nova
