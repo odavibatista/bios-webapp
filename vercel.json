@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npx --yes npm@11.21.1 ci",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist/bios-webapp/browser",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
