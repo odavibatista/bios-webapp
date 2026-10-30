@@ -1,6 +1,7 @@
 import { makeEnvironmentProviders, type EnvironmentProviders } from '@angular/core';
 import { ApiCredentials, InMemoryApiCredentials } from '../api/api-credentials';
 import { BIOS_API_IMPLEMENTATION, BiosApi } from '../api/bios-api';
+import { PRESENTATION_MODE } from '../presentation-mode';
 import { MockBiosApi } from './mock-bios-api';
 import { DEFAULT_MOCK_API_CONFIG, MOCK_API_CONFIG, type MockApiConfig } from './mock-config';
 
@@ -17,5 +18,6 @@ export function provideMockBiosApi(config: Partial<MockApiConfig> = {}): Environ
     { provide: BIOS_API_IMPLEMENTATION, useExisting: MockBiosApi },
     // Sem `provideSession()`, as telas usam o provedor cru (é o caso dos testes do mock).
     { provide: BiosApi, useExisting: MockBiosApi },
+    { provide: PRESENTATION_MODE, useValue: true },
   ]);
 }
