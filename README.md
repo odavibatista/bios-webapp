@@ -94,6 +94,16 @@ Na versão de apresentação, o provedor é o `MockBiosApi` (`src/app/core/mocks
   sorteio. O que a apresentação não reproduz (uma exportação não capturada, um setor fora da lista)
   responde `422 NOT_AVAILABLE_IN_PRESENTATION`, em vez de inventar dado.
 
+## Painel
+
+As rotas privadas moram na casca do painel (`src/app/layout/`): menu lateral fixo em tela larga e
+gaveta em tela estreita, com o item atual marcado por `aria-current`. O menu vem de `PANEL_NAV`
+(`panel-nav.ts`), filtrado pelo papel; só o `ADMIN` vê a administração. A barra do topo mostra quem
+entrou (nome e e-mail da conta, papel da sessão). As rotas de `/admin` pedem o papel com
+`requireRole('ADMIN')`: o `USER` vai para `/acesso-negado`. Endereço desconhecido com sessão mostra o
+"não encontrado" dentro do painel; sem sessão, fora dele, sem pedir login. A cada troca de tela, o
+foco vai para o conteúdo (`main#conteudo`).
+
 ## Estados de tela e erros
 
 Toda tela que carrega dados usa os mesmos estados (`src/app/shared/`, NFIN03):
