@@ -148,6 +148,24 @@ cores exatas ficam como variáveis CSS para a marca e os gráficos:
 | `--bios-brand-ink`   | `#1A1A1A` | Texto                             |
 | `--bios-brand-paper` | `#F5F5F5` | Superfícies, rodapé               |
 
+## Publicação (Vercel)
+
+A versão de apresentação é estática e é publicada na Vercel (plano Hobby) a cada merge na `main`.
+`vercel.json` define a instalação (o mesmo npm 11 do CI), o build (`npm run build`), a pasta publicada
+(`dist/bios-webapp/browser`) e a reescrita de toda rota para `index.html`, para um link profundo
+(`/empresas/<cnpj>`) abrir direto. O rodapé avisa que os dados são capturados, e um e2e confere que o site
+não faz nenhuma requisição fora da própria origem: não há API real nem segredo no build.
+
+Para criar o projeto (uma vez):
+
+1. Em vercel.com, **Add New → Project → Import** o repositório `odavibatista/bios-webapp`.
+2. **Framework Preset:** Other (o `vercel.json` já traz instalação, build e saída). Nenhuma variável de
+   ambiente.
+3. Depois de criado: **Settings → Git → Production Branch:** `main`; **Settings → Build and Deployment →
+   Node.js Version:** 22.x, o mesmo do Volta.
+4. Conferir no endereço público: a página inicial abre, e uma rota inexistente (`/rota-que-nao-existe`)
+   mostra a página "não encontrado" do app, e não o 404 da Vercel.
+
 ## Fluxo de contribuição
 
 Branch a partir do `develop`, PR de volta para ele com título em Conventional Commits, e promoção
