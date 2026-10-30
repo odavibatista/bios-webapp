@@ -1,0 +1,101 @@
+{
+  "description": "Respostas reais do bios-core-api capturadas por scripts/capture-api.mjs para a versão de apresentação (#11).",
+  "api": {
+    "repository": "odavibatista/bios-core-api",
+    "commit": "f595fcc"
+  },
+  "demo_account": {
+    "name": "Conta de Demonstração",
+    "email": "apresentacao@example.com"
+  },
+  "blocked_domain_used": "0-mail.com",
+  "companies": [
+    {
+      "cnpj": "60894730000105",
+      "slug": "usiminas",
+      "reason": "Divisão CNAE 24; autos do IBAMA e inventário de emissões confirmado no GHG Protocol"
+    },
+    {
+      "cnpj": "33042730000104",
+      "slug": "csn",
+      "reason": "Divisão CNAE 24; auto do IBAMA e inventário de emissões confirmado no GHG Protocol"
+    },
+    {
+      "cnpj": "33611500000119",
+      "slug": "gerdau",
+      "reason": "Divisão CNAE 24; sem registro nas fontes, GHG não verificado (índices indisponíveis)"
+    },
+    {
+      "cnpj": "07358761000169",
+      "slug": "gerdau-acos-longos",
+      "reason": "Divisão CNAE 24; inventário GHG publicado com este CNPJ, mas não localizado pelo nome (GHG UNKNOWN)"
+    },
+    {
+      "cnpj": "17469701000177",
+      "slug": "arcelormittal",
+      "reason": "Divisão CNAE 24; inventário de emissões confirmado no GHG Protocol"
+    },
+    {
+      "cnpj": "07005330000119",
+      "slug": "ternium",
+      "reason": "Divisão CNAE 24; inventário de emissões confirmado no GHG Protocol"
+    },
+    {
+      "cnpj": "23637697000101",
+      "slug": "alcoa",
+      "reason": "Divisão CNAE 24 (metalurgia de não ferrosos); autos do IBAMA"
+    },
+    {
+      "cnpj": "00990842000138",
+      "slug": "aco-cearense",
+      "reason": "Divisão CNAE 24; autos do IBAMA; GHG não verificado nesta coleta (UNKNOWN)"
+    },
+    {
+      "cnpj": "04735087000104",
+      "slug": "sidermin",
+      "reason": "Divisão CNAE 24; autos do IBAMA e inventário de emissões confirmado no GHG Protocol"
+    },
+    {
+      "cnpj": "82643537000134",
+      "slug": "electro-aco-altona",
+      "reason": "Divisão CNAE 24; inventário de emissões confirmado no GHG Protocol, sem autos do IBAMA"
+    },
+    {
+      "cnpj": "50375702000128",
+      "slug": "eccheli",
+      "reason": "Sanção vigente no CEIS (conduta administrativa)"
+    },
+    {
+      "cnpj": "33458350000155",
+      "slug": "atuante",
+      "reason": "Sanções vigentes no CEIS e no CNEP; situação cadastral inapta"
+    },
+    {
+      "cnpj": "42240841000116",
+      "slug": "fox-store",
+      "reason": "Sanção do CEIS vencida em 2024 (registro histórico); situação cadastral inapta"
+    },
+    {
+      "cnpj": "47960950000121",
+      "slug": "magazine-luiza",
+      "reason": "Sem registro em nenhuma fonte ambiental (NOT_FOUND); GHG não verificado"
+    }
+  ],
+  "phases": {
+    "contas": "2026-10-30T13:14:36.372Z",
+    "admin": "2026-10-30T13:15:48.009Z",
+    "empresas": "2026-10-30T13:38:02.446Z",
+    "setores": "2026-10-30T13:37:17.760Z",
+    "teto": "2026-10-30T13:38:22.989Z",
+    "limites": "2026-10-30T13:38:58.624Z"
+  },
+  "notes": [
+    "Banco local limpo em 30/10/2026: carga inicial (catalog:bootstrap), sincronização do cadastro do GHG (1029 organizações) e lote do IBAMA (829 807 linhas, 229 280 evidências) disparados à mão antes da captura.",
+    "E-mails da API entregues a um Mailpit local (SMTP_HOST=localhost, SMTP_PORT=1025); nenhum e-mail real foi enviado. Os tokens dos links vieram de lá e foram trocados por marcadores.",
+    "contas e admin: horários das últimas capturas de cada fase (registrados à mão: a execução foi retomada depois de uma falha de conexão do roteiro, já corrigida).",
+    "teto: a API rodou só para esta captura com EXPORT_MAX_COMPANIES=3, para o 422 EXPORT_TOO_LARGE aparecer com as 10 empresas da divisão 24; o padrão é 5000.",
+    "setores: uma janela (outubro/2026), por isso history_status INSUFFICIENT. Repetir o agregador e a fase depois de 01/11/2026 para a série ter duas janelas reais.",
+    "Estados que esta captura não traz: evidência OUTDATED (exige que a validade vença sem nova coleta) e o 503 de cadastro indisponível (a cadeia cadastral respondeu 404 para o CNPJ inexistente).",
+    "GHG: o relatório da organização 'Gerdau SA' traz o CNPJ da Gerdau Aços Longos, mas a API não o confirma, porque localiza candidatos comparando o nome inteiro (GERDAU S A x GERDAU SA). Limitação do bios-core-api, não da captura."
+  ]
+}

@@ -1,6 +1,7 @@
-# Gerados: tipos da API e documento OpenAPI copiado do bios-core-api.
+# Gerados: tipos da API, documento OpenAPI copiado do bios-core-api e respostas capturadas dela.
 src/app/core/api/generated/
 api/openapi.json
+src/app/core/mocks/fixtures/
 
 # Saídas de build, cache e testes.
 dist/

@@ -6,8 +6,15 @@ import tseslint from 'typescript-eslint';
 
 export default defineConfig([
   {
-    // Tipos gerados do OpenAPI da API: não se editam à mão.
-    ignores: ['src/app/core/api/generated/**', 'dist/**', 'coverage/**', '.angular/**'],
+    // Gerados, não se editam à mão: tipos do OpenAPI da API e respostas capturadas dela
+    // (estas conferidas pelo typecheck contra os tipos gerados).
+    ignores: [
+      'src/app/core/api/generated/**',
+      'src/app/core/mocks/fixtures/**',
+      'dist/**',
+      'coverage/**',
+      '.angular/**',
+    ],
   },
   {
     files: ['**/*.ts'],
