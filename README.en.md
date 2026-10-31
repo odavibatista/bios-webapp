@@ -105,6 +105,18 @@ signed in (account name and email, session role). `/admin` routes require the ro
 "not found" page inside the panel; without one, outside it, without asking to sign in. On every screen
 change, focus moves to the content (`main#conteudo`).
 
+## Sign-up and account forms
+
+`/cadastro`, `/confirmar-email/:token` and `/reenviar-confirmacao` are public (`src/app/features/auth/`).
+The confirmation route is the one in the link the API emails. Name, email and password rules
+(`shared/forms/account-rules.ts`) are the API's, with the same messages; email uses Zod 4's `z.email()`
+pattern, the same as bios-core-api. `bios-password-field` has a show-password button and, for a new
+password, the policy visible before the first error.
+
+After submitting, sign-up and resend show only the API's message, the same for a new and an already
+registered email (RF01 b). In the presentation build, `bios-mail-preview` stands in for the inbox: it
+shows the link the email would carry as a hyperlink, or says nothing arrived.
+
 ## Screen states and errors
 
 Every screen that loads data uses the same states (`src/app/shared/`, NFIN03):
