@@ -1,7 +1,14 @@
-import { provideRouter } from '@angular/router';
-import { render, screen } from '@testing-library/angular';
+import { Component } from '@angular/core';
+import { DeferBlockState, TestBed } from '@angular/core/testing';
+import { provideRouter, Router } from '@angular/router';
+import { render, screen, within } from '@testing-library/angular';
 import { App } from './app';
+import { BiosApi } from './core/api/bios-api';
 import { PRESENTATION_MODE } from './core/presentation-mode';
+import { SessionStore } from './core/session/session-store';
+
+@Component({ template: '<h1>Tela</h1>' })
+class Screen {}
 
 describe('App', () => {
   async function renderApp() {
@@ -43,5 +50,54 @@ describe('App', () => {
     await renderApp();
 
     expect(screen.getByRole('contentinfo').textContent).not.toContain('Versão de apresentação');
+  });
+
+  it('a cada troca de tela, depois da primeira, o foco vai para o conteúdo', async () => {
+    await render(App, {
+      providers: [
+        provideRouter([
+          { path: '', component: Screen },
+          { path: 'outra', component: Screen },
+        ]),
+      ],
+    });
+    const router = TestBed.inject(Router);
+    const main = screen.getByRole('main');
+
+    await router.navigateByUrl('/');
+    expect(document.activeElement).not.toBe(main);
+
+    await router.navigateByUrl('/outra');
+    expect(document.activeElement).toBe(main);
+  });
+
+  it('sem sessão, a barra não mostra o menu da conta', async () => {
+    await renderApp();
+
+    expect(screen.getByRole('banner').querySelector('bios-user-menu')).toBeNull();
+  });
+
+  it('com sessão, a barra mostra quem entrou', async () => {
+    await render(App, {
+      providers: [
+        provideRouter([]),
+        { provide: BiosApi, useValue: { getOwnAccount: () => new Promise(() => undefined) } },
+      ],
+      deferBlockStates: DeferBlockState.Complete,
+      configureTestBed: () => {
+        TestBed.inject(SessionStore).store({
+          access_token: 'a',
+          refresh_token: 'r',
+          token_type: 'Bearer',
+          expires_in: 900,
+          user: { id: '1', name: 'Conta de Demonstração', role: 'USER' },
+        });
+      },
+    });
+
+    // O menu vem sob demanda (`@defer`), fora do bundle inicial.
+    expect(
+      await within(screen.getByRole('banner')).findByRole('button', { name: /Usuário/ }),
+    ).toBeTruthy();
   });
 });

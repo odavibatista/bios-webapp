@@ -95,6 +95,16 @@ In the presentation version, the provider is `MockBiosApi` (`src/app/core/mocks/
   from randomness. What the presentation does not reproduce (an export that was not captured, a sector
   outside the list) answers `422 NOT_AVAILABLE_IN_PRESENTATION` instead of making data up.
 
+## Panel
+
+Private routes live in the panel shell (`src/app/layout/`): a fixed side menu on wide screens and a
+drawer on narrow ones, with the current item marked by `aria-current`. The menu comes from `PANEL_NAV`
+(`panel-nav.ts`), filtered by role; only `ADMIN` sees the administration. The top bar shows who is
+signed in (account name and email, session role). `/admin` routes require the role through
+`requireRole('ADMIN')`: a `USER` goes to `/acesso-negado`. An unknown address with a session shows the
+"not found" page inside the panel; without one, outside it, without asking to sign in. On every screen
+change, focus moves to the content (`main#conteudo`).
+
 ## Screen states and errors
 
 Every screen that loads data uses the same states (`src/app/shared/`, NFIN03):
