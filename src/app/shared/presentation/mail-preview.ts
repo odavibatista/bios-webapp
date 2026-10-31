@@ -70,11 +70,20 @@ export class MailPreview {
   /** Para quem o e-mail iria. */
   readonly to = input.required<string>();
   readonly kind = input.required<MockEmail['kind']>();
+  /**
+   * Quando a pessoa fez o pedido (ISO 8601): só conta o e-mail enviado a partir daí. Sem isso, um
+   * pedido que não manda nada (conta já ativa) mostraria o link de um e-mail anterior.
+   */
+  readonly since = input.required<string>();
 
   protected readonly presentation = inject(PRESENTATION_MODE);
   private readonly mailbox = inject(MockMailbox);
 
   protected readonly normalizedTo = computed(() => this.to().trim().toLowerCase());
-  protected readonly email = computed(() => this.mailbox.latest(this.to(), this.kind()));
+  protected readonly email = computed(() => {
+    const email = this.mailbox.latest(this.to(), this.kind());
+
+    return email && email.sentAt >= this.since() ? email : undefined;
+  });
   protected readonly label = computed(() => LINK_LABELS[this.kind()]);
 }

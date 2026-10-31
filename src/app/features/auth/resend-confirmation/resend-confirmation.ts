@@ -23,6 +23,8 @@ import { FormErrorSummary } from '../../../shared/states/form-error-summary';
 interface Sent {
   message: string;
   email: string;
+  /** Quando o pedido saiu (ISO 8601), para o aviso da apresentação. */
+  requestedAt: string;
 }
 
 /**
@@ -70,13 +72,14 @@ export class ResendConfirmation {
     }
 
     const email = this.form.getRawValue().email.trim();
+    const requestedAt = new Date().toISOString();
     this.submitting.set(true);
     this.formErrors.set([]);
 
     try {
       const response = await this.api.resendEmailConfirmation({ body: { email } });
 
-      this.sent.set({ message: response.message, email });
+      this.sent.set({ message: response.message, email, requestedAt });
       afterNextRender(() => this.sentHeading()?.nativeElement.focus(), {
         injector: this.injector,
       });
