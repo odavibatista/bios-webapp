@@ -26,6 +26,29 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home').then((m) => m.Home),
       },
       {
+        path: 'cadastro',
+        title: 'Criar conta — BIOS',
+        data: { public: true },
+        loadComponent: () => import('./features/auth/register/register').then((m) => m.Register),
+      },
+      {
+        // O caminho do link do e-mail de confirmação da API (template `EMAIL_CONFIRMATION`).
+        path: 'confirmar-email/:token',
+        title: 'Confirmar e-mail — BIOS',
+        data: { public: true },
+        loadComponent: () =>
+          import('./features/auth/confirm-email/confirm-email').then((m) => m.ConfirmEmail),
+      },
+      {
+        path: 'reenviar-confirmacao',
+        title: 'Novo link de confirmação — BIOS',
+        data: { public: true },
+        loadComponent: () =>
+          import('./features/auth/resend-confirmation/resend-confirmation').then(
+            (m) => m.ResendConfirmation,
+          ),
+      },
+      {
         path: '',
         // Sob demanda: quem só vê a página inicial não baixa a casca do painel.
         loadComponent: () =>

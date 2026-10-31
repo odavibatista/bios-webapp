@@ -1,9 +1,10 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter, Router } from '@angular/router';
+import { provideRouter, Router, withComponentInputBinding } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { of } from 'rxjs';
 import { routes } from './app.routes';
+import { provideMockBiosApi } from './core/mocks/provide-mock-bios-api';
 import { privateByDefault } from './core/session/private-by-default.guard';
 import type { Role } from './core/session/role.guards';
 import { SessionStore } from './core/session/session-store';
@@ -12,7 +13,8 @@ import { SessionStore } from './core/session/session-store';
 async function navigate(url: string, role: Role | null = null) {
   TestBed.configureTestingModule({
     providers: [
-      provideRouter(routes),
+      provideRouter(routes, withComponentInputBinding()),
+      provideMockBiosApi({ latencyMs: 0 }),
       {
         provide: BreakpointObserver,
         useValue: { observe: () => of({ matches: false, breakpoints: {} }) },
@@ -51,6 +53,19 @@ describe('routes', () => {
 
     expect(page.url).toBe('/');
     expect(page.title).toBe('BIOS');
+    expect(page.inPanel).toBe(false);
+  });
+
+  it.each([
+    ['/cadastro', 'Criar conta — BIOS', 'Criar conta'],
+    ['/reenviar-confirmacao', 'Novo link de confirmação — BIOS', 'Pedir novo link de confirmação'],
+    ['/confirmar-email/token-qualquer', 'Confirmar e-mail — BIOS', 'Confirmando o e-mail'],
+  ])('"%s" é pública, fora do painel', async (url, title, heading) => {
+    const page = await navigate(url);
+
+    expect(page.url).toBe(url);
+    expect(page.title).toBe(title);
+    expect(page.heading).toBe(heading);
     expect(page.inPanel).toBe(false);
   });
 
