@@ -121,6 +121,10 @@ hiperlink o link que o e-mail traria, ou diz que nada chegou.
 confirmada oferece o reenvio do link; bloqueio por tentativas mostra o tempo restante e trava o botão
 até lá. A senha de quem entra só precisa existir (`currentPasswordRules`), sem a política da senha nova.
 
+O menu da conta tem "Sair" e "Sair de todos os dispositivos"; o segundo pede confirmação
+(`confirmAction`, em `shared/dialogs/`, com o foco inicial em "Cancelar"). A sessão local é apagada
+mesmo se a chamada falhar, e o app vai para o login.
+
 ## Estados de tela e erros
 
 Toda tela que carrega dados usa os mesmos estados (`src/app/shared/`, NFIN03):

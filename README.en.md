@@ -123,6 +123,10 @@ wrong. An unconfirmed account gets the option to resend the link; a lockout afte
 the remaining time and disables the button until then. The sign-in password only has to be present
 (`currentPasswordRules`), without the new-password policy.
 
+The account menu has "Sair" (sign out) and "Sair de todos os dispositivos" (sign out everywhere); the
+second asks for confirmation (`confirmAction`, in `shared/dialogs/`, with initial focus on "Cancelar").
+The local session is cleared even if the call fails, and the app goes to the login page.
+
 ## Screen states and errors
 
 Every screen that loads data uses the same states (`src/app/shared/`, NFIN03):
