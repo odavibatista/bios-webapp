@@ -20,6 +20,26 @@ h1 {
   color: var(--bios-brand-moss);
 }
 
+.notice {
+  margin: 0 0 1.5rem;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--mat-sys-primary);
+  background: var(--mat-sys-surface-container);
+}
+
+.wait {
+  margin: -0.5rem 0 1rem;
+  font-weight: 600;
+}
+
+.unconfirmed {
+  margin: -0.5rem 0 1.5rem;
+
+  p {
+    margin: 0;
+  }
+}
+
 form {
   display: grid;
   gap: 0.5rem;
