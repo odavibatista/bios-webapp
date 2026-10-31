@@ -57,6 +57,7 @@ describe('routes', () => {
   });
 
   it.each([
+    ['/entrar', 'Entrar — BIOS', 'Entrar'],
     ['/cadastro', 'Criar conta — BIOS', 'Criar conta'],
     ['/reenviar-confirmacao', 'Novo link de confirmação — BIOS', 'Pedir novo link de confirmação'],
     ['/confirmar-email/token-qualquer', 'Confirmar e-mail — BIOS', 'Confirmando o e-mail'],
@@ -73,6 +74,8 @@ describe('routes', () => {
     const page = await navigate('/painel');
 
     expect(page.url).toBe('/entrar?voltar=%2Fpainel');
+    expect(page.title).toBe('Entrar — BIOS');
+    expect(page.heading).toBe('Entrar');
   });
 
   it('com sessão, o painel abre dentro da casca, com o título da aba', async () => {

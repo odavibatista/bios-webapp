@@ -26,6 +26,13 @@ export const routes: Routes = [
         loadComponent: () => import('./features/home/home').then((m) => m.Home),
       },
       {
+        // `LOGIN_PATH`: para onde o guard e a renovação da sessão mandam quem não tem sessão.
+        path: 'entrar',
+        title: 'Entrar — BIOS',
+        data: { public: true },
+        loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
+      },
+      {
         path: 'cadastro',
         title: 'Criar conta — BIOS',
         data: { public: true },
