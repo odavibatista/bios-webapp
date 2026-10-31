@@ -6,9 +6,14 @@
     <span class="brand-name">BIOS</span>
   </a>
   <span class="brand-tagline">Business Intelligence on Sustainability</span>
+  @if (signedIn()) {
+    @defer {
+      <bios-user-menu class="user-menu" />
+    }
+  }
 </mat-toolbar>
 
-<main id="conteudo" class="content" tabindex="-1">
+<main #main id="conteudo" class="content" tabindex="-1">
   <router-outlet />
 </main>
 
