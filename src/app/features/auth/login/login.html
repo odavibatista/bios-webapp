@@ -1,0 +1,47 @@
+<h1>Entrar</h1>
+
+@if (sessionEnded()) {
+  <p class="notice" role="status">Sua sessão terminou. Entre de novo para continuar.</p>
+} @else {
+  <p class="lead">Use o e-mail e a senha da sua conta do BIOS.</p>
+}
+
+<bios-form-error-summary [messages]="formErrors()" />
+
+@if (remaining() > 0) {
+  <p class="wait">Você poderá tentar de novo em {{ wait() }}.</p>
+}
+
+@if (unconfirmedEmail()) {
+  <div class="unconfirmed">
+    @if (resent(); as resent) {
+      <p role="status">{{ resent.message }}</p>
+      <bios-mail-preview [to]="resent.email" kind="confirmar-email" [since]="resent.requestedAt" />
+    } @else {
+      <button mat-stroked-button type="button" [disabled]="resending()" (click)="resend()">
+        {{ resending() ? 'Enviando…' : 'Reenviar o link de confirmação' }}
+      </button>
+    }
+  </div>
+}
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  <mat-form-field appearance="outline" class="field">
+    <mat-label>E-mail</mat-label>
+    <input matInput type="email" formControlName="email" autocomplete="username" />
+    <mat-error>{{ messageOf(form.controls.email) }}</mat-error>
+  </mat-form-field>
+
+  <bios-password-field [control]="form.controls.password" autocomplete="current-password" />
+
+  <div class="actions">
+    <button mat-flat-button type="submit" [disabled]="submitting() || remaining() > 0">
+      {{ submitting() ? 'Entrando…' : 'Entrar' }}
+    </button>
+    <a mat-button routerLink="/esqueci-senha">Esqueci a senha</a>
+  </div>
+</form>
+
+<div class="alternatives">
+  <p>Ainda não tem conta? <a routerLink="/cadastro">Criar conta</a></p>
+</div>
