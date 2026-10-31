@@ -117,6 +117,12 @@ After submitting, sign-up and resend show only the API's message, the same for a
 registered email (RF01 b). In the presentation build, `bios-mail-preview` stands in for the inbox: it
 shows the link the email would carry as a hyperlink, or says nothing arrived.
 
+`/entrar` opens the session and goes to the destination stored in `?voltar=`, if it is a path of the app
+itself (`safeReturnUrl`), or to `/painel`. Messages are the API's, without pointing at which field was
+wrong. An unconfirmed account gets the option to resend the link; a lockout after failed attempts shows
+the remaining time and disables the button until then. The sign-in password only has to be present
+(`currentPasswordRules`), without the new-password policy.
+
 ## Screen states and errors
 
 Every screen that loads data uses the same states (`src/app/shared/`, NFIN03):

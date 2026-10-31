@@ -5,6 +5,14 @@ import { expect, type Page, type TestInfo } from '@playwright/test';
 export const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 /**
+ * Sentinelas do focus trap do CDK (gaveta do menu aberta no celular, diálogos): divs invisíveis,
+ * com `aria-hidden` e `tabindex="0"`, que só devolvem o foco para dentro da área presa. O leitor
+ * de tela nunca para nelas, mas o axe as acusa em `aria-hidden-focus`. Só elas ficam de fora; o
+ * conteúdo da gaveta e do diálogo continua analisado.
+ */
+const FOCUS_TRAP_SENTINELS = '.cdk-focus-trap-anchor';
+
+/**
  * Roda a análise de acessibilidade (axe) na página como ela está agora e falha com qualquer
  * violação de nível A ou AA (NFIN01). O resultado completo vai como anexo do teste, para ser
  * lido no relatório do Playwright; a falha lista regra, impacto e elementos afetados.
@@ -14,7 +22,10 @@ export async function expectAccessible(
   testInfo: TestInfo,
   step = 'página',
 ): Promise<void> {
-  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze();
+  const results = await new AxeBuilder({ page })
+    .withTags(WCAG_TAGS)
+    .exclude(FOCUS_TRAP_SENTINELS)
+    .analyze();
 
   await testInfo.attach(`acessibilidade (axe) — ${step}`, {
     body: JSON.stringify(results.violations, null, 2),

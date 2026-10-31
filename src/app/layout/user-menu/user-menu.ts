@@ -43,6 +43,21 @@ import { roleLabel } from '../panel-nav';
       color: inherit;
     }
 
+    // Nome longo não empurra a barra para fora da tela (NFIN02): corta com reticências, e o nome
+    // inteiro continua no nome acessível do botão.
+    .name {
+      display: inline-block;
+      max-width: 12rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      vertical-align: middle;
+
+      @media (max-width: 600px) {
+        max-width: 7rem;
+      }
+    }
+
     .role {
       margin-left: 0.5rem;
       opacity: 0.85;

@@ -1,6 +1,7 @@
 import { FormControl } from '@angular/forms';
 import { API_ERROR_KEY } from '../errors/form-errors';
 import {
+  currentPasswordRules,
   emailRules,
   fieldMessage,
   nameRules,
@@ -60,6 +61,16 @@ describe('regras da conta (iguais às da API)', () => {
     [`a1${'x'.repeat(127)}`, ['A senha deve ter no máximo 128 caracteres.']],
   ])('senha %j', (value, expected) => {
     expect(messages(passwordRules, value)).toEqual(expected);
+  });
+
+  it.each([
+    ['', ['Informe a senha.']],
+    ['a', []],
+    ['12345678', []],
+    ['x'.repeat(128), []],
+    ['x'.repeat(129), ['A senha deve ter no máximo 128 caracteres.']],
+  ])('senha atual %j: só precisa existir, sem a política da senha nova', (value, expected) => {
+    expect(messages(currentPasswordRules, value)).toEqual(expected);
   });
 
   it('a política de senha descreve as mesmas regras', () => {
