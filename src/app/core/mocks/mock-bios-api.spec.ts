@@ -145,6 +145,22 @@ describe('MockBiosApi', () => {
 
       expect(mailbox.emails().map((email) => email.to)).toEqual(['p@example.com', 'p@example.com']);
     });
+
+    it('o novo link de confirmação invalida o anterior (UC01, regra 2)', async () => {
+      await api.registerAccount({
+        body: { name: 'Pendente', email: 'p@example.com', password: 'senha1234' },
+      });
+      const first = mailbox.latest('p@example.com', 'confirmar-email')?.link.split('/').pop();
+      await api.resendEmailConfirmation({ body: { email: 'p@example.com' } });
+      const second = mailbox.latest('p@example.com', 'confirmar-email')?.link.split('/').pop();
+
+      await expectError(
+        api.confirmEmail({ body: { token: first ?? '' } }),
+        400,
+        'USER_TOKEN_INVALID',
+      );
+      await expect(api.confirmEmail({ body: { token: second ?? '' } })).resolves.toBeTruthy();
+    });
   });
 
   describe('sessão (UC02, UC03, UC17)', () => {

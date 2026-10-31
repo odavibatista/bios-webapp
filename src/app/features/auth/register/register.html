@@ -1,0 +1,49 @@
+@if (sent(); as sent) {
+  <section aria-labelledby="titulo-cadastro-enviado">
+    <h1 id="titulo-cadastro-enviado" #sentHeading tabindex="-1">Confira seu e-mail</h1>
+    <p class="lead" role="status">{{ sent.message }}</p>
+    <p>
+      Abra o link do e-mail para ativar a conta; sem essa confirmação, não é possível entrar. O link
+      vale por tempo limitado.
+    </p>
+    <div class="alternatives">
+      <p>Não chegou ou o link expirou?</p>
+      <div class="actions">
+        <a mat-stroked-button routerLink="/reenviar-confirmacao">Pedir um novo link</a>
+        <a mat-button routerLink="/entrar">Ir para o login</a>
+      </div>
+    </div>
+    <bios-mail-preview [to]="sent.email" kind="confirmar-email" [since]="sent.requestedAt" />
+  </section>
+} @else {
+  <h1>Criar conta</h1>
+  <p class="lead">Com a conta, você consulta empresas, pesquisa e compara setores.</p>
+
+  <bios-form-error-summary [messages]="formErrors()" />
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <mat-form-field appearance="outline" class="field">
+      <mat-label>Nome</mat-label>
+      <input matInput formControlName="name" autocomplete="name" />
+      <mat-error>{{ messageOf(form.controls.name) }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="field">
+      <mat-label>E-mail</mat-label>
+      <input matInput type="email" formControlName="email" autocomplete="email" />
+      <mat-error>{{ messageOf(form.controls.email) }}</mat-error>
+    </mat-form-field>
+
+    <bios-password-field [control]="form.controls.password" [showPolicy]="true" />
+
+    <div class="actions">
+      <button mat-flat-button type="submit" [disabled]="submitting()">
+        {{ submitting() ? 'Criando a conta…' : 'Criar conta' }}
+      </button>
+    </div>
+  </form>
+
+  <div class="alternatives">
+    <p>Já tem conta? <a routerLink="/entrar">Entrar</a></p>
+  </div>
+}
