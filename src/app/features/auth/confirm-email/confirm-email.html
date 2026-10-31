@@ -1,0 +1,21 @@
+<div aria-live="polite">
+  @if (confirmation.isLoading()) {
+    <h1>Confirmando o e-mail</h1>
+    <bios-loading label="Confirmando o e-mail…" />
+  } @else if (confirmation.hasValue()) {
+    <h1>E-mail confirmado</h1>
+    <p class="lead">{{ confirmation.value().message }}</p>
+    <div class="actions">
+      <a mat-flat-button routerLink="/entrar">Entrar</a>
+    </div>
+  } @else if (invalidLink(); as message) {
+    <h1>Não foi possível confirmar</h1>
+    <p class="lead">{{ message }}</p>
+    <div class="actions">
+      <a mat-flat-button routerLink="/reenviar-confirmacao">Pedir um novo link</a>
+    </div>
+  } @else {
+    <h1>Não foi possível confirmar</h1>
+    <bios-error-state [error]="confirmation.error()" (retry)="confirmation.reload()" />
+  }
+</div>
