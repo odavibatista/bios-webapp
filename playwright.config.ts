@@ -18,6 +18,9 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     locale: 'pt-BR',
     trace: 'on-first-retry',
+    // Sem animação (o Material respeita `prefers-reduced-motion`): o axe mede a tela pronta, e não
+    // um texto ainda em transição de opacidade, que reprova o contraste por acaso.
+    reducedMotion: 'reduce',
   },
   projects: [
     {

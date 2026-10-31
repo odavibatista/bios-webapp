@@ -1,0 +1,48 @@
+// Telas de conta sem sessão (cadastro, confirmação, login, senha): uma coluna estreita, centrada.
+:host {
+  display: block;
+  max-width: 28rem;
+  margin: 0 auto;
+}
+
+h1 {
+  margin: 0 0 0.5rem;
+  font: var(--mat-sys-headline-medium);
+  color: var(--bios-brand-green);
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.lead {
+  margin: 0 0 1.5rem;
+  color: var(--bios-brand-moss);
+}
+
+form {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.field {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.alternatives {
+  margin: 1.5rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+
+  p {
+    margin: 0 0 0.5rem;
+  }
+}

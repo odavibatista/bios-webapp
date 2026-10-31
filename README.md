@@ -104,6 +104,18 @@ entrou (nome e e-mail da conta, papel da sessão). As rotas de `/admin` pedem o 
 "não encontrado" dentro do painel; sem sessão, fora dele, sem pedir login. A cada troca de tela, o
 foco vai para o conteúdo (`main#conteudo`).
 
+## Cadastro e formulários de conta
+
+`/cadastro`, `/confirmar-email/:token` e `/reenviar-confirmacao` são públicas (`src/app/features/auth/`).
+A rota da confirmação é a do link que a API manda por e-mail. As regras de nome, e-mail e senha
+(`shared/forms/account-rules.ts`) são as da API, com as mesmas mensagens; o e-mail usa o padrão do
+`z.email()` do Zod 4, o mesmo do bios-core-api. O `bios-password-field` traz o botão de mostrar a senha e,
+na senha nova, a política visível antes do primeiro erro.
+
+Depois do envio, cadastro e reenvio mostram só a mensagem da API, igual para e-mail novo e já cadastrado
+(RF01 b). Na versão de apresentação, o `bios-mail-preview` faz as vezes da caixa de entrada: mostra como
+hiperlink o link que o e-mail traria, ou diz que nada chegou.
+
 ## Estados de tela e erros
 
 Toda tela que carrega dados usa os mesmos estados (`src/app/shared/`, NFIN03):
