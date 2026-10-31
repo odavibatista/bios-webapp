@@ -1,0 +1,23 @@
+.panel {
+  min-height: 60vh;
+  background: transparent;
+}
+
+.panel-menu {
+  width: 240px;
+  border-right: 1px solid var(--mat-sys-outline-variant);
+}
+
+.panel-content {
+  // Sem largura mínima: conteúdo largo (tabelas) rola dentro dele, nunca na página (NFIN02).
+  min-width: 0;
+  padding: 0 0 0 1.5rem;
+
+  @media (max-width: 959.98px) {
+    padding: 0;
+  }
+}
+
+.menu-toggle {
+  margin-bottom: 1rem;
+}

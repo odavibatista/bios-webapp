@@ -1,6 +1,9 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { RouterLink } from '@angular/router';
+import { SessionStore } from '../../core/session/session-store';
 
 interface OdsSummary {
   number: number;
@@ -28,11 +31,14 @@ export const CALCULATED_ODS: readonly OdsSummary[] = [
 /** Página inicial: o que o BIOS calcula e como ler o índice. */
 @Component({
   selector: 'bios-home',
-  imports: [MatCardModule, MatIconModule],
+  imports: [MatButtonModule, MatCardModule, MatIconModule, RouterLink],
   templateUrl: './home.html',
   styleUrl: './home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Home {
   protected readonly odsList = CALCULATED_ODS;
+
+  /** Quem já entrou vai direto ao painel; quem não entrou, ao login ou ao cadastro. */
+  protected readonly signedIn = inject(SessionStore).isAuthenticated;
 }

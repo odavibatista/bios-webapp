@@ -4,6 +4,14 @@
     A partir de um CNPJ, o BIOS reúne dados públicos de fontes oficiais e calcula, para os ODS 13 e
     15, um índice de aderência com nível de confiança e a contribuição de cada evidência.
   </p>
+  <div class="actions">
+    @if (signedIn()) {
+      <a mat-flat-button routerLink="/painel">Ir para o painel</a>
+    } @else {
+      <a mat-flat-button routerLink="/entrar">Entrar</a>
+      <a mat-stroked-button routerLink="/cadastro">Criar conta</a>
+    }
+  </div>
 </section>
 
 <section class="ods" aria-labelledby="titulo-ods">
