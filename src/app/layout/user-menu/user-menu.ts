@@ -1,20 +1,26 @@
 import { ChangeDetectionStrategy, Component, computed, inject, resource } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { BiosApi } from '../../core/api/bios-api';
+import { LOGIN_PATH, SessionService } from '../../core/session/session.service';
 import { SessionStore } from '../../core/session/session-store';
+import { confirmAction } from '../../shared/dialogs/confirm-dialog';
 import { roleLabel } from '../panel-nav';
 
 /**
  * Quem entrou, na barra do topo (#18): nome e papel, e o menu da conta. O nome e o e-mail vêm da
  * conta (`getOwnAccount`), para refletir uma edição; enquanto ela carrega, a barra mostra um
- * esqueleto, e não "undefined". O papel vem do token da sessão. "Sair" entra com a #21.
+ * esqueleto, e não "undefined". O papel vem do token da sessão.
+ *
+ * "Sair" e "Sair de todos os dispositivos" (UC03, RF23; #21) encerram a sessão e levam ao login.
  */
 @Component({
   selector: 'bios-user-menu',
-  imports: [MatButtonModule, MatIconModule, MatMenuModule, RouterLink],
+  imports: [MatButtonModule, MatDividerModule, MatIconModule, MatMenuModule, RouterLink],
   template: `
     @if (role(); as role) {
       <button mat-button class="trigger" [matMenuTriggerFor]="menu">
@@ -35,6 +41,15 @@ import { roleLabel } from '../panel-nav';
           <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">person</mat-icon>
           Minha conta
         </a>
+        <mat-divider />
+        <button mat-menu-item type="button" (click)="signOut()">
+          <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">logout</mat-icon>
+          Sair
+        </button>
+        <button mat-menu-item type="button" (click)="signOut(true)">
+          <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">devices</mat-icon>
+          Sair de todos os dispositivos
+        </button>
       </mat-menu>
     }
   `,
@@ -90,6 +105,9 @@ import { roleLabel } from '../panel-nav';
 export class UserMenu {
   private readonly api = inject(BiosApi);
   private readonly store = inject(SessionStore);
+  private readonly session = inject(SessionService);
+  private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
 
   /** A conta de quem entrou; recarrega quando muda a pessoa da sessão. */
   private readonly account = resource({
@@ -113,4 +131,31 @@ export class UserMenu {
   protected readonly email = computed(() =>
     this.account.hasValue() ? this.account.value().email : null,
   );
+
+  /**
+   * Sai neste dispositivo ou, depois de confirmar, em todos. A sessão local some mesmo se a
+   * chamada falhar (`SessionService.signOut`), e o app vai para o login do mesmo jeito: nenhum
+   * token continua valendo aqui (UC03, pós-condição).
+   */
+  protected async signOut(everywhere = false): Promise<void> {
+    if (
+      everywhere &&
+      !(await confirmAction(this.dialog, {
+        title: 'Sair de todos os dispositivos?',
+        message:
+          'As sessões abertas em outros aparelhos e navegadores também serão encerradas, e será ' +
+          'preciso entrar de novo em cada um.',
+        confirmLabel: 'Sair de todos',
+      }))
+    ) {
+      return;
+    }
+
+    try {
+      await this.session.signOut(everywhere);
+    } catch {
+      // A sessão local já foi apagada; a falha da API não muda o que a pessoa vê.
+    }
+    await this.router.navigateByUrl(LOGIN_PATH);
+  }
 }
