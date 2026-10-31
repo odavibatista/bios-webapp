@@ -116,6 +116,11 @@ Depois do envio, cadastro e reenvio mostram só a mensagem da API, igual para e-
 (RF01 b). Na versão de apresentação, o `bios-mail-preview` faz as vezes da caixa de entrada: mostra como
 hiperlink o link que o e-mail traria, ou diz que nada chegou.
 
+`/entrar` abre a sessão e leva ao destino guardado em `?voltar=`, se for um caminho do próprio app
+(`safeReturnUrl`), ou ao `/painel`. As mensagens são as da API, sem apontar qual campo errou. Conta não
+confirmada oferece o reenvio do link; bloqueio por tentativas mostra o tempo restante e trava o botão
+até lá. A senha de quem entra só precisa existir (`currentPasswordRules`), sem a política da senha nova.
+
 ## Estados de tela e erros
 
 Toda tela que carrega dados usa os mesmos estados (`src/app/shared/`, NFIN03):

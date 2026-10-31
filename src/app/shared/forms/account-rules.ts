@@ -68,6 +68,18 @@ export const passwordRules = rules((value) => [
 ]);
 
 /**
+ * Senha de quem entra (login, confirmação com a senha atual): basta que exista, até 128
+ * caracteres. A política da senha nova não se aplica, como na API: validar força aqui revelaria a
+ * regra e trancaria contas de senha antiga.
+ */
+export const currentPasswordRules = rules((value) => [
+  ...(value.length ? [] : ['Informe a senha.']),
+  ...(value.length > PASSWORD_MAX_LENGTH
+    ? [`A senha deve ter no máximo ${PASSWORD_MAX_LENGTH} caracteres.`]
+    : []),
+]);
+
+/**
  * O que o `mat-error` do campo mostra: as regras que o valor quebra ou, depois do envio, o que a
  * API disse do campo.
  */

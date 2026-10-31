@@ -1,6 +1,6 @@
 import { expect, test } from './support/test';
 
-// O painel com sessão (menu por papel, acesso negado) entra no e2e junto com o login (#20).
+// O painel com sessão (menu por papel, acesso negado) está em `login.spec.ts`.
 test.describe('painel sem sessão', () => {
   test('o painel leva ao login, guardando o destino', async ({ page }) => {
     await page.goto('/painel');
