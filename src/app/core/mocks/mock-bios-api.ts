@@ -399,13 +399,7 @@ export class MockBiosApi extends BiosApi {
       if (this.isBlocked(email)) throw this.error('requestEmailChange/dominio-bloqueado', path);
 
       // E-mail de outra conta: a mesma resposta, sem enviar nada (UC05, regra 5).
-      if (!this.accountByEmail(email)) {
-        // Pedir outra troca invalida o link anterior (UC05, regra 4).
-        this.linkTokens
-          .filter((link) => link.accountId === account.id && link.kind === 'confirmar-novo-email')
-          .forEach((link) => (link.used = true));
-        this.sendLink(account, 'confirmar-novo-email', email);
-      }
+      if (!this.accountByEmail(email)) this.sendLink(account, 'confirmar-novo-email', email);
 
       return this.d.capturedBody<Api.RequestEmailChangeResponse>('requestEmailChange/sucesso');
     });
@@ -857,9 +851,16 @@ export class MockBiosApi extends BiosApi {
     }
   }
 
+  /**
+   * Manda um link novo e invalida os pendentes do mesmo tipo da conta, como a API ao emitir um
+   * token (UC01 regra 2, UC04, UC05 regra 4): só o link mais recente vale.
+   */
   private sendLink(account: Account, kind: MockEmail['kind'], to: string): void {
     const token = `mock-link-${this.next()}`;
 
+    this.linkTokens
+      .filter((link) => link.accountId === account.id && link.kind === kind)
+      .forEach((link) => (link.used = true));
     this.linkTokens.push({
       token,
       kind,
