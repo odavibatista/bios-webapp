@@ -1,7 +1,6 @@
 import { Route, Routes } from '@angular/router';
 import { privateByDefault } from './core/session/private-by-default.guard';
 import { requireRole, withSession } from './core/session/role.guards';
-import { PanelLayout } from './layout/panel-layout/panel-layout';
 
 const notFound: Route = {
   path: '**',
@@ -28,7 +27,9 @@ export const routes: Routes = [
       },
       {
         path: '',
-        component: PanelLayout,
+        // Sob demanda: quem só vê a página inicial não baixa a casca do painel.
+        loadComponent: () =>
+          import('./layout/panel-layout/panel-layout').then((m) => m.PanelLayout),
         children: [
           {
             path: 'painel',

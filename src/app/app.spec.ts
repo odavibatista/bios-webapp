@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { TestBed } from '@angular/core/testing';
+import { DeferBlockState, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { render, screen, within } from '@testing-library/angular';
 import { App } from './app';
@@ -83,6 +83,7 @@ describe('App', () => {
         provideRouter([]),
         { provide: BiosApi, useValue: { getOwnAccount: () => new Promise(() => undefined) } },
       ],
+      deferBlockStates: DeferBlockState.Complete,
       configureTestBed: () => {
         TestBed.inject(SessionStore).store({
           access_token: 'a',
@@ -94,8 +95,9 @@ describe('App', () => {
       },
     });
 
+    // O menu vem sob demanda (`@defer`), fora do bundle inicial.
     expect(
-      within(screen.getByRole('banner')).getByRole('button', { name: /Usuário/ }),
+      await within(screen.getByRole('banner')).findByRole('button', { name: /Usuário/ }),
     ).toBeTruthy();
   });
 });
