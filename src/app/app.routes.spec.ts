@@ -130,6 +130,20 @@ describe('routes', () => {
     expect(anonymous.url).toBe('/entrar?voltar=%2Fconta%2Fsenha');
   });
 
+  it('a conta é privada: com sessão abre no painel; sem ela, leva ao login', async () => {
+    const signedIn = await navigate('/conta', 'USER');
+
+    expect(signedIn.url).toBe('/conta');
+    expect(signedIn.title).toBe('Minha conta — BIOS');
+    expect(signedIn.heading).toBe('Minha conta');
+    expect(signedIn.inPanel).toBe(true);
+
+    TestBed.resetTestingModule();
+    const anonymous = await navigate('/conta');
+
+    expect(anonymous.url).toBe('/entrar?voltar=%2Fconta');
+  });
+
   it('USER na administração vai para o acesso negado', async () => {
     const page = await navigate('/admin/dominios-bloqueados', 'USER');
 

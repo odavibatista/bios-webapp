@@ -134,6 +134,20 @@ The account menu has "Sair" (sign out) and "Sair de todos os dispositivos" (sign
 second asks for confirmation (`confirmAction`, in `shared/dialogs/`, with initial focus on "Cancelar").
 The local session is cleared even if the call fails, and the app goes to the login page.
 
+## Account
+
+`/conta` (`src/app/features/account/`) shows the signed-in person's data (name, email, role and address)
+and edits the name and the address. The account comes from `OwnAccount` (`core/account/`), the same one
+the top bar menu reads: on save, the API's response applies in both places, without another read.
+
+- **Only what changed:** "Salvar" is enabled only when something changed (`accountChanges`), and the
+  edit sends only what changed; the address goes whole, with the postal code as digits.
+- **Optional address:** without a saved address, blank fields are not required; starting to fill them in
+  requires the others, with the API's rules and messages (`shared/forms/address-rules.ts`). The postal
+  code has a mask (`00000-000`) and the state comes from the 27 abbreviations.
+- **Remove address:** asks for confirmation and sends `address: null`.
+- Email change (FE-13) and account deletion (FE-14) come in as sections of this page.
+
 ## Screen states and errors
 
 Every screen that loads data uses the same states (`src/app/shared/`, NFIN03):

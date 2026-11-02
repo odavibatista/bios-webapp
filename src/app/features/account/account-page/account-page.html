@@ -1,0 +1,140 @@
+<h1>Minha conta</h1>
+
+<bios-async-state
+  [loading]="account.isLoading() && !account.hasValue()"
+  [error]="account.hasValue() ? null : account.error()"
+  emptyMessage=""
+  loadingLabel="Carregando a conta…"
+  (retry)="account.reload()"
+>
+  @if (account.hasValue()) {
+    @let saved = account.value();
+
+    <section class="card" aria-labelledby="titulo-dados">
+      <h2 id="titulo-dados">Seus dados</h2>
+      <dl class="data">
+        <dt>Nome</dt>
+        <dd>{{ saved.name }}</dd>
+        <dt>E-mail</dt>
+        <dd>{{ saved.email }}</dd>
+        <dt>Papel</dt>
+        <dd>{{ roleLabel(saved.role) }}</dd>
+        <dt>Endereço</dt>
+        <dd>
+          @if (saved.address; as address) {
+            <address>
+              {{ address.street }}, {{ address.number }}
+              @if (address.complement) {
+                — {{ address.complement }}
+              }
+              <br />
+              {{ address.neighborhood }}, {{ address.city }} – {{ address.state }}
+              <br />
+              CEP {{ formatPostalCode(address.postal_code) }}
+            </address>
+          } @else {
+            Nenhum endereço informado.
+          }
+        </dd>
+      </dl>
+    </section>
+
+    <section class="card" aria-labelledby="titulo-editar">
+      <h2 id="titulo-editar">Editar dados</h2>
+      <p class="lead">O e-mail é a forma de entrar e não muda por aqui.</p>
+
+      <bios-form-error-summary [messages]="formErrors()" />
+
+      <form [formGroup]="form" (ngSubmit)="save()" novalidate>
+        <mat-form-field appearance="outline" class="field">
+          <mat-label>Nome</mat-label>
+          <input matInput formControlName="name" autocomplete="name" />
+          <mat-error>{{ messageOf(form.controls.name) }}</mat-error>
+        </mat-form-field>
+
+        <fieldset class="address" formGroupName="address">
+          <legend>Endereço <span class="optional">(opcional)</span></legend>
+
+          <mat-form-field appearance="outline" class="cep">
+            <mat-label>CEP</mat-label>
+            <input
+              matInput
+              formControlName="postal_code"
+              inputmode="numeric"
+              autocomplete="postal-code"
+              maxlength="9"
+              (input)="maskPostalCode()"
+            />
+            <mat-hint>8 dígitos</mat-hint>
+            <mat-error>{{ messageOf(form.controls.address.controls.postal_code) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="street">
+            <mat-label>Logradouro</mat-label>
+            <input matInput formControlName="street" autocomplete="address-line1" />
+            <mat-error>{{ messageOf(form.controls.address.controls.street) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="number">
+            <mat-label>Número</mat-label>
+            <input matInput formControlName="number" />
+            <mat-hint>Ou "s/n"</mat-hint>
+            <mat-error>{{ messageOf(form.controls.address.controls.number) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="complement">
+            <mat-label>Complemento (opcional)</mat-label>
+            <input matInput formControlName="complement" autocomplete="address-line2" />
+            <mat-error>{{ messageOf(form.controls.address.controls.complement) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="neighborhood">
+            <mat-label>Bairro</mat-label>
+            <input matInput formControlName="neighborhood" autocomplete="address-level3" />
+            <mat-error>{{ messageOf(form.controls.address.controls.neighborhood) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="city">
+            <mat-label>Cidade</mat-label>
+            <input matInput formControlName="city" autocomplete="address-level2" />
+            <mat-error>{{ messageOf(form.controls.address.controls.city) }}</mat-error>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="state">
+            <mat-label>UF</mat-label>
+            <mat-select formControlName="state">
+              <mat-option value="">—</mat-option>
+              @for (state of states; track state) {
+                <mat-option [value]="state">{{ state }}</mat-option>
+              }
+            </mat-select>
+            <mat-error>{{ messageOf(form.controls.address.controls.state) }}</mat-error>
+          </mat-form-field>
+        </fieldset>
+
+        <div class="actions">
+          <button mat-flat-button type="submit" [disabled]="saving() || !changes()">
+            {{ saving() ? 'Salvando…' : 'Salvar' }}
+          </button>
+          @if (saved.address) {
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="saving()"
+              (click)="removeAddress()"
+            >
+              Remover endereço
+            </button>
+          }
+        </div>
+        <p class="notice" role="status">{{ notice() }}</p>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="titulo-seguranca">
+      <h2 id="titulo-seguranca">Segurança</h2>
+      <p>Ao trocar a senha, todas as sessões abertas são encerradas.</p>
+      <a mat-stroked-button routerLink="/conta/senha">Alterar a senha</a>
+    </section>
+  }
+</bios-async-state>
