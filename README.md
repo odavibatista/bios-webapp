@@ -199,6 +199,19 @@ Com um ODS, cada empresa traz índice e confiança em colunas separadas; sem cá
 nunca zero. A lista é tabela em tela larga e cartões abaixo de 720 px; a tabela rola dentro do próprio
 contêiner. ODS fora dos calculados mostra os disponíveis, com botão para pesquisar em cada um.
 
+## Setores
+
+`/setores` mostra a evolução do índice médio de um setor (divisão CNAE) num ODS, mês a mês
+(`src/app/features/sectors/`). Setor e ODS ficam na URL (`/setores?cnae=24&ods=13`); o campo aceita
+divisão, grupo, classe ou subclasse, com ou sem máscara, e sugere os setores de `listSectors`. Tudo é
+agregado: nenhuma empresa aparece na tela.
+
+O gráfico de linha (ECharts, só os módulos usados, carregado sob demanda) põe índice médio e confiança
+média em eixos separados, nunca combinados; a tabela ao lado traz os mesmos números para o leitor de
+tela. Média omitida por amostra mínima é lacuna explicada, nunca zero, e as contagens continuam visíveis.
+Com menos de dois meses registrados, a tela diz que o histórico ainda é insuficiente e mostra o que já
+há. Na versão de apresentação, só aparecem as janelas capturadas da API: nenhum mês é gerado no front.
+
 ## Tema
 
 As cores vêm da apresentação do projeto (`bios-docs/assets/BIOS - PPTX.pptx`). As paletas do Material 3
