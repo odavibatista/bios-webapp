@@ -1,7 +1,7 @@
 <h1>Entrar</h1>
 
-@if (sessionEnded()) {
-  <p class="notice" role="status">Sua sessão terminou. Entre de novo para continuar.</p>
+@if (notice(); as notice) {
+  <p class="notice" role="status">{{ notice }}</p>
 } @else {
   <p class="lead">Use o e-mail e a senha da sua conta do BIOS.</p>
 }

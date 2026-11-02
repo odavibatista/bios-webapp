@@ -113,6 +113,13 @@ The confirmation route is the one in the link the API emails. Name, email and pa
 pattern, the same as bios-core-api. `bios-password-field` has a show-password button and, for a new
 password, the policy visible before the first error.
 
+Password: `/esqueci-senha` requests the link (same message whether or not the account exists) and
+`/redefinir-senha/:token`, the route in the API's email link, sets the new one; a password outside the
+policy does not spend the link. At `/conta/senha`, a signed-in user changes the password by giving the
+current one; API errors without `details` (wrong current password, new equal to current) mark the right
+field (`setApiError`). Changing or resetting ends every session, this browser's included: the app clears
+the local session and the login page says why (`?senha=alterada` or `?senha=redefinida`).
+
 After submitting, sign-up and resend show only the API's message, the same for a new and an already
 registered email (RF01 b). In the presentation build, `bios-mail-preview` stands in for the inbox: it
 shows the link the email would carry as a hyperlink, or says nothing arrived.
