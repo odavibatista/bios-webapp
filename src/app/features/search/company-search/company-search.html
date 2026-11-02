@@ -1,0 +1,181 @@
+<h1>Pesquisar empresas</h1>
+<p class="lead">
+  Monte uma lista de empresas da base do BIOS por nome, UF, município e CNAE e, num ODS escolhido,
+  por índice e confiança mínimos.
+</p>
+
+<section class="criteria" aria-labelledby="titulo-criterios">
+  <h2 id="titulo-criterios" class="visually-hidden">Critérios da pesquisa</h2>
+
+  <bios-form-error-summary [messages]="formErrors()" />
+
+  <form [formGroup]="form" (ngSubmit)="search()" novalidate>
+    <div class="fields">
+      <mat-form-field appearance="outline">
+        <mat-label>Nome da empresa</mat-label>
+        <input matInput formControlName="name" autocomplete="off" />
+        <mat-hint>Razão social ou nome fantasia, inteiro ou em parte</mat-hint>
+        <mat-error>{{ messageOf(form.controls.name) }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>UF</mat-label>
+        <mat-select formControlName="uf">
+          <mat-option value="">Todas</mat-option>
+          @for (uf of ufs; track uf) {
+            <mat-option [value]="uf">{{ uf }}</mat-option>
+          }
+        </mat-select>
+        <mat-error>{{ messageOf(form.controls.uf) }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Município</mat-label>
+        <input matInput formControlName="city" autocomplete="off" />
+        <mat-hint>Nome inteiro; acento e caixa não importam</mat-hint>
+        <mat-error>{{ messageOf(form.controls.city) }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>CNAE</mat-label>
+        <input matInput formControlName="cnae" inputmode="numeric" autocomplete="off" />
+        <mat-hint>De 2 a 7 dígitos, com ou sem pontuação (ex.: 24.51-2)</mat-hint>
+        <mat-error>{{ messageOf(form.controls.cnae) }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>ODS</mat-label>
+        <mat-select formControlName="ods">
+          <mat-option [value]="null">Nenhum</mat-option>
+          @if (odsList.hasValue()) {
+            @for (ods of odsList.value().data; track ods.ods_number) {
+              <mat-option [value]="ods.ods_number">
+                ODS {{ ods.ods_number }} — {{ ods.title }}
+              </mat-option>
+            }
+          }
+        </mat-select>
+        @if (odsList.error()) {
+          <mat-hint>Não foi possível carregar os ODS.</mat-hint>
+        } @else {
+          <mat-hint>Os ODS que o BIOS calcula</mat-hint>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Índice mínimo</mat-label>
+        <input matInput formControlName="min_score" inputmode="decimal" autocomplete="off" />
+        <mat-hint>
+          {{ form.controls.ods.value === null ? 'Escolha um ODS para usar' : 'De −100 a 100' }}
+        </mat-hint>
+        <mat-error>{{ messageOf(form.controls.min_score) }}</mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Confiança mínima</mat-label>
+        <input matInput formControlName="min_confidence" inputmode="decimal" autocomplete="off" />
+        <mat-hint>
+          {{ form.controls.ods.value === null ? 'Escolha um ODS para usar' : 'De 0 a 1' }}
+        </mat-hint>
+        <mat-error>{{ messageOf(form.controls.min_confidence) }}</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="actions">
+      <button mat-flat-button type="submit" aria-describedby="dica-criterio">Pesquisar</button>
+      <button mat-button type="button" (click)="clear()">Limpar</button>
+      <p id="dica-criterio" class="hint">Informe ao menos um critério.</p>
+    </div>
+  </form>
+</section>
+
+<section class="results" aria-labelledby="titulo-resultados">
+  <h2 id="titulo-resultados">Resultados</h2>
+
+  @if (!searched()) {
+    <p class="idle">Escolha ao menos um critério e pesquise.</p>
+  } @else if (failure(); as failure) {
+    @if (failure.validOds.length) {
+      <div class="unavailable" role="alert">
+        <p>{{ failure.view.message }}</p>
+        <p>Pesquise num dos ODS disponíveis:</p>
+        <ul>
+          @for (ods of failure.validOds; track ods) {
+            <li>
+              <button mat-stroked-button type="button" (click)="searchOds(ods)">
+                {{ odsTitle(ods) }}
+              </button>
+            </li>
+          }
+        </ul>
+      </div>
+    } @else if (failure.fieldMessages.length) {
+      <bios-form-error-summary [messages]="failure.fieldMessages" />
+    } @else {
+      <bios-error-state [error]="failure.error" (retry)="results.reload()" />
+    }
+  } @else {
+    <bios-async-state
+      [loading]="results.isLoading()"
+      [empty]="results.hasValue() && results.value().data.length === 0"
+      emptyMessage="Nenhuma empresa atende aos filtros. Tente afrouxá-los: retire um critério ou diminua os mínimos."
+      loadingLabel="Pesquisando…"
+    >
+      @if (results.hasValue() && page(); as page) {
+        <div class="summary">
+          <p role="status">
+            {{ page.total === 1 ? '1 empresa encontrada' : page.total + ' empresas encontradas' }}
+          </p>
+          <!-- A exportação em XLSX (FE-22) entra aqui, ao lado do total. -->
+        </div>
+
+        @if (odsLabel(); as ods) {
+          <p class="score-note">
+            Índice de aderência ao {{ ods }} (de −100 a 100) e confiança (de 0 a 1) ficam lado a
+            lado e não se combinam. "Sem índice" quer dizer que o BIOS ainda não calculou o
+            {{ ods }} para a empresa; não é nota baixa.
+          </p>
+        }
+
+        <bios-search-results
+          [items]="results.value().data"
+          [odsLabel]="odsLabel()"
+          [layout]="cards() ? 'cards' : 'table'"
+        />
+
+        <nav class="pager" aria-label="Páginas dos resultados">
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="page.page <= 1"
+            (click)="goToPage(page.page - 1)"
+          >
+            Página anterior
+          </button>
+          <span>Página {{ page.page }} de {{ page.total_pages }}</span>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="page.page >= page.total_pages"
+            (click)="goToPage(page.page + 1)"
+          >
+            Próxima página
+          </button>
+          <mat-form-field appearance="outline" class="page-size" subscriptSizing="dynamic">
+            <mat-label>Itens por página</mat-label>
+            <select
+              #pageSize
+              matNativeControl
+              [value]="criteria().pageSize"
+              (change)="changePageSize(pageSize.value)"
+            >
+              @for (size of pageSizes(); track size) {
+                <option [value]="size" [selected]="size === criteria().pageSize">{{ size }}</option>
+              }
+            </select>
+          </mat-form-field>
+        </nav>
+      }
+    </bios-async-state>
+  }
+</section>
