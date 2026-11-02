@@ -1,6 +1,6 @@
 import { FormControl, FormGroup, Validators } from '@angular/forms';
 import type { ErrorView } from './describe-error';
-import { apiErrorOf, applyApiErrors } from './form-errors';
+import { apiErrorOf, applyApiErrors, setApiError } from './form-errors';
 
 function validation(fieldErrors: ErrorView['fieldErrors']): ErrorView {
   return {
@@ -72,6 +72,17 @@ describe('applyApiErrors', () => {
         message: 'A senha atual está incorreta.',
       }),
     ).toEqual(['A senha atual está incorreta.']);
+  });
+
+  it('setApiError marca o campo com uma mensagem da API sem details', () => {
+    const group = form();
+
+    setApiError(group.controls.password, 'A senha atual está incorreta.');
+
+    expect(apiErrorOf(group.controls.password)).toBe('A senha atual está incorreta.');
+    expect(group.controls.password.touched).toBe(true);
+    group.controls.password.setValue('outra');
+    expect(apiErrorOf(group.controls.password)).toBeNull();
   });
 
   it('o erro da API some quando o usuário corrige o campo', () => {
