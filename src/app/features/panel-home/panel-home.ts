@@ -3,6 +3,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { SessionStore } from '../../core/session/session-store';
+import { CnpjSearch } from '../profile/cnpj-search/cnpj-search';
 
 interface Shortcut {
   title: string;
@@ -36,10 +37,14 @@ export const PANEL_SHORTCUTS: readonly Shortcut[] = [
 /** Entrada do painel depois do login (#18). */
 @Component({
   selector: 'bios-panel-home',
-  imports: [MatCardModule, MatIconModule, RouterLink],
+  imports: [CnpjSearch, MatCardModule, MatIconModule, RouterLink],
   template: `
     <h1>Olá, {{ firstName() }}</h1>
-    <p class="lead">Por onde você quer começar?</p>
+    <section class="lookup" aria-labelledby="titulo-consulta-cnpj">
+      <h2 id="titulo-consulta-cnpj">Consultar uma empresa pelo CNPJ</h2>
+      <bios-cnpj-search />
+    </section>
+    <p class="lead">Ou comece por aqui:</p>
     <ul class="shortcuts">
       @for (shortcut of shortcuts; track shortcut.path) {
         <li>
@@ -70,6 +75,16 @@ export const PANEL_SHORTCUTS: readonly Shortcut[] = [
     .lead {
       margin: 0 0 1.5rem;
       color: var(--bios-brand-moss);
+    }
+
+    .lookup {
+      max-width: 36rem;
+      margin: 1rem 0 2rem;
+
+      h2 {
+        margin: 0 0 0.75rem;
+        font: var(--mat-sys-title-medium);
+      }
     }
 
     .shortcuts {
