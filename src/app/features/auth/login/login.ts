@@ -69,8 +69,25 @@ export class Login {
   readonly voltar = input<string>();
   /** `encerrada` quando a sessão terminou e a renovação não deu certo (#15). */
   readonly sessao = input<string>();
+  /**
+   * `alterada` ou `redefinida` depois de trocar ou redefinir a senha (#22): as duas encerram todas
+   * as sessões (UC04, regra 5), e a tela diz por que pede o login de novo.
+   */
+  readonly senha = input<string>();
 
-  protected readonly sessionEnded = computed(() => this.sessao() === 'encerrada');
+  /** Por que a pessoa voltou ao login, quando não foi por escolha dela. */
+  protected readonly notice = computed(() => {
+    if (this.senha() === 'alterada') {
+      return 'Sua senha foi alterada e todas as sessões foram encerradas. Entre com a nova senha.';
+    }
+    if (this.senha() === 'redefinida') {
+      return 'Sua senha foi redefinida e todas as sessões foram encerradas. Entre com a nova senha.';
+    }
+
+    return this.sessao() === 'encerrada'
+      ? 'Sua sessão terminou. Entre de novo para continuar.'
+      : null;
+  });
 
   protected readonly form = new FormGroup({
     email: new FormControl('', { nonNullable: true, validators: [emailRules] }),

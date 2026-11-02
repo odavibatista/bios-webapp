@@ -17,7 +17,7 @@ class Destination {}
 const USER_EMAIL = 'apresentacao@example.com';
 const PASSWORD = 'Apresentacao2026';
 
-async function renderLogin(inputs: { voltar?: string; sessao?: string } = {}) {
+async function renderLogin(inputs: { voltar?: string; sessao?: string; senha?: string } = {}) {
   const result = await render(Login, {
     inputs,
     providers: [
@@ -196,6 +196,28 @@ describe('Login', () => {
     expect(screen.getByRole('status').textContent).toBe(
       'Sua sessão terminou. Entre de novo para continuar.',
     );
+  });
+
+  it.each([
+    [
+      'alterada',
+      'Sua senha foi alterada e todas as sessões foram encerradas. Entre com a nova senha.',
+    ],
+    [
+      'redefinida',
+      'Sua senha foi redefinida e todas as sessões foram encerradas. Entre com a nova senha.',
+    ],
+  ])('senha %s: avisa que todas as sessões caíram', async (senha, notice) => {
+    await renderLogin({ senha });
+
+    expect(screen.getByRole('status').textContent).toBe(notice);
+  });
+
+  it('sem motivo, não há aviso, só a orientação', async () => {
+    await renderLogin({ senha: 'qualquer' });
+
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByText('Use o e-mail e a senha da sua conta do BIOS.')).toBeTruthy();
   });
 
   it('leva ao cadastro e ao "esqueci a senha"', async () => {
