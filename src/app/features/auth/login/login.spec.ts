@@ -186,7 +186,10 @@ describe('Login', () => {
     expect((await screen.findByRole('alert')).textContent).toContain(
       'Acesso temporariamente bloqueado.',
     );
-    expect(screen.getByText('Você poderá tentar de novo em 15 min.')).toBeTruthy();
+    // Com a máquina carregada, o primeiro tique pode chegar antes desta linha.
+    expect(
+      screen.getByText(/^Você poderá tentar de novo em (15 min|14 min 5\d s)\.$/),
+    ).toBeTruthy();
     expect(TestBed.inject(SessionStore).isAuthenticated()).toBe(false);
   });
 
