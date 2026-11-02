@@ -165,6 +165,20 @@ The phases and scenarios are in the script header. The `limites` phase blocks lo
 minutes (RF20), so it runs last; `setores` is repeated in another month so the sector evolution series
 has two real windows.
 
+## Company search
+
+`/pesquisa` (`src/app/features/search/`) filters by name, UF, city, CNAE and, for an SDG chosen among the
+ones BIOS calculates (`listOds`), by minimum score and confidence. Criteria live in the URL
+(`/pesquisa?cnae=24&ods=13&indice_min=0&pagina=2&por_pagina=50`): the link can be shared and the
+browser's back button redoes the previous search. `search-criteria.ts` converts between URL, form and API
+query; minimums and ordering (`ordem`, whose control comes with FE-21) only exist with the SDG, and the
+query never carries them without it. Field rules (`search-rules.ts`) are the API's.
+
+With an SDG, each company shows score and confidence in separate columns; without a calculation it shows
+"Sem índice" (no score), never zero. The list is a table on wide screens and cards below 720 px; the
+table scrolls inside its own container. An SDG outside the calculated ones shows the available ones, with
+a button to search in each.
+
 ## Theme
 
 The colors come from the project's presentation (`bios-docs/assets/BIOS - PPTX.pptx`). The Material 3

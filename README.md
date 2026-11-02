@@ -161,6 +161,19 @@ As fases e os cenários estão no cabeçalho do script. A fase `limites` bloquei
 minutos (RF20) e por isso é a última; a `setores` se repete em outro mês para a série da evolução
 setorial ter duas janelas reais.
 
+## Pesquisa de empresas
+
+`/pesquisa` (`src/app/features/search/`) filtra por nome, UF, município, CNAE e, num ODS escolhido entre
+os que o BIOS calcula (`listOds`), por índice e confiança mínimos. Os critérios moram na URL
+(`/pesquisa?cnae=24&ods=13&indice_min=0&pagina=2&por_pagina=50`): o link é compartilhável e o "voltar"
+do navegador refaz a pesquisa anterior. `search-criteria.ts` converte URL, formulário e consulta da API;
+mínimos e ordenação (`ordem`, com controle na FE-21) só existem com o ODS, e a consulta nunca os leva
+sem ele. As regras dos campos (`search-rules.ts`) são as da API.
+
+Com um ODS, cada empresa traz índice e confiança em colunas separadas; sem cálculo, aparece "Sem índice",
+nunca zero. A lista é tabela em tela larga e cartões abaixo de 720 px; a tabela rola dentro do próprio
+contêiner. ODS fora dos calculados mostra os disponíveis, com botão para pesquisar em cada um.
+
 ## Tema
 
 As cores vêm da apresentação do projeto (`bios-docs/assets/BIOS - PPTX.pptx`). As paletas do Material 3
