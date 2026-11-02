@@ -124,6 +124,12 @@ export const routes: Routes = [
               ),
           },
           {
+            path: 'conta',
+            title: 'Minha conta — BIOS',
+            loadComponent: () =>
+              import('./features/account/account-page/account-page').then((m) => m.AccountPage),
+          },
+          {
             path: 'admin',
             canActivateChild: [requireRole('ADMIN')],
             children: [notFound],
