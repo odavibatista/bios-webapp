@@ -144,7 +144,10 @@ lê: ao salvar, a resposta da API passa a valer nos dois lugares, sem outra leit
   preenchê-los cobra os demais, com as regras e as mensagens da API (`shared/forms/address-rules.ts`).
   O CEP tem máscara (`00000-000`) e a UF vem das 27 siglas.
 - **Remover endereço:** pede confirmação e envia `address: null`.
-- A troca de e-mail (FE-13) e a exclusão da conta (FE-14) entram como seções desta página.
+- **Excluir conta:** o diálogo lista o que será apagado e pede a senha; "Excluir conta" só habilita com
+  ela preenchida, e senha errada mantém o diálogo aberto, com o erro no campo. Excluída, a sessão local
+  some (a API já a encerrou) e o app volta à página inicial com o aviso (`/?conta=excluida`).
+- A troca de e-mail (FE-13) entra como outra seção desta página.
 
 ## Estados de tela e erros
 

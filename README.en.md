@@ -146,7 +146,11 @@ the top bar menu reads: on save, the API's response applies in both places, with
   requires the others, with the API's rules and messages (`shared/forms/address-rules.ts`). The postal
   code has a mask (`00000-000`) and the state comes from the 27 abbreviations.
 - **Remove address:** asks for confirmation and sends `address: null`.
-- Email change (FE-13) and account deletion (FE-14) come in as sections of this page.
+- **Delete account:** the dialog lists what will be erased and asks for the password; "Excluir conta" is
+  enabled only once it is filled in, and a wrong password keeps the dialog open, with the error on the
+  field. Once deleted, the local session is cleared (the API already ended it) and the app goes back to
+  the home page with a notice (`/?conta=excluida`).
+- Email change (FE-13) comes in as another section of this page.
 
 ## Screen states and errors
 
