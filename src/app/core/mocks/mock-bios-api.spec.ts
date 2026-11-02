@@ -644,6 +644,17 @@ describe('MockBiosApi', () => {
         ods_number: 13,
       });
     });
+
+    it('evolução setorial aceita grupo, classe e subclasse com máscara e recusa a divisão 00', async () => {
+      await expect(
+        api.getSectorEvolution({ path: { cnae: '2431-8/00' }, query: { ods: 13 } }),
+      ).resolves.toMatchObject({ cnae_division: '24' });
+      await expectError(
+        api.getSectorEvolution({ path: { cnae: '00' }, query: { ods: 13 } }),
+        422,
+        'VALIDATION_FAILED',
+      );
+    });
   });
 
   it('exportação acima do teto configurado: 422 com o total e o máximo', async () => {
