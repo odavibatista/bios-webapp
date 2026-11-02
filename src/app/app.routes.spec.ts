@@ -165,10 +165,20 @@ describe('routes', () => {
     expect(page.heading).toBe('Acesso negado');
   });
 
-  it('ADMIN entra na administração', async () => {
+  it('ADMIN entra na blacklist de domínios, dentro do painel', async () => {
     const page = await navigate('/admin/dominios-bloqueados', 'ADMIN');
 
     expect(page.url).toBe('/admin/dominios-bloqueados');
+    expect(page.title).toBe('Domínios bloqueados — BIOS');
+    expect(page.heading).toBe('Domínios bloqueados');
+    expect(page.inPanel).toBe(true);
+  });
+
+  it('ADMIN em endereço desconhecido da administração vê o "não encontrado"', async () => {
+    const page = await navigate('/admin/nao-existe', 'ADMIN');
+
+    expect(page.title).toBe('Página não encontrada — BIOS');
+    expect(page.inPanel).toBe(true);
   });
 
   it('sem sessão, a administração leva ao login', async () => {
