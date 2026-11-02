@@ -12,12 +12,13 @@ import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router
 import { filter, skip } from 'rxjs';
 import { PRESENTATION_MODE } from './core/presentation-mode';
 import { SessionStore } from './core/session/session-store';
+import { CnpjSearch } from './features/profile/cnpj-search/cnpj-search';
 import { UserMenu } from './layout/user-menu/user-menu';
 
 /** Casca do app: barra superior, área das rotas e rodapé. */
 @Component({
   selector: 'bios-root',
-  imports: [MatIconModule, MatToolbarModule, RouterLink, RouterOutlet, UserMenu],
+  imports: [CnpjSearch, MatIconModule, MatToolbarModule, RouterLink, RouterOutlet, UserMenu],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

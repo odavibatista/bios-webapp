@@ -83,6 +83,23 @@ export const routes: Routes = [
               import('./features/panel-home/panel-home').then((m) => m.PanelHome),
           },
           {
+            path: 'empresas',
+            title: 'Empresas — BIOS',
+            loadComponent: () =>
+              import('./features/profile/company-lookup/company-lookup').then(
+                (m) => m.CompanyLookup,
+              ),
+          },
+          {
+            // O CNPJ normalizado, sem a máscara (a barra dela nunca vai para a URL).
+            path: 'empresas/:cnpj',
+            title: 'Empresa — BIOS',
+            loadComponent: () =>
+              import('./features/profile/company-profile/company-profile').then(
+                (m) => m.CompanyProfile,
+              ),
+          },
+          {
             path: 'acesso-negado',
             title: 'Acesso negado — BIOS',
             loadComponent: () =>

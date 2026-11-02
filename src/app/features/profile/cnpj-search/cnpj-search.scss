@@ -1,0 +1,45 @@
+:host {
+  display: block;
+}
+
+.form-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.field {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+// Alinha o botão com a caixa do campo (a dica fica embaixo).
+.submit {
+  margin-top: 0.5rem;
+}
+
+.toolbar-search {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.toolbar-input {
+  width: 12rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: var(--mat-sys-corner-full);
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  &::placeholder {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--bios-brand-leaf);
+    outline-offset: 2px;
+  }
+}
