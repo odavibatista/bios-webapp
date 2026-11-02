@@ -100,6 +100,15 @@ export const routes: Routes = [
               ),
           },
           {
+            // Setor e ODS vão na URL (`?cnae=24&ods=13`), como na pesquisa.
+            path: 'setores',
+            title: 'Evolução por setor — BIOS',
+            loadComponent: () =>
+              import('./features/sectors/sector-evolution/sector-evolution').then(
+                (m) => m.SectorEvolution,
+              ),
+          },
+          {
             path: 'acesso-negado',
             title: 'Acesso negado — BIOS',
             loadComponent: () =>

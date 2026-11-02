@@ -100,6 +100,20 @@ describe('routes', () => {
     expect(page.inPanel).toBe(true);
   });
 
+  it('a evolução por setor é privada e abre dentro da casca, com setor e ODS da URL', async () => {
+    expect((await navigate('/setores?cnae=24&ods=13')).url).toBe(
+      '/entrar?voltar=%2Fsetores%3Fcnae%3D24%26ods%3D13',
+    );
+
+    TestBed.resetTestingModule();
+    const page = await navigate('/setores?cnae=24&ods=13', 'USER');
+
+    expect(page.url).toBe('/setores?cnae=24&ods=13');
+    expect(page.title).toBe('Evolução por setor — BIOS');
+    expect(page.heading).toBe('Evolução por setor');
+    expect(page.inPanel).toBe(true);
+  });
+
   it.each([
     ['/empresas', 'Empresas — BIOS'],
     ['/empresas/00990842000138', 'Empresa — BIOS'],
