@@ -112,6 +112,13 @@ A rota da confirmação é a do link que a API manda por e-mail. As regras de no
 `z.email()` do Zod 4, o mesmo do bios-core-api. O `bios-password-field` traz o botão de mostrar a senha e,
 na senha nova, a política visível antes do primeiro erro.
 
+Senha: `/esqueci-senha` pede o link (mesma mensagem exista ou não a conta) e `/redefinir-senha/:token`,
+a rota do link do e-mail da API, define a nova; uma senha fora da política não gasta o link. Em
+`/conta/senha`, quem está logado troca a senha informando a atual; os erros da API sem `details`
+(senha atual errada, nova igual à atual) marcam o campo certo (`setApiError`). Trocar ou redefinir
+encerra todas as sessões, inclusive a deste navegador: o app apaga a sessão local e o login diz por quê
+(`?senha=alterada` ou `?senha=redefinida`).
+
 Depois do envio, cadastro e reenvio mostram só a mensagem da API, igual para e-mail novo e já cadastrado
 (RF01 b). Na versão de apresentação, o `bios-mail-preview` faz as vezes da caixa de entrada: mostra como
 hiperlink o link que o e-mail traria, ou diz que nada chegou.

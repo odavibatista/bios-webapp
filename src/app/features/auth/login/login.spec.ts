@@ -17,7 +17,7 @@ class Destination {}
 const USER_EMAIL = 'apresentacao@example.com';
 const PASSWORD = 'Apresentacao2026';
 
-async function renderLogin(inputs: { voltar?: string; sessao?: string } = {}) {
+async function renderLogin(inputs: { voltar?: string; sessao?: string; senha?: string } = {}) {
   const result = await render(Login, {
     inputs,
     providers: [
@@ -187,7 +187,10 @@ describe('Login', () => {
     expect((await screen.findByRole('alert')).textContent).toContain(
       'Acesso temporariamente bloqueado.',
     );
-    expect(screen.getByText('Você poderá tentar de novo em 15 min.')).toBeTruthy();
+    // Com a máquina carregada, o primeiro tique pode chegar antes desta linha.
+    expect(
+      screen.getByText(/^Você poderá tentar de novo em (15 min|14 min 5\d s)\.$/),
+    ).toBeTruthy();
     expect(TestBed.inject(SessionStore).isAuthenticated()).toBe(false);
   });
 
@@ -197,6 +200,28 @@ describe('Login', () => {
     expect(screen.getByRole('status').textContent).toBe(
       'Sua sessão terminou. Entre de novo para continuar.',
     );
+  });
+
+  it.each([
+    [
+      'alterada',
+      'Sua senha foi alterada e todas as sessões foram encerradas. Entre com a nova senha.',
+    ],
+    [
+      'redefinida',
+      'Sua senha foi redefinida e todas as sessões foram encerradas. Entre com a nova senha.',
+    ],
+  ])('senha %s: avisa que todas as sessões caíram', async (senha, notice) => {
+    await renderLogin({ senha });
+
+    expect(screen.getByRole('status').textContent).toBe(notice);
+  });
+
+  it('sem motivo, não há aviso, só a orientação', async () => {
+    await renderLogin({ senha: 'qualquer' });
+
+    expect(screen.queryByRole('status')).toBeNull();
+    expect(screen.getByText('Use o e-mail e a senha da sua conta do BIOS.')).toBeTruthy();
   });
 
   it('leva ao cadastro e ao "esqueci a senha"', async () => {
