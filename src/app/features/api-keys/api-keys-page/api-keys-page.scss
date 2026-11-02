@@ -1,0 +1,115 @@
+:host {
+  display: grid;
+  gap: 1.5rem;
+}
+
+h1 {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+  color: var(--bios-brand-green);
+}
+
+h2 {
+  margin: 0 0 0.75rem;
+  font: var(--mat-sys-title-large);
+
+  &:focus {
+    outline: none;
+  }
+}
+
+.lead {
+  max-width: 70ch;
+  margin: -0.75rem 0 0;
+  color: var(--bios-brand-moss);
+}
+
+.card {
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+}
+
+form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem 1rem;
+}
+
+.name {
+  flex: 1 1 18rem;
+  max-width: 32rem;
+}
+
+.actions {
+  padding-top: 0.5rem;
+}
+
+.feedback p {
+  margin: 0 0 0.75rem;
+}
+
+.notice {
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--mat-sys-primary);
+  background: var(--mat-sys-surface-container);
+}
+
+.revoke-error {
+  padding: 0.5rem 1rem;
+  border-left: 4px solid var(--mat-sys-error);
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
+.count {
+  margin: 0 0 0.5rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+// A tabela rola dentro do próprio contêiner no celular, nunca a página (NFIN02).
+.table-scroll {
+  overflow-x: auto;
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  text-align: left;
+  white-space: nowrap;
+}
+
+thead th {
+  font: var(--mat-sys-title-small);
+}
+
+tbody th {
+  font-weight: 600;
+  white-space: normal;
+}
+
+.usage {
+  p {
+    max-width: 70ch;
+  }
+
+  pre {
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--mat-sys-corner-small);
+    background: var(--mat-sys-surface-container-high);
+    overflow-x: auto;
+  }
+}
