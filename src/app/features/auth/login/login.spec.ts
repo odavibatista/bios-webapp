@@ -187,7 +187,7 @@ describe('Login', () => {
     expect((await screen.findByRole('alert')).textContent).toContain(
       'Acesso temporariamente bloqueado.',
     );
-    // Com a máquina carregada, o primeiro tique pode chegar antes desta linha.
+    // Com a máquina carregada, a contagem pode já ter andado um segundo (14 min 59 s).
     expect(
       screen.getByText(/^Você poderá tentar de novo em (15 min|14 min 5\d s)\.$/),
     ).toBeTruthy();

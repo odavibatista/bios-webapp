@@ -1,0 +1,109 @@
+import { provideRouter } from '@angular/router';
+import { render, screen, within } from '@testing-library/angular';
+import type { CompanySearchItem } from '../../../core/api/generated';
+import { SearchResults } from './search-results';
+
+const SCORED: CompanySearchItem = {
+  cnpj: '33592510000154',
+  legal_name: 'EMPRESA DEMONSTRACAO S.A.',
+  trade_name: 'DEMONSTRACAO',
+  registration_status: 'ATIVA',
+  city: 'OURO BRANCO',
+  uf: 'MG',
+  main_cnae: { code: '2451200', description: 'Fundição de ferro e aço' },
+  ods_score: { ods_number: 13, score_value: -12.5, confidence_value: 0.62 },
+};
+
+const UNSCORED: CompanySearchItem = {
+  ...SCORED,
+  cnpj: '11222333000181',
+  legal_name: 'OUTRA EMPRESA LTDA',
+  trade_name: null,
+  registration_status: 'BAIXADA',
+  ods_score: { ods_number: 13, score_value: null, confidence_value: null },
+};
+
+async function renderResults(
+  layout: 'table' | 'cards',
+  odsLabel: string | null,
+  items: CompanySearchItem[] = [SCORED, UNSCORED],
+) {
+  return render(SearchResults, {
+    inputs: { items, odsLabel, layout },
+    providers: [provideRouter([])],
+  });
+}
+
+describe('SearchResults', () => {
+  it('tabela: resumo da empresa e, com ODS, índice e confiança em colunas separadas', async () => {
+    await renderResults('table', 'ODS 13');
+
+    const headers = screen.getAllByRole('columnheader').map((cell) => cell.textContent.trim());
+    expect(headers).toEqual([
+      'Empresa',
+      'CNPJ',
+      'Situação',
+      'Município',
+      'CNAE principal',
+      'Índice no ODS 13',
+      'Confiança no ODS 13',
+    ]);
+
+    const [, first, second] = screen.getAllByRole('row');
+    const firstCells = within(first)
+      .getAllByRole('cell')
+      .map((cell) => cell.textContent.trim());
+    expect(firstCells).toEqual([
+      '33.592.510/0001-54',
+      'Ativa',
+      'OURO BRANCO/MG',
+      expect.stringContaining('2451200'),
+      '-12,5',
+      '0,62',
+    ]);
+    const secondCells = within(second)
+      .getAllByRole('cell')
+      .map((cell) => cell.textContent.trim());
+    expect(secondCells.slice(-2)).toEqual(['Sem índice', 'Sem cálculo']);
+    expect(secondCells[1]).toBe('Baixada');
+  });
+
+  it('o nome leva ao perfil da empresa', async () => {
+    await renderResults('table', null);
+
+    expect(
+      screen.getByRole('link', { name: 'EMPRESA DEMONSTRACAO S.A.' }).getAttribute('href'),
+    ).toBe('/empresas/33592510000154');
+  });
+
+  it('sem ODS escolhido, não há colunas de índice', async () => {
+    await renderResults('table', null);
+
+    expect(screen.getAllByRole('columnheader')).toHaveLength(5);
+    expect(screen.queryByText(/Índice no/)).toBeNull();
+  });
+
+  it('a tabela fica numa região rolável, alcançável pelo teclado', async () => {
+    await renderResults('table', 'ODS 13');
+
+    const region = screen.getByRole('region', { name: 'Empresas encontradas' });
+    expect(region.getAttribute('tabindex')).toBe('0');
+    expect(within(region).getByRole('table')).toBeTruthy();
+  });
+
+  it('cartões: os mesmos dados, com "Sem índice" em vez de zero', async () => {
+    await renderResults('cards', 'ODS 13');
+
+    const cards = within(screen.getByRole('list', { name: 'Empresas encontradas' })).getAllByRole(
+      'listitem',
+    );
+    expect(cards).toHaveLength(2);
+    expect(
+      within(cards[0]).getByRole('heading', { name: 'EMPRESA DEMONSTRACAO S.A.' }),
+    ).toBeTruthy();
+    expect(cards[0].textContent).toContain('-12,5');
+    expect(cards[1].textContent).toContain('Sem índice');
+    expect(cards[1].textContent).not.toMatch(/Índice no ODS 13\s*0\b/);
+    expect(screen.queryByRole('table')).toBeNull();
+  });
+});

@@ -1,0 +1,96 @@
+@if (layout() === 'table') {
+  <div class="table-scroll" role="region" aria-label="Empresas encontradas" tabindex="0">
+    <table>
+      <caption class="visually-hidden">
+        Empresas encontradas
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Empresa</th>
+          <th scope="col">CNPJ</th>
+          <th scope="col">Situação</th>
+          <th scope="col">Município</th>
+          <th scope="col">CNAE principal</th>
+          @if (odsLabel(); as ods) {
+            <th scope="col" class="number">Índice no {{ ods }}</th>
+            <th scope="col" class="number">Confiança no {{ ods }}</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of items(); track item.cnpj) {
+          <tr>
+            <th scope="row">
+              <a [routerLink]="['/empresas', item.cnpj]">{{ item.legal_name }}</a>
+              @if (item.trade_name) {
+                <span class="trade-name">{{ item.trade_name }}</span>
+              }
+            </th>
+            <td class="nowrap">{{ cnpj(item.cnpj) }}</td>
+            <td>{{ status(item.registration_status) }}</td>
+            <td>{{ item.city }}/{{ item.uf }}</td>
+            <td>
+              <span class="nowrap">{{ item.main_cnae.code }}</span>
+              <span class="cnae-description">{{ item.main_cnae.description }}</span>
+            </td>
+            @if (odsLabel()) {
+              <td class="number" [class.missing]="missing(item.ods_score?.score_value)">
+                {{ score(item.ods_score?.score_value) }}
+              </td>
+              <td class="number" [class.missing]="missing(item.ods_score?.confidence_value)">
+                {{ confidence(item.ods_score?.confidence_value) }}
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+} @else {
+  <ul class="cards" aria-label="Empresas encontradas">
+    @for (item of items(); track item.cnpj) {
+      <li>
+        <article class="card">
+          <h3>
+            <a [routerLink]="['/empresas', item.cnpj]">{{ item.legal_name }}</a>
+          </h3>
+          @if (item.trade_name) {
+            <p class="trade-name">{{ item.trade_name }}</p>
+          }
+          <dl>
+            <div>
+              <dt>CNPJ</dt>
+              <dd>{{ cnpj(item.cnpj) }}</dd>
+            </div>
+            <div>
+              <dt>Situação</dt>
+              <dd>{{ status(item.registration_status) }}</dd>
+            </div>
+            <div>
+              <dt>Município</dt>
+              <dd>{{ item.city }}/{{ item.uf }}</dd>
+            </div>
+            <div>
+              <dt>CNAE principal</dt>
+              <dd>{{ item.main_cnae.code }} — {{ item.main_cnae.description }}</dd>
+            </div>
+            @if (odsLabel(); as ods) {
+              <div>
+                <dt>Índice no {{ ods }}</dt>
+                <dd [class.missing]="missing(item.ods_score?.score_value)">
+                  {{ score(item.ods_score?.score_value) }}
+                </dd>
+              </div>
+              <div>
+                <dt>Confiança no {{ ods }}</dt>
+                <dd [class.missing]="missing(item.ods_score?.confidence_value)">
+                  {{ confidence(item.ods_score?.confidence_value) }}
+                </dd>
+              </div>
+            }
+          </dl>
+        </article>
+      </li>
+    }
+  </ul>
+}
