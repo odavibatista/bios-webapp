@@ -209,8 +209,8 @@ const UNACCENTED = new Set([
   'atencao',
   'protecao',
   'aplicacao',
+  // "meses" não leva acento: só o singular "mês" entra na lista.
   'mes',
-  'meses',
   'ja',
   'saida',
 ]);
