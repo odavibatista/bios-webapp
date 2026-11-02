@@ -1,0 +1,59 @@
+:host {
+  display: block;
+}
+
+// A tabela larga rola aqui dentro, nunca a página (NFIN02); com foco, o teclado também a rola.
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-small);
+
+  &:focus-visible {
+    outline: 2px solid var(--mat-sys-primary);
+    outline-offset: 2px;
+  }
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font: var(--mat-sys-body-medium);
+}
+
+th,
+td {
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+thead th {
+  font: var(--mat-sys-title-small);
+  background: var(--mat-sys-surface-container);
+  white-space: nowrap;
+}
+
+tbody tr:last-child > * {
+  border-bottom: 0;
+}
+
+tbody th {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.number {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.omitted {
+  font-style: italic;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.note {
+  margin: 0.75rem 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
