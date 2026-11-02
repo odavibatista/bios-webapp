@@ -132,6 +132,20 @@ O menu da conta tem "Sair" e "Sair de todos os dispositivos"; o segundo pede con
 (`confirmAction`, em `shared/dialogs/`, com o foco inicial em "Cancelar"). A sessão local é apagada
 mesmo se a chamada falhar, e o app vai para o login.
 
+## Conta
+
+`/conta` (`src/app/features/account/`) mostra os dados de quem entrou (nome, e-mail, papel e endereço) e
+edita o nome e o endereço. A conta vem de `OwnAccount` (`core/account/`), a mesma que o menu da barra
+lê: ao salvar, a resposta da API passa a valer nos dois lugares, sem outra leitura.
+
+- **Só o que mudou:** "Salvar" só habilita quando algo mudou (`accountChanges`), e a edição envia só o
+  que mudou; o endereço vai inteiro, com o CEP em dígitos.
+- **Endereço opcional:** sem endereço gravado, os campos em branco não são cobrados; começar a
+  preenchê-los cobra os demais, com as regras e as mensagens da API (`shared/forms/address-rules.ts`).
+  O CEP tem máscara (`00000-000`) e a UF vem das 27 siglas.
+- **Remover endereço:** pede confirmação e envia `address: null`.
+- A troca de e-mail (FE-13) e a exclusão da conta (FE-14) entram como seções desta página.
+
 ## Estados de tela e erros
 
 Toda tela que carrega dados usa os mesmos estados (`src/app/shared/`, NFIN03):

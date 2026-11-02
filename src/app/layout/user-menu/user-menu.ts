@@ -1,11 +1,11 @@
-import { ChangeDetectionStrategy, Component, computed, inject, resource } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { Router, RouterLink } from '@angular/router';
-import { BiosApi } from '../../core/api/bios-api';
+import { OwnAccount } from '../../core/account/own-account';
 import { LOGIN_PATH, SessionService } from '../../core/session/session.service';
 import { SessionStore } from '../../core/session/session-store';
 import { confirmAction } from '../../shared/dialogs/confirm-dialog';
@@ -13,7 +13,7 @@ import { roleLabel } from '../panel-nav';
 
 /**
  * Quem entrou, na barra do topo (#18): nome e papel, e o menu da conta. O nome e o e-mail vêm da
- * conta (`getOwnAccount`), para refletir uma edição; enquanto ela carrega, a barra mostra um
+ * conta (`OwnAccount`), para refletir uma edição; enquanto ela carrega, a barra mostra um
  * esqueleto, e não "undefined". O papel vem do token da sessão.
  *
  * "Sair" e "Sair de todos os dispositivos" (UC03, RF23; #21) encerram a sessão e levam ao login.
@@ -103,17 +103,13 @@ import { roleLabel } from '../panel-nav';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class UserMenu {
-  private readonly api = inject(BiosApi);
   private readonly store = inject(SessionStore);
   private readonly session = inject(SessionService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
 
-  /** A conta de quem entrou; recarrega quando muda a pessoa da sessão. */
-  private readonly account = resource({
-    params: () => this.store.user()?.id,
-    loader: () => this.api.getOwnAccount(),
-  });
+  /** A conta de quem entrou, a mesma que `/conta` edita: o nome novo aparece aqui ao salvar. */
+  private readonly account = inject(OwnAccount).account;
 
   protected readonly role = computed(() => {
     const user = this.store.user();

@@ -20,7 +20,8 @@ export const PASSWORD_MAX_LENGTH = 128;
 /** A política de senha, mostrada antes de a pessoa errar (UC01, regra 4). */
 export const PASSWORD_POLICY = `De ${PASSWORD_MIN_LENGTH} a ${PASSWORD_MAX_LENGTH} caracteres, com ao menos uma letra e um número.`;
 
-function rules(check: (value: string) => string[]): ValidatorFn {
+/** Validador a partir das mensagens que o valor quebra, na ordem da API (vazio: válido). */
+export function rules(check: (value: string) => string[]): ValidatorFn {
   return (control: AbstractControl): ValidationErrors | null => {
     const value: unknown = control.value;
     const messages = check(typeof value === 'string' ? value : '');

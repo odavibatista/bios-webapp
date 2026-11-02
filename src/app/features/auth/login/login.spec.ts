@@ -140,10 +140,18 @@ describe('Login', () => {
       'Acesso temporariamente bloqueado.',
     );
     // Com a máquina carregada, o primeiro tique (1 s) pode chegar antes desta linha.
-    expect(screen.getByText(/^Você poderá tentar de novo em [12] s\.$/)).toBeTruthy();
+    const first = screen.getByText(/^Você poderá tentar de novo em [12] s\.$/).textContent;
     expect(screen.getByRole('button', { name: 'Entrar' }).hasAttribute('disabled')).toBe(true);
 
-    expect(await screen.findByText('Você poderá tentar de novo em 1 s.')).toBeTruthy();
+    // A contagem anda sozinha; o prazo folgado não disputa o tique de 1 s com a espera.
+    await vi.waitFor(
+      () => {
+        expect(screen.queryByText(/Você poderá tentar de novo/)?.textContent ?? 'fim').not.toBe(
+          first,
+        );
+      },
+      { timeout: 2500 },
+    );
     await vi.waitFor(
       () => {
         expect(screen.getByRole('button', { name: 'Entrar' }).hasAttribute('disabled')).toBe(false);

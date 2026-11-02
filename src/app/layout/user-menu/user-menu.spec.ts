@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
+import { OwnAccount } from '../../core/account/own-account';
 import { BiosApi } from '../../core/api/bios-api';
 import type { AccountResponse } from '../../core/api/generated';
 import type { Role } from '../../core/session/role.guards';
@@ -96,6 +97,19 @@ describe('UserMenu', () => {
     expect(screen.getByRole('menuitem', { name: /Minha conta/ }).getAttribute('href')).toBe(
       '/conta',
     );
+  });
+
+  it('a edição da conta aparece na barra na hora, sem outra leitura (#23)', async () => {
+    const getOwnAccount = vi.fn(() => Promise.resolve(ACCOUNT));
+    const { fixture } = await renderMenu(getOwnAccount);
+    await screen.findByRole('button', { name: /Nome Editado/ });
+
+    // O que `OwnAccount.update` faz ao salvar: grava a resposta da API.
+    TestBed.inject(OwnAccount).account.set({ ...ACCOUNT, name: 'Nome Salvo em /conta' });
+    await fixture.whenStable();
+
+    expect(screen.getByRole('button', { name: /Nome Salvo em \/conta/ })).toBeTruthy();
+    expect(getOwnAccount).toHaveBeenCalledTimes(1);
   });
 
   it('se a conta não carregar, mostra o nome da sessão', async () => {
