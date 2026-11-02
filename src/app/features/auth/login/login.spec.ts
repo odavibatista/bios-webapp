@@ -131,7 +131,13 @@ describe('Login', () => {
 
   it('bloqueio: mostra o tempo restante, atualizado, e reabilita o botão ao fim', async () => {
     const { user, fixture } = await renderLogin();
-    vi.spyOn(TestBed.inject(SessionService), 'signIn').mockRejectedValueOnce(blocked(2));
+    vi.spyOn(TestBed.inject(SessionService), 'signIn').mockRejectedValueOnce(blocked(3));
+    const shownSeconds = () =>
+      Number(
+        /em (\d) s\.$/.exec(
+          screen.queryByText(/Você poderá tentar de novo/)?.textContent ?? '',
+        )?.[1],
+      );
 
     await signIn(user, USER_EMAIL, PASSWORD);
     await fixture.whenStable();
@@ -139,25 +145,34 @@ describe('Login', () => {
     expect((await screen.findByRole('alert')).textContent).toContain(
       'Acesso temporariamente bloqueado.',
     );
-    // Com a máquina carregada, o primeiro tique (1 s) pode chegar antes desta linha.
-    expect(screen.getByText(/^Você poderá tentar de novo em [12] s\.$/)).toBeTruthy();
+    // Com a máquina carregada, o primeiro tique pode chegar antes desta linha.
+    const first = shownSeconds();
+    expect([2, 3]).toContain(first);
     expect(screen.getByRole('button', { name: 'Entrar' }).hasAttribute('disabled')).toBe(true);
 
-    expect(await screen.findByText('Você poderá tentar de novo em 1 s.')).toBeTruthy();
+    // A contagem anda: o número cai sem a pessoa fazer nada.
+    await vi.waitFor(
+      () => {
+        expect(shownSeconds()).toBeLessThan(first);
+      },
+      { timeout: 3000 },
+    );
     await vi.waitFor(
       () => {
         expect(screen.getByRole('button', { name: 'Entrar' }).hasAttribute('disabled')).toBe(false);
       },
-      { timeout: 3000 },
+      { timeout: 5000 },
     );
     expect(screen.queryByText(/Você poderá tentar de novo/)).toBeNull();
-  });
+  }, 10_000);
 
   it('um novo bloqueio com o mesmo tempo recomeça a contagem', async () => {
     const { user } = await renderLogin();
     vi.spyOn(TestBed.inject(SessionService), 'signIn')
-      .mockRejectedValueOnce(blocked(1))
-      .mockRejectedValueOnce(blocked(1));
+      // O mesmo tempo nas duas (é isso que se prova), e longo o bastante para o texto da nova
+      // contagem ficar na tela de sobra mesmo com a máquina carregada.
+      .mockRejectedValueOnce(blocked(3))
+      .mockRejectedValueOnce(blocked(3));
     const button = () => screen.getByRole('button', { name: 'Entrar' });
 
     await signIn(user, USER_EMAIL, PASSWORD);
@@ -165,13 +180,13 @@ describe('Login', () => {
       () => {
         expect(button().hasAttribute('disabled')).toBe(false);
       },
-      { timeout: 3000 },
+      { timeout: 5000 },
     );
     await user.click(button());
 
-    expect(await screen.findByText('Você poderá tentar de novo em 1 s.')).toBeTruthy();
+    expect(await screen.findByText(/^Você poderá tentar de novo em [123] s\.$/)).toBeTruthy();
     expect(button().hasAttribute('disabled')).toBe(true);
-  });
+  }, 10_000);
 
   it('o bloqueio do mock real chega depois de 5 senhas erradas, e nem a senha certa entra', async () => {
     const { user, fixture } = await renderLogin();
