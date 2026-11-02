@@ -2,7 +2,6 @@ import {
   addressLines,
   companySizeLabel,
   formatCnae,
-  formatDateTime,
   formatZipcode,
   registrationStatusLabel,
 } from './registration-labels';
@@ -68,9 +67,5 @@ describe('rótulos do cadastro', () => {
         zipcode: null,
       }),
     ).toEqual(['FORTALEZA/CE']);
-  });
-
-  it('data e hora no horário de Brasília', () => {
-    expect(formatDateTime('2026-10-30T13:36:35.224Z')).toBe('30/10/2026, 10:36');
   });
 });

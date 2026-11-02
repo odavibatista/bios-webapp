@@ -58,15 +58,20 @@ describe('CreatedKeyDialog', () => {
   });
 
   it('se a cópia falhar, explica e deixa a chave selecionada para o Ctrl+C', async () => {
-    const { user } = await openDialog();
+    await openDialog();
     stubClipboard(() => Promise.reject(new Error('sem permissão')));
 
-    await user.click(screen.getByRole('button', { name: 'Copiar a chave' }));
+    // `fireEvent`, e não o `user.click`: o ponteiro simulado do user-event mexe na seleção do
+    // documento e disputa com a seleção que a tela faz (falhava com a máquina carregada).
+    fireEvent.click(screen.getByRole('button', { name: 'Copiar a chave' }));
 
     expect(await screen.findByText(/Não foi possível copiar automaticamente/)).toBeTruthy();
-    await vi.waitFor(() => {
-      expect(window.getSelection()?.toString()).toBe(KEY);
-    });
+    await vi.waitFor(
+      () => {
+        expect(window.getSelection()?.toString()).toBe(KEY);
+      },
+      { timeout: 3000 },
+    );
     expect(screen.getByRole('status').textContent).toContain('Não foi possível copiar');
   });
 

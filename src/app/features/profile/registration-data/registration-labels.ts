@@ -59,12 +59,3 @@ export function addressLines(address: CompanyAddress): string[] {
     address.zipcode ? `CEP ${formatZipcode(address.zipcode)}` : '',
   ].filter(Boolean);
 }
-
-/** Data e hora no horário de Brasília (`30/10/2026, 10:36`), o mesmo em qualquer fuso. */
-export function formatDateTime(iso: string): string {
-  return new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-    timeZone: 'America/Sao_Paulo',
-  }).format(new Date(iso));
-}

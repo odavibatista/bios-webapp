@@ -245,6 +245,16 @@ visible. With fewer than two recorded months, the screen says the history is sti
 shows what there is. In the presentation build, only the windows captured from the API appear: no month
 is generated in the front end.
 
+## Administration
+
+`/admin/dominios-bloqueados` is the blacklist of email domains (`src/app/features/admin/`), for the
+`ADMIN` role only: a `USER` does not see the menu item and, through the URL, goes to `/acesso-negado`.
+The list is alphabetical and paginated, with the origin ("Carga inicial" or "Administrador") and the
+date it was added. Adding validates the domain with the API's rule (`shared/forms/domain-rules.ts`: the
+domain only, without `@`) and stores it in lowercase; an already blocked domain marks the field with the
+API's notice. Removing asks for confirmation. The effect is immediate: the domain starts (or stops)
+blocking sign-ups and email changes right away.
+
 ## Theme
 
 The colors come from the project's presentation (`bios-docs/assets/BIOS - PPTX.pptx`). The Material 3
