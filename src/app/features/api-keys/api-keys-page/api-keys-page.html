@@ -1,0 +1,99 @@
+<h1>Chaves de API</h1>
+<p class="lead">
+  Com uma chave, o seu sistema consulta o perfil das empresas na API pública do BIOS. Gere uma chave
+  para cada integração e revogue a que não usar mais.
+</p>
+
+<section class="card" aria-labelledby="titulo-gerar-chave">
+  <h2 id="titulo-gerar-chave">Gerar chave</h2>
+
+  <bios-form-error-summary [messages]="formErrors()" />
+
+  <form [formGroup]="form" (ngSubmit)="create()" novalidate>
+    <mat-form-field appearance="outline" class="name">
+      <mat-label>Nome de identificação</mat-label>
+      <input matInput formControlName="name" autocomplete="off" />
+      <mat-hint>De 2 a 60 caracteres, como “integração com o CRM”.</mat-hint>
+      <mat-error>{{ messageOf(form.controls.name) }}</mat-error>
+    </mat-form-field>
+    <div class="actions">
+      <button mat-flat-button type="submit" [disabled]="creating()">
+        {{ creating() ? 'Gerando…' : 'Gerar chave' }}
+      </button>
+    </div>
+  </form>
+</section>
+
+<section aria-labelledby="titulo-chaves-ativas">
+  <h2 id="titulo-chaves-ativas" #listHeading tabindex="-1">Chaves ativas</h2>
+
+  <div class="feedback">
+    @if (notice(); as notice) {
+      <p class="notice" role="status">{{ notice }}</p>
+    }
+    @if (revokeError(); as message) {
+      <p class="revoke-error" role="alert">{{ message }}</p>
+    }
+  </div>
+
+  <bios-async-state
+    [loading]="keys.isLoading() && !keys.hasValue()"
+    [error]="keys.error()"
+    [empty]="activeKeys().length === 0"
+    emptyMessage="Você ainda não tem chaves de API. Gere a primeira acima."
+    loadingLabel="Carregando as chaves…"
+    (retry)="keys.reload()"
+  >
+    <p class="count">{{ activeKeys().length }} de {{ maxKeys }} chaves ativas.</p>
+    <div class="table-scroll" role="region" aria-label="Tabela das chaves ativas" tabindex="0">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Nome</th>
+            <th scope="col">Prefixo</th>
+            <th scope="col">Criada em</th>
+            <th scope="col">Último uso</th>
+            <th scope="col"><span class="visually-hidden">Ações</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (key of activeKeys(); track key.id) {
+            <tr>
+              <th scope="row">{{ key.name }}</th>
+              <td>
+                <code>{{ key.prefix }}</code>
+              </td>
+              <td>{{ formatDate(key.created_at) }}</td>
+              <td>{{ key.last_used_at ? formatDate(key.last_used_at) : 'Nunca usada' }}</td>
+              <td>
+                <button
+                  mat-stroked-button
+                  type="button"
+                  [attr.aria-label]="'Revogar a chave ' + key.name"
+                  [disabled]="revoking() === key.id"
+                  (click)="revoke(key)"
+                >
+                  {{ revoking() === key.id ? 'Revogando…' : 'Revogar' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </bios-async-state>
+</section>
+
+<section class="usage" aria-labelledby="titulo-como-usar">
+  <h2 id="titulo-como-usar">Como usar a chave</h2>
+  <p>
+    Envie a chave no cabeçalho <code>x-api-key</code> para consultar o perfil de uma empresa pelo
+    CNPJ:
+  </p>
+  <pre><code>GET /v1/companies/&#123;cnpj&#125;
+x-api-key: bios_XXXXXXXX_…</code></pre>
+  <p>
+    A documentação OpenAPI, com as rotas, os parâmetros e as respostas, fica no endereço da API, em
+    <code>/docs</code>.
+  </p>
+</section>
