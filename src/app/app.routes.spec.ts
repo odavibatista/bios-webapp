@@ -88,6 +88,23 @@ describe('routes', () => {
     expect(page.inPanel).toBe(true);
   });
 
+  it.each([
+    ['/empresas', 'Empresas — BIOS'],
+    ['/empresas/00990842000138', 'Empresa — BIOS'],
+  ])('com sessão, "%s" abre dentro do painel', async (url, title) => {
+    const page = await navigate(url, 'USER');
+
+    expect(page.url).toBe(url);
+    expect(page.title).toBe(title);
+    expect(page.inPanel).toBe(true);
+  });
+
+  it('sem sessão, o perfil da empresa leva ao login guardando o destino', async () => {
+    const page = await navigate('/empresas/00990842000138');
+
+    expect(page.url).toBe('/entrar?voltar=%2Fempresas%2F00990842000138');
+  });
+
   it('a troca de senha é privada: com sessão abre no painel; sem ela, leva ao login', async () => {
     const signedIn = await navigate('/conta/senha', 'USER');
 

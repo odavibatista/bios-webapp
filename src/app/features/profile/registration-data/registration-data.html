@@ -1,0 +1,50 @@
+<section aria-labelledby="titulo-dados-cadastrais">
+  <h2 id="titulo-dados-cadastrais">Dados cadastrais</h2>
+  <dl class="data">
+    <div>
+      <dt>Situação cadastral</dt>
+      <dd>{{ status() }}</dd>
+    </div>
+    <div>
+      <dt>Porte</dt>
+      <dd>{{ size() }}</dd>
+    </div>
+    <div>
+      <dt>Endereço</dt>
+      <dd>
+        @for (line of address(); track $index) {
+          <span class="line">{{ line }}</span>
+        }
+      </dd>
+    </div>
+    <div class="wide">
+      <dt>Atividade principal (CNAE)</dt>
+      <dd>
+        <span class="cnae-code">{{ formatCnae(profile().main_cnae.code) }}</span>
+        {{ profile().main_cnae.description }}
+      </dd>
+    </div>
+    <div class="wide">
+      <dt>Atividades secundárias</dt>
+      <dd>
+        @if (profile().secondary_cnaes.length) {
+          <ul class="cnaes">
+            @for (cnae of profile().secondary_cnaes; track cnae.code) {
+              <li>
+                <span class="cnae-code">{{ formatCnae(cnae.code) }}</span>
+                {{ cnae.description }}
+              </li>
+            }
+          </ul>
+        } @else {
+          Nenhuma informada.
+        }
+      </dd>
+    </div>
+  </dl>
+  <p class="refreshed">
+    Cadastro atualizado na fonte em
+    <time [attr.datetime]="profile().refreshed_at">{{ refreshedAt() }}</time
+    >.
+  </p>
+</section>

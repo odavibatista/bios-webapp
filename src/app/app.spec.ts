@@ -101,5 +101,9 @@ describe('App', () => {
     expect(
       await within(screen.getByRole('banner')).findByRole('button', { name: /Usuário/ }),
     ).toBeTruthy();
+    // A consulta por CNPJ também (#24); o CSS a mostra só em tela larga.
+    expect(
+      within(screen.getByRole('banner')).getByLabelText('Consultar empresa por CNPJ'),
+    ).toBeTruthy();
   });
 });

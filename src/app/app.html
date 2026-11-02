@@ -8,6 +8,9 @@
   <span class="brand-tagline">Business Intelligence on Sustainability</span>
   @if (signedIn()) {
     @defer {
+      <bios-cnpj-search class="toolbar-search" variant="toolbar" />
+    }
+    @defer {
       <bios-user-menu class="user-menu" />
     }
   }
