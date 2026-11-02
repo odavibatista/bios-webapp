@@ -145,6 +145,20 @@ Toda tela que carrega dados usa os mesmos estados (`src/app/shared/`, NFIN03):
 - Formulários: `applyApiErrors` marca cada campo pelo `details[].path` de um 422 (`apiErrorOf` lê a
   mensagem no `mat-error`), e `bios-form-error-summary` mostra no topo o que não é de um campo.
 
+## Perfil da empresa
+
+A consulta por CNPJ (`bios-cnpj-search`, em `src/app/features/profile/`) fica no topo do painel, em
+`/empresas` e, em tela larga, na barra do topo. O CNPJ é conferido antes de qualquer chamada, com o
+algoritmo do value object da API (`shared/cnpj/cnpj.ts`: numérico e alfanumérico, dígitos
+verificadores, recusa de sequência de um caractere só), e o perfil abre em `/empresas/<cnpj>` com o
+CNPJ normalizado, sem a máscara na URL.
+
+O perfil mostra a razão social, o nome fantasia e a seção "Dados cadastrais": situação em português
+(a não reconhecida com o texto do provedor), porte, endereço, CNAEs com o código formatado e a
+descrição, e a data em que a fonte atualizou o cadastro. "Empresa não encontrada" (`404`) e
+indisponibilidade temporária (`503`, com "Tentar de novo") são telas diferentes. As evidências e os
+índices por ODS entram como novas seções da mesma página, a partir do mesmo `getCompanyProfile`.
+
 ## Dados da versão de apresentação
 
 As respostas vêm de uma API local com empresas reais, capturadas por `scripts/capture-api.mjs`, e não

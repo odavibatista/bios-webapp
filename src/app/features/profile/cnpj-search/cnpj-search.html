@@ -1,0 +1,33 @@
+@if (variant() === 'toolbar') {
+  <form class="toolbar-search" role="search" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <label class="visually-hidden" for="cnpj-barra">Consultar empresa por CNPJ</label>
+    <input
+      id="cnpj-barra"
+      class="toolbar-input"
+      formControlName="cnpj"
+      placeholder="CNPJ"
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <button mat-icon-button type="submit" aria-label="Consultar CNPJ">
+      <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">search</mat-icon>
+    </button>
+  </form>
+} @else {
+  <form
+    class="form-search"
+    role="search"
+    aria-label="Consultar empresa por CNPJ"
+    [formGroup]="form"
+    (ngSubmit)="submit()"
+    novalidate
+  >
+    <mat-form-field appearance="outline" class="field">
+      <mat-label>CNPJ</mat-label>
+      <input matInput formControlName="cnpj" autocomplete="off" spellcheck="false" />
+      <mat-hint>Com ou sem pontuação; vale também o CNPJ alfanumérico.</mat-hint>
+      <mat-error>{{ errorMessage() }}</mat-error>
+    </mat-form-field>
+    <button mat-flat-button type="submit" class="submit">Consultar</button>
+  </form>
+}

@@ -147,6 +147,21 @@ Every screen that loads data uses the same states (`src/app/shared/`, NFIN03):
 - Forms: `applyApiErrors` marks each field by the `details[].path` of a 422 (`apiErrorOf` reads the
   message in `mat-error`), and `bios-form-error-summary` shows at the top what does not belong to a field.
 
+## Company profile
+
+The CNPJ lookup (`bios-cnpj-search`, in `src/app/features/profile/`) sits at the top of the panel, on
+`/empresas` and, on wide screens, in the top bar. The CNPJ is checked before any call, with the
+algorithm of the API's value object (`shared/cnpj/cnpj.ts`: numeric and alphanumeric, check digits,
+rejection of single-character sequences), and the profile opens at `/empresas/<cnpj>` with the
+normalized CNPJ, without the mask in the URL.
+
+The profile shows the legal name, the trade name and the "Dados cadastrais" (registration data)
+section: status in Portuguese (an unrecognized one with the provider's text), company size, address,
+CNAEs with formatted code and description, and when the source last updated the record. "Company not
+found" (`404`) and temporary unavailability (`503`, with "Tentar de novo") are different screens.
+Evidence and the per-SDG indices come as new sections of the same page, from the same
+`getCompanyProfile`.
+
 ## Presentation data
 
 The responses come from a local API with real companies, captured by `scripts/capture-api.mjs`, not
