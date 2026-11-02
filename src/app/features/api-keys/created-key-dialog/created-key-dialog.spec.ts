@@ -64,7 +64,9 @@ describe('CreatedKeyDialog', () => {
     await user.click(screen.getByRole('button', { name: 'Copiar a chave' }));
 
     expect(await screen.findByText(/Não foi possível copiar automaticamente/)).toBeTruthy();
-    expect(window.getSelection()?.toString()).toBe(KEY);
+    await vi.waitFor(() => {
+      expect(window.getSelection()?.toString()).toBe(KEY);
+    });
     expect(screen.getByRole('status').textContent).toContain('Não foi possível copiar');
   });
 
