@@ -127,6 +127,12 @@ export const routes: Routes = [
                 (m) => m.ChangePassword,
               ),
           },
+          {
+            path: 'conta/chaves',
+            title: 'Chaves de API — BIOS',
+            loadComponent: () =>
+              import('./features/api-keys/api-keys-page/api-keys-page').then((m) => m.ApiKeysPage),
+          },
           // Endereço desconhecido com sessão: o "não encontrado" fica dentro do painel.
           { ...notFound, canMatch: [withSession] },
         ],
