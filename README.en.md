@@ -219,6 +219,20 @@ With an SDG, each company shows score and confidence in separate columns; withou
 table scrolls inside its own container. An SDG outside the calculated ones shows the available ones, with
 a button to search in each.
 
+## Sectors
+
+`/setores` shows how a sector's (CNAE division) average score for an SDG evolves month by month
+(`src/app/features/sectors/`). Sector and SDG live in the URL (`/setores?cnae=24&ods=13`); the field
+accepts a division, group, class or subclass, with or without mask, and suggests the sectors from
+`listSectors`. Everything is aggregated: no company appears on the screen.
+
+The line chart (ECharts, only the modules in use, loaded on demand) puts average score and average
+confidence on separate axes, never combined; the table next to it carries the same numbers for screen
+readers. An average withheld for the minimum sample is an explained gap, never zero, and the counts stay
+visible. With fewer than two recorded months, the screen says the history is still insufficient and
+shows what there is. In the presentation build, only the windows captured from the API appear: no month
+is generated in the front end.
+
 ## Theme
 
 The colors come from the project's presentation (`bios-docs/assets/BIOS - PPTX.pptx`). The Material 3
