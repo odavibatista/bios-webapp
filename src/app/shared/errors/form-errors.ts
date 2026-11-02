@@ -33,6 +33,15 @@ export function applyApiErrors(form: AbstractControl, error: ErrorView): string[
   return formLevel.length || byControl.size ? formLevel : [error.message];
 }
 
+/**
+ * Marca um campo com um erro da API que não vem em `details` (ex.: `INVALID_CURRENT_PASSWORD`),
+ * quando a tela sabe a qual campo ele pertence. Some quando o valor muda, como os demais.
+ */
+export function setApiError(control: AbstractControl, message: string): void {
+  control.setErrors({ ...(control.errors ?? {}), [API_ERROR_KEY]: message });
+  control.markAsTouched();
+}
+
 /** A mensagem que a API deu para este controle, se houver (para o `mat-error`). */
 export function apiErrorOf(control: AbstractControl | null): string | null {
   const message: unknown = control?.errors?.[API_ERROR_KEY];

@@ -56,6 +56,21 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'esqueci-senha',
+        title: 'Esqueci a senha — BIOS',
+        data: { public: true },
+        loadComponent: () =>
+          import('./features/auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),
+      },
+      {
+        // O caminho do link do e-mail de redefinição da API (template `PASSWORD_RESET`).
+        path: 'redefinir-senha/:token',
+        title: 'Redefinir a senha — BIOS',
+        data: { public: true },
+        loadComponent: () =>
+          import('./features/auth/reset-password/reset-password').then((m) => m.ResetPassword),
+      },
+      {
         path: '',
         // Sob demanda: quem só vê a página inicial não baixa a casca do painel.
         loadComponent: () =>
@@ -77,6 +92,14 @@ export const routes: Routes = [
             path: 'admin',
             canActivateChild: [requireRole('ADMIN')],
             children: [notFound],
+          },
+          {
+            path: 'conta/senha',
+            title: 'Alterar a senha — BIOS',
+            loadComponent: () =>
+              import('./features/auth/change-password/change-password').then(
+                (m) => m.ChangePassword,
+              ),
           },
           // Endereço desconhecido com sessão: o "não encontrado" fica dentro do painel.
           { ...notFound, canMatch: [withSession] },
