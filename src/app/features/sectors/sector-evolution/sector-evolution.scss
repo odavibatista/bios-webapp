@@ -1,0 +1,81 @@
+:host {
+  display: grid;
+  gap: 1.5rem;
+}
+
+h1 {
+  margin: 0;
+  font: var(--mat-sys-headline-medium);
+  color: var(--bios-brand-green);
+}
+
+h2 {
+  margin: 0 0 0.5rem;
+  font: var(--mat-sys-title-large);
+  overflow-wrap: anywhere;
+}
+
+h3 {
+  margin: 1.5rem 0 0.75rem;
+  font: var(--mat-sys-title-medium);
+}
+
+.lead {
+  max-width: 70ch;
+  margin: -0.75rem 0 0;
+  color: var(--bios-brand-moss);
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  gap: 0.25rem 1rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.ods {
+  display: block;
+  font: var(--mat-sys-title-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.aggregate-note {
+  max-width: 80ch;
+  margin: 0 0 1rem;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.insufficient {
+  padding: 1rem;
+  border-left: 4px solid var(--mat-sys-primary);
+  border-radius: var(--mat-sys-corner-small);
+  background: var(--mat-sys-surface-container);
+
+  p {
+    margin: 0;
+    max-width: 80ch;
+  }
+}
+
+.field-failure {
+  padding: 1rem;
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+
+  p {
+    margin: 0;
+  }
+}
+
+// Reserva a altura do gráfico enquanto ele carrega, para a tela não pular.
+.chart-placeholder {
+  height: 20rem;
+}

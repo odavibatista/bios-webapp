@@ -1,0 +1,101 @@
+<h1>Evolução por setor</h1>
+<p class="lead">
+  O índice médio e a confiança média de um setor (divisão CNAE), mês a mês. Tudo aqui é média do
+  setor: nenhuma empresa aparece nesta tela.
+</p>
+
+<form [formGroup]="form" (ngSubmit)="show()" novalidate aria-label="Setor e ODS">
+  <div class="fields">
+    <mat-form-field appearance="outline">
+      <mat-label>Setor (CNAE)</mat-label>
+      <input matInput formControlName="cnae" autocomplete="off" [matAutocomplete]="sectorList" />
+      <mat-autocomplete #sectorList="matAutocomplete">
+        @for (sector of sectorSuggestions(); track sector.cnae_division) {
+          <mat-option [value]="sector.cnae_division">
+            {{ sector.cnae_division }} — {{ sector.description }}
+          </mat-option>
+        }
+      </mat-autocomplete>
+      <mat-hint>Divisão, grupo, classe ou subclasse: 24, 24.3 ou 24.31-8/00.</mat-hint>
+      <mat-error>{{ messageOf(form.controls.cnae) }}</mat-error>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>ODS</mat-label>
+      <mat-select formControlName="ods">
+        @for (ods of odsOptions(); track ods.ods_number) {
+          <mat-option [value]="ods.ods_number">{{ odsTitle(ods.ods_number) }}</mat-option>
+        }
+      </mat-select>
+      <mat-error>Escolha um ODS.</mat-error>
+    </mat-form-field>
+  </div>
+
+  <div class="actions">
+    <button mat-flat-button type="submit">Ver evolução</button>
+  </div>
+</form>
+
+@if (!requested()) {
+  <bios-empty-state message="Escolha um setor e um ODS para ver a evolução." icon="monitoring" />
+} @else {
+  <div aria-live="polite" [attr.aria-busy]="evolution.isLoading()">
+    @if (evolution.isLoading()) {
+      <bios-loading label="Carregando a evolução…" />
+    } @else if (failure(); as failure) {
+      @if (failure.fieldMessages.length) {
+        <div class="field-failure" role="alert">
+          @for (message of failure.fieldMessages; track $index) {
+            <p>{{ message }}</p>
+          }
+        </div>
+      } @else {
+        <bios-error-state [error]="failure.error" (retry)="evolution.reload()" />
+      }
+    } @else if (evolution.hasValue()) {
+      @let result = evolution.value();
+      <section class="result" aria-labelledby="titulo-setor">
+        <h2 id="titulo-setor">
+          {{ result.cnae_division }} — {{ result.cnae_division_description }}
+          <span class="ods">{{ odsTitle(result.ods_number) }}</span>
+        </h2>
+        <p class="aggregate-note">
+          Médias do setor, nunca de uma empresa. Índice e confiança são medidas separadas, nunca
+          combinadas, e o índice médio não é um veredito de sustentabilidade do setor.
+        </p>
+
+        @if (result.history_status === 'INSUFFICIENT') {
+          <div class="insufficient" role="status">
+            <p>
+              <strong>Ainda não há janelas suficientes para mostrar a evolução deste setor.</strong>
+              A evolução aparece a partir de dois meses registrados.
+              @if (result.windows.length) {
+                Até agora, há um mês registrado.
+              } @else {
+                Nenhum mês foi registrado até agora.
+              }
+            </p>
+          </div>
+          @if (result.windows.length) {
+            <h3>Mês registrado</h3>
+            <bios-sector-windows-table
+              [windows]="result.windows"
+              [caption]="'Mês registrado de ' + subject()"
+            />
+          }
+        } @else {
+          @defer (on viewport) {
+            <bios-sector-chart [windows]="result.windows" [subject]="subject()" />
+          } @placeholder {
+            <div class="chart-placeholder"></div>
+          }
+          <h3>Os números, mês a mês</h3>
+          <bios-sector-windows-table
+            [windows]="result.windows"
+            [caption]="'Evolução de ' + subject()"
+          />
+        }
+      </section>
+    }
+  </div>
+}
