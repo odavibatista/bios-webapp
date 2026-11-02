@@ -39,6 +39,20 @@ describe('Home', () => {
     expect(screen.queryByRole('link', { name: 'Ir para o painel' })).toBeNull();
   });
 
+  it('depois da exclusão da conta, avisa o que foi apagado', async () => {
+    await render(Home, { providers: [provideRouter([])], inputs: { conta: 'excluida' } });
+
+    expect(screen.getByRole('status').textContent.trim()).toBe(
+      'Sua conta foi excluída, com os dados pessoais, as sessões e as chaves de API.',
+    );
+  });
+
+  it('sem o parâmetro, não há aviso', async () => {
+    await renderHome();
+
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+
   it('com sessão, leva direto ao painel', async () => {
     await renderHome(true);
 

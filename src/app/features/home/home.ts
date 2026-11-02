@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
@@ -41,4 +41,8 @@ export class Home {
 
   /** Quem já entrou vai direto ao painel; quem não entrou, ao login ou ao cadastro. */
   protected readonly signedIn = inject(SessionStore).isAuthenticated;
+
+  /** `excluida` depois que a pessoa excluiu a própria conta (UC05, fluxo 1.3; #30). */
+  readonly conta = input<string>();
+  protected readonly accountDeleted = computed(() => this.conta() === 'excluida');
 }
