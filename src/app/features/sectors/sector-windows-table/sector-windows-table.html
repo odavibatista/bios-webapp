@@ -1,0 +1,37 @@
+<div class="table-scroll" role="region" [attr.aria-label]="caption()" tabindex="0">
+  <table>
+    <caption class="visually-hidden">
+      {{
+        caption()
+      }}
+    </caption>
+    <thead>
+      <tr>
+        <th scope="col">Mês</th>
+        <th scope="col" class="number">Índice médio</th>
+        <th scope="col" class="number">Confiança média</th>
+        <th scope="col" class="number">Empresas avaliadas</th>
+        <th scope="col" class="number">Com índice</th>
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of rows(); track row.key) {
+        <tr>
+          <th scope="row">{{ row.month }}</th>
+          <td class="number" [class.omitted]="row.scoreOmitted">{{ row.score }}</td>
+          <td class="number" [class.omitted]="row.confidenceOmitted">{{ row.confidence }}</td>
+          <td class="number">{{ row.companies }}</td>
+          <td class="number">{{ row.scored }}</td>
+        </tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<p class="note">
+  Empresas avaliadas: as do setor com cálculo no ODS. Com índice: as que tiveram índice; sem
+  evidência suficiente, a empresa conta como avaliada, sem índice, e isso não é nota baixa.
+</p>
+@if (anyOmitted()) {
+  <p class="note">{{ omittedNote }}</p>
+}

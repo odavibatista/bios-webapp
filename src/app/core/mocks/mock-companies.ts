@@ -290,7 +290,8 @@ export function sectorEvolution(cnae: string, ods: number, now: number): SectorE
   const digits = cnae.replace(/[.\-/\s]/g, '');
   const path = `/sectors/${cnae}/evolution?ods=${ods}`;
 
-  if (!/^\d{2}(\d|\d{3}|\d{5})?$/.test(digits)) {
+  // Como `cnaeDivisionOf` da API: 2, 3, 5 ou 7 dígitos, e a divisão 00 não existe.
+  if (!/^\d{2}(\d|\d{3}|\d{5})?$/.test(digits) || digits.startsWith('00')) {
     throw capturedError('getSectorEvolution/cnae-invalido', path, now);
   }
   if (!activeOds().includes(ods)) {
