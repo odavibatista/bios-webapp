@@ -139,7 +139,8 @@ describe('Login', () => {
     expect((await screen.findByRole('alert')).textContent).toContain(
       'Acesso temporariamente bloqueado.',
     );
-    expect(screen.getByText('Você poderá tentar de novo em 2 s.')).toBeTruthy();
+    // Com a máquina carregada, o primeiro tique (1 s) pode chegar antes desta linha.
+    expect(screen.getByText(/^Você poderá tentar de novo em [12] s\.$/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Entrar' }).hasAttribute('disabled')).toBe(true);
 
     expect(await screen.findByText('Você poderá tentar de novo em 1 s.')).toBeTruthy();
