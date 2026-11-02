@@ -159,6 +159,18 @@ descrição, e a data em que a fonte atualizou o cadastro. "Empresa não encontr
 indisponibilidade temporária (`503`, com "Tentar de novo") são telas diferentes. As evidências e os
 índices por ODS entram como novas seções da mesma página, a partir do mesmo `getCompanyProfile`.
 
+## Chaves de API
+
+`/conta/chaves` (`src/app/features/api-keys/`) gera, lista e revoga as chaves de API da conta. O nome
+segue a regra da API (2 a 60 caracteres, sem contar os espaços das pontas). A chave completa só existe
+na resposta da geração e aparece uma única vez, num diálogo com "Copiar a chave" (que anuncia "Chave
+copiada" e, se a cópia falhar, deixa a chave selecionada para o Ctrl+C); o diálogo só fecha pelo botão,
+e nada no app guarda o valor depois disso. A lista mostra só nome, prefixo, criação e último uso
+("Nunca usada" sem uso), com a contagem diante do teto de 10 chaves ativas. Revogar pede confirmação
+(`confirmAction`); uma chave que já não existe (`404`) atualiza a lista. A página também explica o uso
+na API pública: cabeçalho `x-api-key` em `GET /v1/companies/{cnpj}`, com a documentação OpenAPI em
+`/docs`, no endereço da API.
+
 ## Dados da versão de apresentação
 
 As respostas vêm de uma API local com empresas reais, capturadas por `scripts/capture-api.mjs`, e não
