@@ -560,6 +560,31 @@ describe('MockBiosApi', () => {
       );
     });
 
+    it('recusa domínio que a API recusa: hífen na ponta do rótulo e topo numérico', async () => {
+      await signIn(ADMIN);
+
+      for (const domain of ['fim-.example', 'dominio.123']) {
+        await expectError(
+          api.addBlockedEmailDomain({ body: { domain } }),
+          422,
+          'VALIDATION_FAILED',
+        );
+      }
+    });
+
+    it('reincluir um domínio removido restaura o registro, agora em nome do administrador', async () => {
+      await signIn(ADMIN);
+      const seed = (await api.listBlockedEmailDomains()).data[0];
+
+      expect(seed.origin).toBe('SEED');
+      await api.removeBlockedEmailDomain({ path: { id: seed.id } });
+      clock += 60_000;
+
+      const restored = await api.addBlockedEmailDomain({ body: { domain: seed.domain } });
+
+      expect(restored).toEqual({ ...seed, origin: 'ADMIN' });
+    });
+
     it('o domínio incluído passa a barrar o cadastro', async () => {
       await signIn(ADMIN);
       await api.addBlockedEmailDomain({ body: { domain: 'novo-bloqueio.example' } });

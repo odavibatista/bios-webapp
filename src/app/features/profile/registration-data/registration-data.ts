@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { CompanyFullProfileResponse } from '../../../core/api/generated';
+import { formatDateTime } from '../../../shared/format/date-time';
 import {
   addressLines,
   companySizeLabel,
   formatCnae,
-  formatDateTime,
   registrationStatusLabel,
 } from './registration-labels';
 

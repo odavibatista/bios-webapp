@@ -7,7 +7,8 @@ import type {
   CreateApiKeyData,
   RevokeApiKeyData,
 } from '../../../core/api/generated';
-import { ApiKeysPage, formatKeyDate } from './api-keys-page';
+import { formatDateTime } from '../../../shared/format/date-time';
+import { ApiKeysPage } from './api-keys-page';
 
 const SECRET = 'bios_NovaChav_segredo-que-so-aparece-uma-vez';
 
@@ -93,10 +94,10 @@ describe('ApiKeysPage', () => {
     expect(screen.getByText('2 de 10 chaves ativas.')).toBeTruthy();
     const seed = within(rowOf('Planilha de fornecedores'));
     expect(seed.getByText('bios_ZvdVkOaC')).toBeTruthy();
-    expect(seed.getByText(formatKeyDate(SEED.created_at))).toBeTruthy();
+    expect(seed.getByText(formatDateTime(SEED.created_at))).toBeTruthy();
     expect(seed.getByText('Nunca usada')).toBeTruthy();
     expect(
-      within(rowOf('Integração com o CRM')).getByText(formatKeyDate('2026-10-31T18:30:00.000Z')),
+      within(rowOf('Integração com o CRM')).getByText(formatDateTime('2026-10-31T18:30:00.000Z')),
     ).toBeTruthy();
     expect(screen.getAllByRole('columnheader').map((header) => header.textContent.trim())).toEqual([
       'Nome',
@@ -105,10 +106,6 @@ describe('ApiKeysPage', () => {
       'Último uso',
       'Ações',
     ]);
-  });
-
-  it('datas no horário de Brasília, em qualquer fuso', () => {
-    expect(formatKeyDate('2026-10-30T13:14:26.239Z')).toBe('30/10/2026, 10:14');
   });
 
   it('sem chaves, explica e convida a gerar a primeira', async () => {
