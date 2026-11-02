@@ -1,4 +1,4 @@
-import type { ValidatorFn } from '@angular/forms';
+import type { AbstractControl, ValidatorFn } from '@angular/forms';
 import { rules } from './account-rules';
 
 /** Unidades da federação, em sigla, na ordem da API (`BRAZILIAN_STATES`). */
@@ -91,13 +91,17 @@ const FIELD_RULES: Record<AddressField, (value: string) => string[]> = {
 
 /**
  * Validador de um campo do endereço. O endereço é opcional: enquanto a conta não tem endereço e o
- * formulário está em branco, `required()` responde `false` e nada é cobrado. O complemento só tem
- * o limite de tamanho, sempre.
+ * formulário está em branco, `required(control)` responde `false` e nada é cobrado (o controle
+ * chega ao `required` para que ele olhe o grupo, em `control.parent`). O complemento só tem o
+ * limite de tamanho, sempre.
  */
-export function addressFieldRules(field: AddressField, required: () => boolean): ValidatorFn {
+export function addressFieldRules(
+  field: AddressField,
+  required: (control: AbstractControl) => boolean,
+): ValidatorFn {
   const check = rules(FIELD_RULES[field]);
 
-  return (control) => (field === 'complement' || required() ? check(control) : null);
+  return (control) => (field === 'complement' || required(control) ? check(control) : null);
 }
 
 /** O endereço está todo em branco? */
