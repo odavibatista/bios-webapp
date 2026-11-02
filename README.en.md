@@ -176,6 +176,18 @@ found" (`404`) and temporary unavailability (`503`, with "Tentar de novo") are d
 Evidence and the per-SDG indices come as new sections of the same page, from the same
 `getCompanyProfile`.
 
+## API keys
+
+`/conta/chaves` (`src/app/features/api-keys/`) creates, lists and revokes the account's API keys. The
+name follows the API rule (2 to 60 characters, not counting surrounding spaces). The full key only
+exists in the creation response and is shown once, in a dialog with "Copiar a chave" (copy key), which
+announces "Chave copiada" and, if copying fails, leaves the key selected for Ctrl+C; the dialog only
+closes through its button, and nothing in the app keeps the value afterwards. The list shows only name,
+prefix, creation date and last use ("Nunca usada" when never used), with the count against the limit of
+10 active keys. Revoking asks for confirmation (`confirmAction`); a key that no longer exists (`404`)
+refreshes the list. The page also explains how to use the key in the public API: the `x-api-key`
+header on `GET /v1/companies/{cnpj}`, with the OpenAPI documentation at `/docs` on the API's address.
+
 ## Presentation data
 
 The responses come from a local API with real companies, captured by `scripts/capture-api.mjs`, not

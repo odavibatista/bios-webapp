@@ -191,4 +191,19 @@ describe('routes', () => {
     expect(page.title).toBe('Página não encontrada — BIOS');
     expect(page.inPanel).toBe(true);
   });
+
+  it('as chaves de API são privadas: sem sessão, leva ao login guardando o destino', async () => {
+    const page = await navigate('/conta/chaves');
+
+    expect(page.url).toBe('/entrar?voltar=%2Fconta%2Fchaves');
+  });
+
+  it('com sessão, as chaves de API abrem dentro da casca, com o título da aba', async () => {
+    const page = await navigate('/conta/chaves', 'USER');
+
+    expect(page.url).toBe('/conta/chaves');
+    expect(page.title).toBe('Chaves de API — BIOS');
+    expect(page.heading).toBe('Chaves de API');
+    expect(page.inPanel).toBe(true);
+  });
 });

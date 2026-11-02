@@ -483,6 +483,41 @@ describe('MockBiosApi', () => {
     it('nome curto é 422', async () => {
       await expectError(api.createApiKey({ body: { name: 'a' } }), 422, 'VALIDATION_FAILED');
     });
+
+    it('nome com mais de 60 caracteres é 422, com a mensagem da API', async () => {
+      await expect(api.createApiKey({ body: { name: 'x'.repeat(60) } })).resolves.toBeTruthy();
+
+      const error = await expectError(
+        api.createApiKey({ body: { name: 'x'.repeat(61) } }),
+        422,
+        'VALIDATION_FAILED',
+      );
+
+      expect(error.details).toEqual([
+        { path: 'name', message: 'O nome deve ter no máximo 60 caracteres.' },
+      ]);
+    });
+
+    it('com 10 chaves ativas, recusa a 11ª até que uma seja revogada (regra 5)', async () => {
+      // A conta de demonstração já tem 1 chave.
+      for (let index = 2; index <= 10; index++) {
+        await api.createApiKey({ body: { name: `Chave ${index}` } });
+      }
+
+      const error = await expectError(
+        api.createApiKey({ body: { name: 'A décima primeira' } }),
+        422,
+        'API_KEY_LIMIT_REACHED',
+      );
+      expect(error.message).toBe(
+        'Você já tem 10 chaves de API ativas. Revogue uma para gerar outra.',
+      );
+      expect(error.details).toEqual({ limit: 10 });
+
+      const [newest] = (await api.listApiKeys()).data;
+      await api.revokeApiKey({ path: { id: newest?.id ?? '' } });
+      await expect(api.createApiKey({ body: { name: 'Agora cabe' } })).resolves.toBeTruthy();
+    });
   });
 
   describe('blacklist de domínios (UC13)', () => {

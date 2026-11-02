@@ -1,6 +1,6 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiCredentials } from '../api/api-credentials';
-import type { ApiError } from '../api/api-error';
+import { ApiError } from '../api/api-error';
 import { BiosApi, type ApiInput, type BiosOperation } from '../api/bios-api';
 import type * as Api from '../api/generated';
 import type { CaptureKey } from './fixtures';
@@ -84,6 +84,26 @@ const BLOCK_SECONDS = 15 * 60;
 const EXPORT_NOT_CAPTURED =
   'A exportação desta pesquisa não está disponível na versão de apresentação: as planilhas são ' +
   'as reais da API, capturadas para as pesquisas de demonstração.';
+
+/** Regras de chave de API do bios-core-api (UC11, regras 4 e 5). */
+const API_KEY_NAME_MAX_LENGTH = 60;
+const MAX_ACTIVE_API_KEYS = 10;
+const API_KEY_NAME_TOO_LONG = `O nome deve ter no máximo ${API_KEY_NAME_MAX_LENGTH} caracteres.`;
+
+/**
+ * Teto de chaves ativas (`ApiKeyLimitReachedException`). Sem captura (chegar ao teto pediria 10
+ * chaves na conta de demonstração): código, texto e `details` copiados da exceção da API.
+ */
+function apiKeyLimitReached(path: string, now: number): ApiError {
+  return new ApiError(422, {
+    statusCode: 422,
+    code: 'API_KEY_LIMIT_REACHED',
+    message: `Você já tem ${MAX_ACTIVE_API_KEYS} chaves de API ativas. Revogue uma para gerar outra.`,
+    details: { limit: MAX_ACTIVE_API_KEYS },
+    timestamp: new Date(now).toISOString(),
+    path,
+  });
+}
 
 /**
  * Implementação mockada do contrato (#14), usada na versão de apresentação.
@@ -453,6 +473,14 @@ export class MockBiosApi extends BiosApi {
           this.field('createApiKey/validacao', 'name'),
         ]);
       }
+      if (name.length > API_KEY_NAME_MAX_LENGTH) {
+        throw this.d.validationError('createApiKey/validacao', path, this.now(), [
+          { path: 'name', message: API_KEY_NAME_TOO_LONG },
+        ]);
+      }
+      if (this.activeApiKeys(account.id).length >= MAX_ACTIVE_API_KEYS) {
+        throw apiKeyLimitReached(path, this.now());
+      }
 
       const sequence = this.next();
       const key: ApiKey = {
@@ -476,8 +504,7 @@ export class MockBiosApi extends BiosApi {
       const { account } = this.authenticated('/api-keys');
 
       return {
-        data: this.apiKeys
-          .filter((key) => key.accountId === account.id && !key.revoked)
+        data: this.activeApiKeys(account.id)
           .sort((a, b) => b.created_at.localeCompare(a.created_at))
           .map((key) => this.keyView(key)),
       };
@@ -776,6 +803,10 @@ export class MockBiosApi extends BiosApi {
       address: account.address && { ...account.address },
       role: account.role,
     };
+  }
+
+  private activeApiKeys(accountId: string): ApiKey[] {
+    return this.apiKeys.filter((key) => key.accountId === accountId && !key.revoked);
   }
 
   private keyView(key: ApiKey): Api.ApiKeyResponse {
