@@ -113,6 +113,13 @@ The confirmation route is the one in the link the API emails. Name, email and pa
 pattern, the same as bios-core-api. `bios-password-field` has a show-password button and, for a new
 password, the policy visible before the first error.
 
+Password: `/esqueci-senha` requests the link (same message whether or not the account exists) and
+`/redefinir-senha/:token`, the route in the API's email link, sets the new one; a password outside the
+policy does not spend the link. At `/conta/senha`, a signed-in user changes the password by giving the
+current one; API errors without `details` (wrong current password, new equal to current) mark the right
+field (`setApiError`). Changing or resetting ends every session, this browser's included: the app clears
+the local session and the login page says why (`?senha=alterada` or `?senha=redefinida`).
+
 After submitting, sign-up and resend show only the API's message, the same for a new and an already
 registered email (RF01 b). In the presentation build, `bios-mail-preview` stands in for the inbox: it
 shows the link the email would carry as a hyperlink, or says nothing arrived.
@@ -122,6 +129,10 @@ itself (`safeReturnUrl`), or to `/painel`. Messages are the API's, without point
 wrong. An unconfirmed account gets the option to resend the link; a lockout after failed attempts shows
 the remaining time and disables the button until then. The sign-in password only has to be present
 (`currentPasswordRules`), without the new-password policy.
+
+The account menu has "Sair" (sign out) and "Sair de todos os dispositivos" (sign out everywhere); the
+second asks for confirmation (`confirmAction`, in `shared/dialogs/`, with initial focus on "Cancelar").
+The local session is cleared even if the call fails, and the app goes to the login page.
 
 ## Screen states and errors
 
@@ -135,6 +146,21 @@ Every screen that loads data uses the same states (`src/app/shared/`, NFIN03):
   blocks "Tentar de novo" until then; `503` is a temporary unavailability, with the button.
 - Forms: `applyApiErrors` marks each field by the `details[].path` of a 422 (`apiErrorOf` reads the
   message in `mat-error`), and `bios-form-error-summary` shows at the top what does not belong to a field.
+
+## Company profile
+
+The CNPJ lookup (`bios-cnpj-search`, in `src/app/features/profile/`) sits at the top of the panel, on
+`/empresas` and, on wide screens, in the top bar. The CNPJ is checked before any call, with the
+algorithm of the API's value object (`shared/cnpj/cnpj.ts`: numeric and alphanumeric, check digits,
+rejection of single-character sequences), and the profile opens at `/empresas/<cnpj>` with the
+normalized CNPJ, without the mask in the URL.
+
+The profile shows the legal name, the trade name and the "Dados cadastrais" (registration data)
+section: status in Portuguese (an unrecognized one with the provider's text), company size, address,
+CNAEs with formatted code and description, and when the source last updated the record. "Company not
+found" (`404`) and temporary unavailability (`503`, with "Tentar de novo") are different screens.
+Evidence and the per-SDG indices come as new sections of the same page, from the same
+`getCompanyProfile`.
 
 ## Presentation data
 

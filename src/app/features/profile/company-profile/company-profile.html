@@ -1,0 +1,42 @@
+@switch (problem()) {
+  @case ('invalid') {
+    <h1>CNPJ inválido</h1>
+    <p class="lead">{{ invalidMessage }}</p>
+    <bios-cnpj-search [initial]="cnpj()" />
+  }
+  @case ('not-found') {
+    <h1>Empresa não encontrada</h1>
+    <p class="lead">{{ notFoundMessage() }}</p>
+    <p>
+      Nenhuma das fontes cadastrais consultadas tem o CNPJ <strong>{{ formatted() }}</strong
+      >. Confira o número ou consulte outro.
+    </p>
+    <bios-cnpj-search />
+  }
+  @case ('failure') {
+    <h1>Não foi possível consultar a empresa</h1>
+    <p class="lead">CNPJ {{ formatted() }}</p>
+    <bios-error-state [error]="profile.error()" (retry)="profile.reload()" />
+  }
+  @default {
+    @if (profile.hasValue()) {
+      <header class="company">
+        <h1>{{ profile.value().legal_name }}</h1>
+        @if (profile.value().trade_name; as tradeName) {
+          @if (tradeName !== profile.value().legal_name) {
+            <p class="trade-name">{{ tradeName }}</p>
+          }
+        }
+        <p class="cnpj">CNPJ {{ formatted() }}</p>
+      </header>
+
+      <bios-registration-data class="section" [profile]="profile.value()" />
+      <!-- Evidências (FE-17) e índices por ODS (FE-18, FE-19) entram aqui, como novas seções. -->
+    } @else {
+      <h1>Empresa</h1>
+      <bios-loading label="Consultando a empresa…" />
+    }
+  }
+}
+
+<p class="back"><a [routerLink]="companiesPath">Consultar outro CNPJ</a></p>

@@ -112,6 +112,13 @@ A rota da confirmação é a do link que a API manda por e-mail. As regras de no
 `z.email()` do Zod 4, o mesmo do bios-core-api. O `bios-password-field` traz o botão de mostrar a senha e,
 na senha nova, a política visível antes do primeiro erro.
 
+Senha: `/esqueci-senha` pede o link (mesma mensagem exista ou não a conta) e `/redefinir-senha/:token`,
+a rota do link do e-mail da API, define a nova; uma senha fora da política não gasta o link. Em
+`/conta/senha`, quem está logado troca a senha informando a atual; os erros da API sem `details`
+(senha atual errada, nova igual à atual) marcam o campo certo (`setApiError`). Trocar ou redefinir
+encerra todas as sessões, inclusive a deste navegador: o app apaga a sessão local e o login diz por quê
+(`?senha=alterada` ou `?senha=redefinida`).
+
 Depois do envio, cadastro e reenvio mostram só a mensagem da API, igual para e-mail novo e já cadastrado
 (RF01 b). Na versão de apresentação, o `bios-mail-preview` faz as vezes da caixa de entrada: mostra como
 hiperlink o link que o e-mail traria, ou diz que nada chegou.
@@ -120,6 +127,10 @@ hiperlink o link que o e-mail traria, ou diz que nada chegou.
 (`safeReturnUrl`), ou ao `/painel`. As mensagens são as da API, sem apontar qual campo errou. Conta não
 confirmada oferece o reenvio do link; bloqueio por tentativas mostra o tempo restante e trava o botão
 até lá. A senha de quem entra só precisa existir (`currentPasswordRules`), sem a política da senha nova.
+
+O menu da conta tem "Sair" e "Sair de todos os dispositivos"; o segundo pede confirmação
+(`confirmAction`, em `shared/dialogs/`, com o foco inicial em "Cancelar"). A sessão local é apagada
+mesmo se a chamada falhar, e o app vai para o login.
 
 ## Estados de tela e erros
 
@@ -133,6 +144,20 @@ Toda tela que carrega dados usa os mesmos estados (`src/app/shared/`, NFIN03):
   de novo" até lá; `503` é indisponibilidade temporária, com o botão.
 - Formulários: `applyApiErrors` marca cada campo pelo `details[].path` de um 422 (`apiErrorOf` lê a
   mensagem no `mat-error`), e `bios-form-error-summary` mostra no topo o que não é de um campo.
+
+## Perfil da empresa
+
+A consulta por CNPJ (`bios-cnpj-search`, em `src/app/features/profile/`) fica no topo do painel, em
+`/empresas` e, em tela larga, na barra do topo. O CNPJ é conferido antes de qualquer chamada, com o
+algoritmo do value object da API (`shared/cnpj/cnpj.ts`: numérico e alfanumérico, dígitos
+verificadores, recusa de sequência de um caractere só), e o perfil abre em `/empresas/<cnpj>` com o
+CNPJ normalizado, sem a máscara na URL.
+
+O perfil mostra a razão social, o nome fantasia e a seção "Dados cadastrais": situação em português
+(a não reconhecida com o texto do provedor), porte, endereço, CNAEs com o código formatado e a
+descrição, e a data em que a fonte atualizou o cadastro. "Empresa não encontrada" (`404`) e
+indisponibilidade temporária (`503`, com "Tentar de novo") são telas diferentes. As evidências e os
+índices por ODS entram como novas seções da mesma página, a partir do mesmo `getCompanyProfile`.
 
 ## Dados da versão de apresentação
 

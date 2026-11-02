@@ -56,6 +56,21 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'esqueci-senha',
+        title: 'Esqueci a senha — BIOS',
+        data: { public: true },
+        loadComponent: () =>
+          import('./features/auth/forgot-password/forgot-password').then((m) => m.ForgotPassword),
+      },
+      {
+        // O caminho do link do e-mail de redefinição da API (template `PASSWORD_RESET`).
+        path: 'redefinir-senha/:token',
+        title: 'Redefinir a senha — BIOS',
+        data: { public: true },
+        loadComponent: () =>
+          import('./features/auth/reset-password/reset-password').then((m) => m.ResetPassword),
+      },
+      {
         path: '',
         // Sob demanda: quem só vê a página inicial não baixa a casca do painel.
         loadComponent: () =>
@@ -66,6 +81,23 @@ export const routes: Routes = [
             title: 'Painel — BIOS',
             loadComponent: () =>
               import('./features/panel-home/panel-home').then((m) => m.PanelHome),
+          },
+          {
+            path: 'empresas',
+            title: 'Empresas — BIOS',
+            loadComponent: () =>
+              import('./features/profile/company-lookup/company-lookup').then(
+                (m) => m.CompanyLookup,
+              ),
+          },
+          {
+            // O CNPJ normalizado, sem a máscara (a barra dela nunca vai para a URL).
+            path: 'empresas/:cnpj',
+            title: 'Empresa — BIOS',
+            loadComponent: () =>
+              import('./features/profile/company-profile/company-profile').then(
+                (m) => m.CompanyProfile,
+              ),
           },
           {
             path: 'acesso-negado',
@@ -86,6 +118,14 @@ export const routes: Routes = [
             path: 'admin',
             canActivateChild: [requireRole('ADMIN')],
             children: [notFound],
+          },
+          {
+            path: 'conta/senha',
+            title: 'Alterar a senha — BIOS',
+            loadComponent: () =>
+              import('./features/auth/change-password/change-password').then(
+                (m) => m.ChangePassword,
+              ),
           },
           // Endereço desconhecido com sessão: o "não encontrado" fica dentro do painel.
           { ...notFound, canMatch: [withSession] },

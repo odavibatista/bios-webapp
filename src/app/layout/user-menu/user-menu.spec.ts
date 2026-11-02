@@ -1,11 +1,17 @@
+import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { render, screen } from '@testing-library/angular';
+import { userEvent } from '@testing-library/user-event';
 import { BiosApi } from '../../core/api/bios-api';
 import type { AccountResponse } from '../../core/api/generated';
 import type { Role } from '../../core/session/role.guards';
+import { SessionService } from '../../core/session/session.service';
 import { SessionStore } from '../../core/session/session-store';
 import { UserMenu } from './user-menu';
+
+@Component({ template: '<h1>Tela</h1>' })
+class Screen {}
 
 const ACCOUNT: AccountResponse = {
   id: '1',
@@ -15,12 +21,28 @@ const ACCOUNT: AccountResponse = {
   role: 'USER',
 };
 
+/** Como o `SessionService` real: apaga a sessão local, e a chamada pode falhar. */
+function fakeSession(fails = false) {
+  return {
+    signOut: vi.fn(() => {
+      TestBed.inject(SessionStore).clear();
+
+      return fails ? Promise.reject(new Error('rede fora do ar')) : Promise.resolve();
+    }),
+  };
+}
+
 async function renderMenu(
   getOwnAccount: () => Promise<AccountResponse>,
   role: Role | null = 'USER',
+  session = fakeSession(),
 ) {
-  return render(UserMenu, {
-    providers: [provideRouter([]), { provide: BiosApi, useValue: { getOwnAccount } }],
+  const result = await render(UserMenu, {
+    providers: [
+      provideRouter([{ path: '**', component: Screen }]),
+      { provide: BiosApi, useValue: { getOwnAccount } },
+      { provide: SessionService, useValue: session },
+    ],
     configureTestBed: () => {
       if (!role) return;
       TestBed.inject(SessionStore).store({
@@ -32,6 +54,12 @@ async function renderMenu(
       });
     },
   });
+
+  return { ...result, session, user: userEvent.setup() };
+}
+
+async function openMenu(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: /Nome Editado/ }));
 }
 
 describe('UserMenu', () => {
@@ -76,5 +104,68 @@ describe('UserMenu', () => {
     await fixture.whenStable();
 
     expect(screen.getByRole('button', { name: /Nome da Sessão/ })).toBeTruthy();
+  });
+
+  describe('sair (#21)', () => {
+    it('"Sair" encerra só esta sessão e leva ao login', async () => {
+      const { user, session } = await renderMenu(() => Promise.resolve(ACCOUNT));
+
+      await openMenu(user);
+      await user.click(await screen.findByRole('menuitem', { name: 'Sair' }));
+
+      expect(session.signOut).toHaveBeenCalledWith(false);
+      await vi.waitFor(() => {
+        expect(TestBed.inject(Router).url).toBe('/entrar');
+      });
+      expect(TestBed.inject(SessionStore).isAuthenticated()).toBe(false);
+    });
+
+    it('se a chamada falhar, a sessão local some e o app vai ao login do mesmo jeito', async () => {
+      const { user } = await renderMenu(() => Promise.resolve(ACCOUNT), 'USER', fakeSession(true));
+
+      await openMenu(user);
+      await user.click(await screen.findByRole('menuitem', { name: 'Sair' }));
+
+      await vi.waitFor(() => {
+        expect(TestBed.inject(Router).url).toBe('/entrar');
+      });
+      expect(TestBed.inject(SessionStore).isAuthenticated()).toBe(false);
+    });
+
+    it('"Sair de todos os dispositivos" pede confirmação antes de encerrar todas', async () => {
+      const { user, session } = await renderMenu(() => Promise.resolve(ACCOUNT));
+
+      await openMenu(user);
+      await user.click(
+        await screen.findByRole('menuitem', { name: /Sair de todos os dispositivos/ }),
+      );
+      expect(session.signOut).not.toHaveBeenCalled();
+
+      await user.click(await screen.findByRole('button', { name: 'Sair de todos' }));
+
+      await vi.waitFor(() => {
+        expect(TestBed.inject(Router).url).toBe('/entrar');
+      });
+      expect(session.signOut).toHaveBeenCalledWith(true);
+    });
+
+    it('cancelar a confirmação mantém a sessão', async () => {
+      const { user, session } = await renderMenu(() => Promise.resolve(ACCOUNT));
+      const router = TestBed.inject(Router);
+      await router.navigateByUrl('/painel');
+
+      await openMenu(user);
+      await user.click(
+        await screen.findByRole('menuitem', { name: /Sair de todos os dispositivos/ }),
+      );
+      await user.click(await screen.findByRole('button', { name: 'Cancelar' }));
+
+      await vi.waitFor(() => {
+        expect(screen.queryByRole('alertdialog')).toBeNull();
+      });
+      expect(session.signOut).not.toHaveBeenCalled();
+      expect(router.url).toBe('/painel');
+      expect(TestBed.inject(SessionStore).isAuthenticated()).toBe(true);
+    });
   });
 });

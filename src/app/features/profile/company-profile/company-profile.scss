@@ -1,0 +1,41 @@
+:host {
+  display: block;
+}
+
+h1 {
+  margin: 0 0 0.25rem;
+  font: var(--mat-sys-headline-medium);
+  color: var(--bios-brand-green);
+  overflow-wrap: anywhere;
+}
+
+.lead {
+  margin: 0 0 1rem;
+  color: var(--bios-brand-moss);
+}
+
+.company {
+  margin-bottom: 1.5rem;
+}
+
+.trade-name {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.cnpj {
+  margin: 0.25rem 0 0;
+  color: var(--bios-brand-moss);
+  font-variant-numeric: tabular-nums;
+}
+
+.section {
+  display: block;
+  padding: 1.25rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+}
+
+.back {
+  margin: 1.5rem 0 0;
+}

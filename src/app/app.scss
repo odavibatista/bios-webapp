@@ -28,6 +28,10 @@
   gap: 1rem;
   background: var(--bios-brand-green);
   color: #fff;
+  // Cor do texto da barra pelo token do Material, que o `mat-toolbar` repassa aos botões de texto
+  // dentro dela (menu da conta). Um `color` no botão empata em especificidade com o do Material e
+  // perde quando os estilos são reinseridos (ao sair e entrar de novo): texto escuro sobre o verde.
+  --mat-toolbar-container-text-color: #fff;
 }
 
 .brand {
@@ -55,6 +59,21 @@
 
 .user-menu {
   margin-left: auto;
+}
+
+// Consulta por CNPJ na barra (#24): só em tela larga, onde cabe ao lado da marca e do menu da
+// conta. Em tela estreita, a consulta fica no painel e em "Empresas".
+.toolbar-search {
+  display: none;
+  margin-left: auto;
+
+  @media (min-width: 1100px) {
+    display: block;
+
+    & ~ .user-menu {
+      margin-left: 0.5rem;
+    }
+  }
 }
 
 .content {

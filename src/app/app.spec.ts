@@ -5,6 +5,7 @@ import { render, screen, within } from '@testing-library/angular';
 import { App } from './app';
 import { BiosApi } from './core/api/bios-api';
 import { PRESENTATION_MODE } from './core/presentation-mode';
+import { SessionService } from './core/session/session.service';
 import { SessionStore } from './core/session/session-store';
 
 @Component({ template: '<h1>Tela</h1>' })
@@ -82,6 +83,7 @@ describe('App', () => {
       providers: [
         provideRouter([]),
         { provide: BiosApi, useValue: { getOwnAccount: () => new Promise(() => undefined) } },
+        { provide: SessionService, useValue: {} },
       ],
       deferBlockStates: DeferBlockState.Complete,
       configureTestBed: () => {
@@ -98,6 +100,10 @@ describe('App', () => {
     // O menu vem sob demanda (`@defer`), fora do bundle inicial.
     expect(
       await within(screen.getByRole('banner')).findByRole('button', { name: /Usuário/ }),
+    ).toBeTruthy();
+    // A consulta por CNPJ também (#24); o CSS a mostra só em tela larga.
+    expect(
+      within(screen.getByRole('banner')).getByLabelText('Consultar empresa por CNPJ'),
     ).toBeTruthy();
   });
 });
