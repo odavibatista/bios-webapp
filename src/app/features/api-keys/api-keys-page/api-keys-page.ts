@@ -23,17 +23,9 @@ import { applyApiErrors } from '../../../shared/errors/form-errors';
 import { fieldMessage } from '../../../shared/forms/account-rules';
 import { AsyncState } from '../../../shared/states/async-state';
 import { FormErrorSummary } from '../../../shared/states/form-error-summary';
+import { formatDateTime } from '../../../shared/format/date-time';
 import { apiKeyNameRules, MAX_ACTIVE_API_KEYS } from '../api-key-rules';
 import { showCreatedKey } from '../created-key-dialog/created-key-dialog';
-
-/** Data e hora no horário de Brasília (`30/10/2026, 10:14`), o mesmo em qualquer fuso. */
-export function formatKeyDate(iso: string): string {
-  return new Intl.DateTimeFormat('pt-BR', {
-    dateStyle: 'short',
-    timeStyle: 'short',
-    timeZone: 'America/Sao_Paulo',
-  }).format(new Date(iso));
-}
 
 /**
  * Chaves de API da conta (UC11, RF16, RF17; #27): gerar com um nome, ver a chave completa uma
@@ -62,7 +54,7 @@ export class ApiKeysPage {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   protected readonly maxKeys = MAX_ACTIVE_API_KEYS;
-  protected readonly formatDate = formatKeyDate;
+  protected readonly formatDate = formatDateTime;
   protected readonly messageOf = fieldMessage;
 
   protected readonly form = new FormGroup({

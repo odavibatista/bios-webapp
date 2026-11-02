@@ -238,6 +238,15 @@ tela. Média omitida por amostra mínima é lacuna explicada, nunca zero, e as c
 Com menos de dois meses registrados, a tela diz que o histórico ainda é insuficiente e mostra o que já
 há. Na versão de apresentação, só aparecem as janelas capturadas da API: nenhum mês é gerado no front.
 
+## Administração
+
+`/admin/dominios-bloqueados` é a blacklist de domínios de e-mail (`src/app/features/admin/`), só para o
+papel `ADMIN`: o `USER` não vê o item no menu e, pela URL, vai para `/acesso-negado`. A lista vem em
+ordem alfabética, paginada, com a origem ("Carga inicial" ou "Administrador") e a data de inclusão.
+Incluir valida o domínio com a regra da API (`shared/forms/domain-rules.ts`: só o domínio, sem `@`) e o
+grava em minúsculas; domínio já bloqueado marca o campo com o aviso da API. Remover pede confirmação.
+O efeito é imediato: o domínio passa (ou deixa) de barrar cadastros e trocas de e-mail na hora.
+
 ## Tema
 
 As cores vêm da apresentação do projeto (`bios-docs/assets/BIOS - PPTX.pptx`). As paletas do Material 3

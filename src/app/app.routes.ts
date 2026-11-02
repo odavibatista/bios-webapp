@@ -132,7 +132,17 @@ export const routes: Routes = [
           {
             path: 'admin',
             canActivateChild: [requireRole('ADMIN')],
-            children: [notFound],
+            children: [
+              {
+                path: 'dominios-bloqueados',
+                title: 'Domínios bloqueados — BIOS',
+                loadComponent: () =>
+                  import('./features/admin/blocked-domains-page/blocked-domains-page').then(
+                    (m) => m.BlockedDomainsPage,
+                  ),
+              },
+              notFound,
+            ],
           },
           {
             path: 'conta/senha',

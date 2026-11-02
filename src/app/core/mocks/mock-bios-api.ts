@@ -3,6 +3,7 @@ import { ApiCredentials } from '../api/api-credentials';
 import { ApiError } from '../api/api-error';
 import { BiosApi, type ApiInput, type BiosOperation } from '../api/bios-api';
 import type * as Api from '../api/generated';
+import { EMAIL_DOMAIN_PATTERN, normalizeEmailDomain } from '../../shared/forms/domain-rules';
 import type { CaptureKey } from './fixtures';
 import { MOCK_API_CONFIG } from './mock-config';
 import type * as MockData from './mock-data';
@@ -49,7 +50,6 @@ interface Detail {
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const DOMAIN = /^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 const STATES = [
   'AC',
   'AL',
@@ -129,6 +129,8 @@ export class MockBiosApi extends BiosApi {
   private readonly sessions: Session[] = [];
   private readonly apiKeys: ApiKey[] = [];
   private readonly domains: Api.BlockedEmailDomain[] = [];
+  /** Removidos da blacklist: a remoção é lógica, e reincluir restaura o registro (UC13, regra 4). */
+  private readonly removedDomains: Api.BlockedEmailDomain[] = [];
 
   /** Os dados capturados; só existem depois da primeira chamada (`run` os carrega). */
   private get d(): typeof MockData {
@@ -552,9 +554,9 @@ export class MockBiosApi extends BiosApi {
     return this.run('addBlockedEmailDomain', () => {
       const path = '/admin/blocked-email-domains';
       this.administrator(path);
-      const domain = body.domain.trim().toLowerCase();
+      const domain = normalizeEmailDomain(body.domain);
 
-      if (!DOMAIN.test(domain)) {
+      if (!EMAIL_DOMAIN_PATTERN.test(domain)) {
         throw this.d.validationError('addBlockedEmailDomain/validacao', path, this.now(), [
           this.field('addBlockedEmailDomain/validacao', 'domain'),
         ]);
@@ -563,7 +565,13 @@ export class MockBiosApi extends BiosApi {
         throw this.error('addBlockedEmailDomain/duplicado', path);
       }
 
-      const created: Api.BlockedEmailDomain = {
+      // Reincluir restaura o mesmo registro, agora em nome do administrador (UC13, regra 4).
+      const removed = this.removedDomains.findIndex((item) => item.domain === domain);
+      const restored =
+        removed >= 0
+          ? { ...this.removedDomains.splice(removed, 1)[0], origin: 'ADMIN' as const }
+          : null;
+      const created: Api.BlockedEmailDomain = restored ?? {
         id: this.id(),
         domain,
         origin: 'ADMIN',
@@ -583,7 +591,7 @@ export class MockBiosApi extends BiosApi {
       const index = this.domains.findIndex((item) => item.id === params.id);
 
       if (index < 0) throw this.error('removeBlockedEmailDomain/nao-encontrado', path);
-      this.domains.splice(index, 1);
+      this.removedDomains.push(...this.domains.splice(index, 1));
     });
   }
 

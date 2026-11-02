@@ -1,0 +1,122 @@
+<h1>Domínios bloqueados</h1>
+<p class="lead">
+  E-mails destes domínios não podem ser usados no cadastro nem na troca de e-mail. Incluir ou
+  remover um domínio vale na hora e não afeta as contas que já existem.
+</p>
+
+<section class="card" aria-labelledby="titulo-bloquear-dominio">
+  <h2 id="titulo-bloquear-dominio">Bloquear domínio</h2>
+
+  <bios-form-error-summary [messages]="formErrors()" />
+
+  <form [formGroup]="form" (ngSubmit)="add()" novalidate>
+    <mat-form-field appearance="outline" class="domain">
+      <mat-label>Domínio</mat-label>
+      <input
+        matInput
+        formControlName="domain"
+        autocomplete="off"
+        autocapitalize="none"
+        spellcheck="false"
+      />
+      <mat-hint>Só o domínio, sem &#64;, como “mailinator.com”.</mat-hint>
+      <mat-error>{{ messageOf(form.controls.domain) }}</mat-error>
+    </mat-form-field>
+    <div class="actions">
+      <button mat-flat-button type="submit" [disabled]="adding()">
+        {{ adding() ? 'Bloqueando…' : 'Bloquear domínio' }}
+      </button>
+    </div>
+  </form>
+</section>
+
+<section aria-labelledby="titulo-blacklist">
+  <h2 id="titulo-blacklist" #listHeading tabindex="-1">Blacklist</h2>
+
+  <div class="feedback">
+    @if (notice(); as notice) {
+      <p class="notice" role="status">{{ notice }}</p>
+    }
+    @if (removeError(); as message) {
+      <p class="remove-error" role="alert">{{ message }}</p>
+    }
+  </div>
+
+  <bios-async-state
+    [loading]="domains.isLoading() && !domains.hasValue()"
+    [error]="domains.error()"
+    [empty]="items().length === 0"
+    emptyMessage="Nenhum domínio bloqueado."
+    loadingLabel="Carregando os domínios…"
+    (retry)="domains.reload()"
+  >
+    @if (pagination(); as pagination) {
+      <p class="count">
+        {{ pagination.total }}
+        {{ pagination.total === 1 ? 'domínio bloqueado' : 'domínios bloqueados' }}, em ordem
+        alfabética.
+      </p>
+    }
+    <div
+      class="table-scroll"
+      role="region"
+      aria-label="Tabela dos domínios bloqueados"
+      tabindex="0"
+    >
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Domínio</th>
+            <th scope="col">Origem</th>
+            <th scope="col">Incluído em</th>
+            <th scope="col"><span class="visually-hidden">Ações</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of items(); track item.id) {
+            <tr>
+              <th scope="row">{{ item.domain }}</th>
+              <td>{{ originLabel(item.origin) }}</td>
+              <td>{{ formatDate(item.created_at) }}</td>
+              <td>
+                <button
+                  mat-stroked-button
+                  type="button"
+                  [attr.aria-label]="'Remover ' + item.domain + ' da blacklist'"
+                  [disabled]="removing() === item.id"
+                  (click)="remove(item)"
+                >
+                  {{ removing() === item.id ? 'Removendo…' : 'Remover' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (pagination(); as pagination) {
+      @if (pagination.total_pages > 1) {
+        <nav class="pager" aria-label="Páginas da blacklist">
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="pagination.page <= 1"
+            (click)="goTo(pagination.page - 1)"
+          >
+            Página anterior
+          </button>
+          <span>Página {{ pagination.page }} de {{ pagination.total_pages }}</span>
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="pagination.page >= pagination.total_pages"
+            (click)="goTo(pagination.page + 1)"
+          >
+            Próxima página
+          </button>
+        </nav>
+      }
+    }
+  </bios-async-state>
+</section>
