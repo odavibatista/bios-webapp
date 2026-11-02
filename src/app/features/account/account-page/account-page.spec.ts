@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
-import { render, screen, within } from '@testing-library/angular';
+import { provideRouter, Router } from '@angular/router';
+import { fireEvent, render, screen, within } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { InMemoryApiCredentials } from '../../../core/api/api-credentials';
 import { ApiError } from '../../../core/api/api-error';
@@ -212,5 +212,53 @@ describe('AccountPage', () => {
     expect(screen.getByRole('link', { name: 'Alterar a senha' }).getAttribute('href')).toBe(
       '/conta/senha',
     );
+  });
+
+  describe('excluir a conta (#30)', () => {
+    /**
+     * Sem o user-event: o diálogo fecha logo depois da resposta da API, e os ouvintes de foco dele
+     * dispariam a detecção de mudanças dentro de outra (NG0101), o que só acontece no teste.
+     */
+    async function openDeletion() {
+      await render(AccountPage, {
+        providers: [
+          provideRouter([{ path: '**', component: AccountPage }]),
+          provideMockBiosApi({ latencyMs: 0 }),
+        ],
+      });
+      await signIn(USER);
+      await screen.findByRole('heading', { name: 'Seus dados' });
+      fireEvent.click(screen.getByRole('button', { name: 'Excluir conta' }));
+
+      return within(await screen.findByRole('alertdialog', { name: 'Excluir a sua conta?' }));
+    }
+
+    it('confirmada com a senha, apaga a sessão local e volta à página inicial com o aviso', async () => {
+      const dialog = await openDeletion();
+
+      fireEvent.input(dialog.getByLabelText('Senha'), { target: { value: PASSWORD } });
+      fireEvent.click(dialog.getByRole('button', { name: 'Excluir conta' }));
+
+      await vi.waitFor(() => {
+        expect(TestBed.inject(Router).url).toBe('/?conta=excluida');
+      });
+      expect(TestBed.inject(SessionStore).isAuthenticated()).toBe(false);
+      // A conta não existe mais: entrar com ela é recusado.
+      await expect(
+        TestBed.inject(BiosApi).login({ body: { email: USER, password: PASSWORD } }),
+      ).rejects.toMatchObject({ status: 401 });
+    });
+
+    it('cancelar mantém a conta e a sessão', async () => {
+      const dialog = await openDeletion();
+
+      fireEvent.click(dialog.getByRole('button', { name: 'Cancelar' }));
+
+      await vi.waitFor(() => {
+        expect(screen.queryByRole('alertdialog')).toBeNull();
+      });
+      expect(TestBed.inject(SessionStore).isAuthenticated()).toBe(true);
+      expect(screen.getByRole('heading', { name: 'Seus dados' })).toBeTruthy();
+    });
   });
 });

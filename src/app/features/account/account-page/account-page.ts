@@ -17,9 +17,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { OwnAccount } from '../../../core/account/own-account';
 import type { AccountResponse } from '../../../core/api/generated';
+import { SessionStore } from '../../../core/session/session-store';
 import { roleLabel } from '../../../layout/panel-nav';
 import { confirmAction } from '../../../shared/dialogs/confirm-dialog';
 import { describeError } from '../../../shared/errors/describe-error';
@@ -36,6 +37,10 @@ import {
 import { AsyncState } from '../../../shared/states/async-state';
 import { FormErrorSummary } from '../../../shared/states/form-error-summary';
 import { accountChanges, accountFormValue } from '../account-changes';
+import { confirmAccountDeletion } from '../delete-account-dialog/delete-account-dialog';
+
+/** O aviso que a página inicial mostra depois da exclusão (`/?conta=excluida`). */
+export const ACCOUNT_DELETED_PARAM = { conta: 'excluida' } as const;
 
 /**
  * Painel da conta (UC05, RF26; #23): os dados de quem entrou (nome, e-mail, endereço e papel) e a
@@ -43,7 +48,9 @@ import { accountChanges, accountFormValue } from '../account-changes';
  * mudou; o que a tela mostra depois é o que a API devolveu. "Remover endereço" pede confirmação e
  * envia `address: null`.
  *
- * A troca de e-mail (FE-13) e a exclusão da conta (FE-14) entram como seções desta página.
+ * "Excluir conta" (UC05, fluxos 1.2 e 1.3; #30) abre a confirmação com a senha; excluída, a sessão
+ * local some e o app volta à página inicial, com o aviso. A troca de e-mail (FE-13) entra como
+ * outra seção desta página.
  */
 @Component({
   selector: 'bios-account-page',
@@ -63,6 +70,8 @@ import { accountChanges, accountFormValue } from '../account-changes';
 })
 export class AccountPage {
   private readonly own = inject(OwnAccount);
+  private readonly session = inject(SessionStore);
+  private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
@@ -203,6 +212,17 @@ export class AccountPage {
     } finally {
       this.saving.set(false);
     }
+  }
+
+  /**
+   * Exclui a conta depois da confirmação com a senha. A API já encerrou a sessão (UC05, regra 6):
+   * aqui só falta apagar a local, sem chamar o logout, que receberia um 401.
+   */
+  protected async deleteAccount(): Promise<void> {
+    if (!(await confirmAccountDeletion(this.dialog))) return;
+
+    this.session.clear();
+    await this.router.navigate(['/'], { queryParams: ACCOUNT_DELETED_PARAM });
   }
 
   private addressControl(field: AddressField): FormControl<string> {
