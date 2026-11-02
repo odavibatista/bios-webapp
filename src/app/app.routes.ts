@@ -106,6 +106,15 @@ export const routes: Routes = [
               import('./features/access-denied/access-denied').then((m) => m.AccessDenied),
           },
           {
+            // Os critérios vão na URL (`?uf=MG&ods=13`): a pesquisa é compartilhável.
+            path: 'pesquisa',
+            title: 'Pesquisar empresas — BIOS',
+            loadComponent: () =>
+              import('./features/search/company-search/company-search').then(
+                (m) => m.CompanySearch,
+              ),
+          },
+          {
             path: 'admin',
             canActivateChild: [requireRole('ADMIN')],
             children: [notFound],

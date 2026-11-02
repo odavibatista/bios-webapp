@@ -88,6 +88,18 @@ describe('routes', () => {
     expect(page.inPanel).toBe(true);
   });
 
+  it('a pesquisa de empresas é privada e abre dentro da casca, com os critérios da URL', async () => {
+    expect((await navigate('/pesquisa?uf=MG')).url).toBe('/entrar?voltar=%2Fpesquisa%3Fuf%3DMG');
+
+    TestBed.resetTestingModule();
+    const page = await navigate('/pesquisa?uf=MG', 'USER');
+
+    expect(page.url).toBe('/pesquisa?uf=MG');
+    expect(page.title).toBe('Pesquisar empresas — BIOS');
+    expect(page.heading).toBe('Pesquisar empresas');
+    expect(page.inPanel).toBe(true);
+  });
+
   it.each([
     ['/empresas', 'Empresas — BIOS'],
     ['/empresas/00990842000138', 'Empresa — BIOS'],
