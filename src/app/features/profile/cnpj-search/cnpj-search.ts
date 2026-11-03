@@ -3,30 +3,45 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  effect,
   inject,
   Injector,
   input,
-  type OnInit,
 } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { type AbstractControl, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { Router } from '@angular/router';
 import { CNPJ_ERROR_KEY, cnpjRule, parseCnpj } from '../../../shared/cnpj/cnpj';
+import { nameRule } from '../../search/search-rules';
+import { RULES_ERROR_KEY } from '../../../shared/forms/account-rules';
 
-/** Caminho da consulta por CNPJ (`/empresas`) e do perfil (`/empresas/:cnpj`). */
+/** Um número que parece CNPJ continua no fluxo de validação do CNPJ. */
+function looksLikeCnpj(value: string): boolean {
+  return /^[\d.\-/\s]+$/.test(value) || /^[A-Za-z\d]{12}\d{2}$/.test(value.trim());
+}
+
+export const companyLookupRule = (control: AbstractControl) => {
+  const value = String(control.value ?? '').trim();
+  if (parseCnpj(value)) return null;
+  if (looksLikeCnpj(value)) return cnpjRule(control);
+  if (!value) return { [CNPJ_ERROR_KEY]: 'Informe um CNPJ ou o nome da empresa.' };
+  const errors = nameRule(control);
+  return errors ? { [CNPJ_ERROR_KEY]: (errors[RULES_ERROR_KEY] as string[])[0] } : null;
+};
+
+/** Caminho da busca (`/empresas`) e do perfil (`/empresas/:cnpj`). */
 export const COMPANIES_PATH = '/empresas';
 
 /**
- * Campo de busca por CNPJ (UC06, passos 1–2; #24). O CNPJ é conferido aqui, com o algoritmo da
- * API, antes de qualquer chamada (fluxo 2.1); válido, abre `/empresas/<cnpj normalizado>`, sem a
- * máscara na URL.
+ * Campo único de busca (UC06; #24 e #31). CNPJ válido abre o perfil; texto válido abre a lista
+ * local por nome. A validação acontece antes de chamar a API.
  *
  * - `form`: campo com rótulo, dica e erro (painel e `/empresas`).
- * - `toolbar`: compacto, para a barra do topo. CNPJ inválido leva a `/empresas`, que mostra o erro
- *   no campo completo.
+ * - `toolbar`: compacto, para a barra do topo. Entrada inválida leva a `/empresas`, que mostra o
+ *   erro no campo completo.
  */
 @Component({
   selector: 'bios-cnpj-search',
@@ -41,19 +56,19 @@ export const COMPANIES_PATH = '/empresas';
   styleUrl: './cnpj-search.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class CnpjSearch implements OnInit {
+export class CnpjSearch {
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly variant = input<'form' | 'toolbar'>('form');
-  /** CNPJ já digitado (ex.: o que veio da barra), conferido ao abrir. */
+  /** Valor já digitado ou presente na URL, conferido ao abrir. */
   readonly initial = input<string>();
 
   /** Conferido no envio: sair do campo vazio não acusa erro. */
   protected readonly form = new FormGroup(
     {
-      cnpj: new FormControl('', { nonNullable: true, validators: [cnpjRule] }),
+      cnpj: new FormControl('', { nonNullable: true, validators: [companyLookupRule] }),
     },
     { updateOn: 'submit' },
   );
@@ -62,13 +77,14 @@ export class CnpjSearch implements OnInit {
     return this.form.controls.cnpj;
   }
 
-  ngOnInit(): void {
-    const initial = this.initial();
-
-    if (initial) {
-      this.cnpj.setValue(initial);
-      this.cnpj.markAsTouched();
-    }
+  constructor() {
+    effect(() => {
+      const initial = this.initial();
+      if (initial) {
+        this.cnpj.setValue(initial);
+        this.cnpj.markAsTouched();
+      }
+    });
   }
 
   protected errorMessage(): string | null {
@@ -78,7 +94,8 @@ export class CnpjSearch implements OnInit {
   }
 
   protected async submit(): Promise<void> {
-    const cnpj = parseCnpj(this.cnpj.value);
+    const value = this.cnpj.value.trim();
+    const cnpj = parseCnpj(value);
 
     if (cnpj) {
       await this.router.navigate([COMPANIES_PATH, cnpj]);
@@ -86,8 +103,14 @@ export class CnpjSearch implements OnInit {
       return;
     }
 
+    if (this.cnpj.valid) {
+      await this.router.navigate([COMPANIES_PATH], { queryParams: { nome: value } });
+      if (this.variant() === 'toolbar') this.cnpj.reset();
+      return;
+    }
+
     if (this.variant() === 'toolbar') {
-      await this.router.navigate([COMPANIES_PATH], { queryParams: { cnpj: this.cnpj.value } });
+      await this.router.navigate([COMPANIES_PATH], { queryParams: { cnpj: value } });
       this.cnpj.reset();
       return;
     }

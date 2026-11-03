@@ -1,42 +1,72 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { BreakpointObserver } from '@angular/cdk/layout';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  resource,
+} from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormControl } from '@angular/forms';
+import { MatButtonModule } from '@angular/material/button';
+import { ActivatedRoute, Router } from '@angular/router';
+import { map } from 'rxjs';
+import { BiosApi } from '../../../core/api/bios-api';
+import { RULES_ERROR_KEY } from '../../../shared/forms/account-rules';
+import { AsyncState } from '../../../shared/states/async-state';
+import { ErrorState } from '../../../shared/states/error-state';
+import { nameRule } from '../../search/search-rules';
+import { SearchResults } from '../../search/search-results/search-results';
 import { CnpjSearch } from '../cnpj-search/cnpj-search';
 
-/**
- * Consulta de empresas (`/empresas`; UC06, passo 1; #24): o campo de CNPJ. O `?cnpj=` traz o que
- * foi digitado na barra do topo quando não era válido, para o erro aparecer no campo. A busca por
- * razão social ou nome fantasia (FE-16) entra nesta página.
- */
+/** Consulta por nome com a mesma operação e a mesma lista da pesquisa. */
 @Component({
   selector: 'bios-company-lookup',
-  imports: [CnpjSearch],
-  template: `
-    <h1>Empresas</h1>
-    <p class="lead">
-      Informe o CNPJ para ver os dados cadastrais da empresa e, a partir deles, as evidências
-      ambientais e o índice de aderência por ODS.
-    </p>
-    <bios-cnpj-search [initial]="cnpj()" />
-  `,
-  styles: `
-    h1 {
-      margin: 0 0 0.5rem;
-      font: var(--mat-sys-headline-medium);
-      color: var(--bios-brand-green);
-    }
-
-    .lead {
-      max-width: 70ch;
-      margin: 0 0 1.5rem;
-      color: var(--bios-brand-moss);
-    }
-
-    bios-cnpj-search {
-      max-width: 36rem;
-    }
-  `,
+  imports: [AsyncState, CnpjSearch, ErrorState, MatButtonModule, SearchResults],
+  templateUrl: './company-lookup.html',
+  styleUrl: './company-lookup.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CompanyLookup {
-  /** CNPJ digitado na barra do topo que não passou na conferência (`?cnpj=`). */
+  private readonly api = inject(BiosApi);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+
+  /** CNPJ inválido digitado na barra, para exibir o erro no campo completo. */
   readonly cnpj = input<string>();
+
+  private readonly query = toSignal(this.route.queryParamMap, {
+    initialValue: this.route.snapshot.queryParamMap,
+  });
+  protected readonly name = computed(() => this.query().get('nome')?.trim() ?? '');
+  protected readonly page = computed(() => {
+    const raw = this.query().get('pagina');
+    const value = raw && /^[1-9]\d*$/.test(raw) ? Number(raw) : 1;
+    return Number.isSafeInteger(value) ? value : 1;
+  });
+  protected readonly nameError = computed(() => {
+    if (!this.name()) return null;
+    const errors = nameRule(new FormControl(this.name()));
+    return (errors?.[RULES_ERROR_KEY] as string[] | undefined)?.[0] ?? null;
+  });
+  protected readonly cards = toSignal(
+    inject(BreakpointObserver)
+      .observe('(max-width: 719.98px)')
+      .pipe(map((state) => state.matches)),
+    { initialValue: false },
+  );
+  protected readonly results = resource({
+    params: () =>
+      this.name() && !this.nameError() ? { name: this.name(), page: this.page() } : undefined,
+    loader: ({ params }) =>
+      this.api.searchCompanies({ query: { name: params.name, page: params.page, page_size: 20 } }),
+  });
+
+  protected goToPage(page: number): Promise<boolean> {
+    return this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { nome: this.name(), pagina: page === 1 ? null : page, cnpj: null },
+    });
+  }
 }

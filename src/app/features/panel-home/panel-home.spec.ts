@@ -29,9 +29,9 @@ describe('PanelHome', () => {
   it('traz o campo de consulta por CNPJ logo no topo', async () => {
     await renderHome();
 
-    const lookup = screen.getByRole('region', { name: 'Consultar uma empresa pelo CNPJ' });
+    const lookup = screen.getByRole('region', { name: 'Buscar uma empresa pelo CNPJ ou nome' });
     expect(lookup.querySelector('bios-cnpj-search')).not.toBeNull();
-    expect(screen.getByRole('search', { name: 'Consultar empresa por CNPJ' })).toBeTruthy();
+    expect(screen.getByRole('search', { name: 'Buscar empresa por CNPJ ou nome' })).toBeTruthy();
   });
 
   it('leva à consulta, à pesquisa e aos setores', async () => {
