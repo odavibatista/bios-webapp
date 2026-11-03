@@ -27,9 +27,9 @@
       <li>
         <mat-card appearance="outlined" class="ods-card">
           <mat-card-header>
-            <mat-icon mat-card-avatar fontSet="material-symbols-outlined" aria-hidden="true">
-              {{ ods.icon }}
-            </mat-icon>
+            <span mat-card-avatar class="card-icon" aria-hidden="true">
+              <mat-icon fontSet="material-symbols-outlined">{{ ods.icon }}</mat-icon>
+            </span>
             <mat-card-title>ODS {{ ods.number }}</mat-card-title>
             <mat-card-subtitle>{{ ods.title }}</mat-card-subtitle>
           </mat-card-header>
