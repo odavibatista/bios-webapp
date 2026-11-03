@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import type { CompanySearchItem } from '../../../core/api/generated';
+import type { SearchOrder } from '../search-criteria';
 import { formatCnpj, formatConfidence, formatScore, statusLabel } from '../search-format';
 
 /**
@@ -20,6 +21,13 @@ export class SearchResults {
   /** O ODS escolhido (`ODS 13`), ou `null` sem ODS: aí não há colunas de índice. */
   readonly odsLabel = input<string | null>(null);
   readonly layout = input<'table' | 'cards'>('table');
+  readonly order = input<SearchOrder | null>(null);
+
+  protected readonly firstMissingIndex = computed(() =>
+    this.order() === null
+      ? -1
+      : this.items().findIndex((item) => this.missing(item.ods_score?.score_value)),
+  );
 
   protected readonly cnpj = formatCnpj;
   protected readonly status = statusLabel;

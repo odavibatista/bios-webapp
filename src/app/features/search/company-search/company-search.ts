@@ -35,6 +35,7 @@ import {
   hasCriterion,
   PAGE_SIZE_OPTIONS,
   type SearchCriteria,
+  type SearchOrder,
   toApiQuery,
 } from '../search-criteria';
 import {
@@ -61,6 +62,7 @@ type CriteriaForm = FormGroup<{
   city: FormControl<string>;
   cnae: FormControl<string>;
   ods: FormControl<number | null>;
+  order: FormControl<SearchOrder | null>;
   min_score: FormControl<string>;
   min_confidence: FormControl<string>;
 }>;
@@ -131,6 +133,7 @@ export class CompanySearch {
     city: new FormControl('', { nonNullable: true, validators: [cityRule] }),
     cnae: new FormControl('', { nonNullable: true, validators: [cnaeRule] }),
     ods: new FormControl<number | null>(null),
+    order: new FormControl<SearchOrder | null>(null),
     min_score: new FormControl('', { nonNullable: true, validators: [minScoreRule] }),
     min_confidence: new FormControl('', { nonNullable: true, validators: [minConfidenceRule] }),
   });
@@ -193,7 +196,7 @@ export class CompanySearch {
       });
     });
 
-    // Sem ODS, índice mínimo e confiança mínima não existem (UC08, regra 3).
+    // Sem ODS, índice mínimo, confiança mínima e ordenação não existem (UC08, regra 3).
     this.form.controls.ods.valueChanges.subscribe((ods) => {
       this.syncOdsFilters(ods);
     });
@@ -264,8 +267,7 @@ export class CompanySearch {
       ods,
       minScore: ods === null ? null : decimal(raw.min_score),
       minConfidence: ods === null ? null : decimal(raw.min_confidence),
-      // A ordenação ainda não tem controle na tela (FE-21): mantém a da URL, se houver.
-      order: ods === null ? null : this.criteria().order,
+      order: ods === null ? null : raw.order,
       page: 1,
       pageSize: this.criteria().pageSize,
     };
@@ -278,6 +280,7 @@ export class CompanySearch {
       city: criteria.city ?? '',
       cnae: criteria.cnae ?? '',
       ods: criteria.ods,
+      order: criteria.order,
       min_score: criteria.minScore === null ? '' : String(criteria.minScore),
       min_confidence: criteria.minConfidence === null ? '' : String(criteria.minConfidence),
     });
@@ -285,6 +288,13 @@ export class CompanySearch {
   }
 
   private syncOdsFilters(ods: number | null): void {
+    if (ods === null) {
+      this.form.controls.order.reset(null, { emitEvent: false });
+      this.form.controls.order.disable({ emitEvent: false });
+    } else {
+      this.form.controls.order.enable({ emitEvent: false });
+    }
+
     for (const control of [this.form.controls.min_score, this.form.controls.min_confidence]) {
       if (ods === null) {
         control.reset('', { emitEvent: false });
