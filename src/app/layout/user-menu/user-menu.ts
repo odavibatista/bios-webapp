@@ -25,13 +25,15 @@ import { roleLabel } from '../panel-nav';
     @if (role(); as role) {
       <button mat-button class="trigger" [matMenuTriggerFor]="menu">
         <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">account_circle</mat-icon>
-        @if (name(); as name) {
-          <span class="name">{{ name }}</span>
-        } @else {
-          <span class="skeleton" aria-hidden="true"></span>
-          <span class="visually-hidden">Carregando a conta</span>
-        }
-        <span class="role">{{ role }}</span>
+        <span class="identity">
+          @if (name(); as name) {
+            <span class="name">{{ name }}</span>
+          } @else {
+            <span class="skeleton" aria-hidden="true"></span>
+            <span class="visually-hidden">Carregando a conta</span>
+          }
+          <span class="role">{{ role }}</span>
+        </span>
       </button>
       <mat-menu #menu="matMenu" xPosition="before">
         @if (email(); as email) {
@@ -56,17 +58,26 @@ import { roleLabel } from '../panel-nav';
   styles: `
     .trigger {
       color: inherit;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .identity {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-width: 0;
     }
 
     // Nome longo não empurra a barra para fora da tela (NFIN02): corta com reticências, e o nome
     // inteiro continua no nome acessível do botão.
     .name {
-      display: inline-block;
+      display: block;
       max-width: 12rem;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      vertical-align: middle;
+      line-height: 1.25rem;
 
       @media (max-width: 600px) {
         max-width: 7rem;
@@ -74,9 +85,9 @@ import { roleLabel } from '../panel-nav';
     }
 
     .role {
-      margin-left: 0.5rem;
       opacity: 0.85;
       font: var(--mat-sys-body-small);
+      line-height: 1.25rem;
 
       @media (max-width: 600px) {
         display: none;
