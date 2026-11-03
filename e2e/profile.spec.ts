@@ -35,6 +35,15 @@ test.describe('perfil da empresa (#24)', () => {
     await expect(data).toContainText('2431-8/00');
     await expect(data).toContainText('PRODUÇÃO DE TUBOS DE AÇO COM COSTURA');
     await expect(data).toContainText('Cadastro atualizado na fonte em 30/10/2026');
+    const scores = page.getByRole('region', { name: 'Índices por ODS' });
+    await expect(scores.getByRole('article', { name: 'ODS 13' })).toContainText(
+      'Sem evidência conclusiva',
+    );
+    await expect(scores.getByRole('article', { name: 'ODS 15' })).toContainText('-80');
+    await expect(scores.getByRole('article', { name: 'ODS 15' })).toContainText('0,50');
+    await expect(
+      scores.getByRole('img', { name: /Índice do ODS 15: -80 numa escala de −100 a 100/ }),
+    ).toBeVisible();
     await expectAccessible(page, testInfo, 'perfil da empresa');
   });
 

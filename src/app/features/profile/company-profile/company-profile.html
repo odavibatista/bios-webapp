@@ -36,7 +36,8 @@
         [profile]="profile.value()"
         (refresh)="profile.reload()"
       />
-      <!-- Índices por ODS e explicação (FE-18, FE-19) entram aqui. -->
+      <bios-ods-scores class="indices" [profile]="profile.value()" />
+      <!-- A explicação do índice (FE-19) entra após os cartões. -->
     } @else {
       <h1>Empresa</h1>
       <bios-loading label="Consultando a empresa…" />
