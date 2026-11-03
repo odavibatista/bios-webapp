@@ -61,6 +61,53 @@ test.describe('pesquisa de empresas (#25)', () => {
     }
   });
 
+  test('ordena pelo índice em ambos os sentidos e mantém empresas sem índice ao fim', async ({
+    page,
+  }, testInfo) => {
+    await signInToSearch(page, '?cnae=24&ods=13');
+    await expect(page.getByRole('status')).toHaveText('10 empresas encontradas');
+
+    const order = page.getByRole('combobox', { name: 'Ordenar pelo índice' });
+    for (const [direction, option, ariaSort] of [
+      ['desc', 'Maior índice primeiro', 'descending'],
+      ['asc', 'Menor índice primeiro', 'ascending'],
+    ] as const) {
+      await order.focus();
+      await order.press('Enter');
+      await page.getByRole('option', { name: option }).click();
+      await page.getByRole('button', { name: 'Pesquisar' }).click();
+      await expect(page).toHaveURL(`/pesquisa?cnae=24&ods=13&ordem=${direction}`);
+      await expect(page.getByRole('status')).toHaveText('10 empresas encontradas');
+
+      const scoreCells =
+        testInfo.project.name === 'celular'
+          ? page.locator('.cards article dl > div:nth-child(5) dd')
+          : page.locator('tbody tr:has(th a) td:nth-last-child(2)');
+      await expect(scoreCells).toHaveCount(10);
+      const scores = await scoreCells.allTextContents();
+      const numeric = scores
+        .filter((score) => score.trim() !== 'Sem índice')
+        .map((score) => Number(score.trim().replace(',', '.')));
+      expect(numeric.length).toBeGreaterThan(0);
+      expect(numeric).toEqual([...numeric].sort((a, b) => (direction === 'asc' ? a - b : b - a)));
+      expect(scores.slice(numeric.length).every((score) => score.trim() === 'Sem índice')).toBe(
+        true,
+      );
+      await expect(page.getByText('Sem índice calculado — apresentados ao fim')).toBeVisible();
+      if (testInfo.project.name !== 'celular') {
+        await expect(page.getByRole('columnheader', { name: 'Índice no ODS 13' })).toHaveAttribute(
+          'aria-sort',
+          ariaSort,
+        );
+      }
+      await expectAccessible(page, testInfo, `resultados ordenados ${direction}`);
+    }
+
+    await page.goBack();
+    await expect(page).toHaveURL('/pesquisa?cnae=24&ods=13&ordem=desc');
+    await expect(order).toContainText('Maior índice primeiro');
+  });
+
   test('ODS fora dos calculados mostra os disponíveis', async ({ page }) => {
     await signInToSearch(page, '?cnae=24&ods=7');
 

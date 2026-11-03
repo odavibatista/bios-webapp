@@ -12,13 +12,28 @@
           <th scope="col">Município</th>
           <th scope="col">CNAE principal</th>
           @if (odsLabel(); as ods) {
-            <th scope="col" class="number">Índice no {{ ods }}</th>
+            <th
+              scope="col"
+              class="number"
+              [attr.aria-sort]="
+                order() === 'asc' ? 'ascending' : order() === 'desc' ? 'descending' : null
+              "
+            >
+              Índice no {{ ods }}
+            </th>
             <th scope="col" class="number">Confiança no {{ ods }}</th>
           }
         </tr>
       </thead>
       <tbody>
-        @for (item of items(); track item.cnpj) {
+        @for (item of items(); track item.cnpj; let index = $index) {
+          @if (index === firstMissingIndex()) {
+            <tr class="unscored-divider">
+              <td [attr.colspan]="odsLabel() ? 7 : 5">
+                Sem índice calculado — apresentados ao fim
+              </td>
+            </tr>
+          }
           <tr>
             <th scope="row">
               <a [routerLink]="['/empresas', item.cnpj]">{{ item.legal_name }}</a>
@@ -48,7 +63,10 @@
   </div>
 } @else {
   <ul class="cards" aria-label="Empresas encontradas">
-    @for (item of items(); track item.cnpj) {
+    @for (item of items(); track item.cnpj; let index = $index) {
+      @if (index === firstMissingIndex()) {
+        <li class="unscored-divider">Sem índice calculado — apresentados ao fim</li>
+      }
       <li>
         <article class="card">
           <h3>

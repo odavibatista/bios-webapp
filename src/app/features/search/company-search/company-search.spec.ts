@@ -66,6 +66,10 @@ describe('CompanySearch', () => {
 
     expect(screen.getByLabelText('Índice mínimo').hasAttribute('disabled')).toBe(true);
     expect(screen.getByLabelText('Confiança mínima').hasAttribute('disabled')).toBe(true);
+    expect(
+      screen.getByRole('combobox', { name: 'Ordenar pelo índice' }).getAttribute('aria-disabled'),
+    ).toBe('true');
+    expect(screen.getByText('Escolha um ODS para ordenar')).toBeTruthy();
 
     await user.click(screen.getByRole('combobox', { name: 'ODS' }));
     const options = (await screen.findAllByRole('option')).map((option) =>
@@ -81,6 +85,52 @@ describe('CompanySearch', () => {
 
     expect(screen.getByLabelText('Índice mínimo').hasAttribute('disabled')).toBe(false);
     expect(screen.getByLabelText('Confiança mínima').hasAttribute('disabled')).toBe(false);
+    expect(
+      screen.getByRole('combobox', { name: 'Ordenar pelo índice' }).getAttribute('aria-disabled'),
+    ).toBe('false');
+  });
+
+  it('ordena pelo índice nos dois sentidos, reflete a URL e limpa a ordem sem ODS', async () => {
+    const { search, user, router } = await openSearch('/pesquisa?cnae=24&ods=13');
+    await resultRows();
+
+    const order = screen.getByRole('combobox', { name: 'Ordenar pelo índice' });
+    await user.click(order);
+    await user.click(screen.getByRole('option', { name: 'Maior índice primeiro' }));
+    await user.click(screen.getByRole('button', { name: 'Pesquisar' }));
+
+    await vi.waitFor(() => expect(router.url).toBe('/pesquisa?cnae=24&ods=13&ordem=desc'));
+    expect(search).toHaveBeenLastCalledWith({
+      query: { page: 1, page_size: 20, cnae: '24', ods: 13, order: 'desc' },
+    });
+    expect(
+      (await screen.findByRole('columnheader', { name: 'Índice no ODS 13' })).getAttribute(
+        'aria-sort',
+      ),
+    ).toBe('descending');
+
+    await user.click(order);
+    await user.click(screen.getByRole('option', { name: 'Menor índice primeiro' }));
+    await user.click(screen.getByRole('button', { name: 'Pesquisar' }));
+
+    await vi.waitFor(() => expect(router.url).toBe('/pesquisa?cnae=24&ods=13&ordem=asc'));
+    expect(search).toHaveBeenLastCalledWith({
+      query: { page: 1, page_size: 20, cnae: '24', ods: 13, order: 'asc' },
+    });
+    expect(
+      (await screen.findByRole('columnheader', { name: 'Índice no ODS 13' })).getAttribute(
+        'aria-sort',
+      ),
+    ).toBe('ascending');
+
+    await router.navigateByUrl('/pesquisa?cnae=24&ods=13&ordem=desc');
+    await vi.waitFor(() => expect(order.textContent).toContain('Maior índice primeiro'));
+
+    await user.click(screen.getByRole('combobox', { name: 'ODS' }));
+    await user.click(screen.getByRole('option', { name: 'Nenhum' }));
+    expect(order.getAttribute('aria-disabled')).toBe('true');
+    await user.click(screen.getByRole('button', { name: 'Pesquisar' }));
+    await vi.waitFor(() => expect(router.url).toBe('/pesquisa?cnae=24'));
   });
 
   it('pesquisar leva os critérios à URL e envia à API só o que foi informado', async () => {

@@ -237,12 +237,14 @@ setorial ter duas janelas reais.
 os que o BIOS calcula (`listOds`), por índice e confiança mínimos. Os critérios moram na URL
 (`/pesquisa?cnae=24&ods=13&indice_min=0&pagina=2&por_pagina=50`): o link é compartilhável e o "voltar"
 do navegador refaz a pesquisa anterior. `search-criteria.ts` converte URL, formulário e consulta da API;
-mínimos e ordenação (`ordem`, com controle na FE-21) só existem com o ODS, e a consulta nunca os leva
+mínimos e ordenação (`ordem=asc` ou `ordem=desc`) só existem com o ODS, e a consulta nunca os leva
 sem ele. As regras dos campos (`search-rules.ts`) são as da API.
 
 Com um ODS, cada empresa traz índice e confiança em colunas separadas; sem cálculo, aparece "Sem índice",
 nunca zero. A lista é tabela em tela larga e cartões abaixo de 720 px; a tabela rola dentro do próprio
 contêiner. ODS fora dos calculados mostra os disponíveis, com botão para pesquisar em cada um.
+Ao ordenar pelo índice, empresas sem cálculo ficam ao fim nos dois sentidos e são separadas visualmente;
+empates usam confiança maior e depois CNPJ. O cabeçalho da tabela anuncia a direção da ordenação.
 
 ## Setores
 
