@@ -51,9 +51,9 @@ export const PANEL_SHORTCUTS: readonly Shortcut[] = [
           <a class="shortcut" [routerLink]="shortcut.path">
             <mat-card appearance="outlined">
               <mat-card-header>
-                <mat-icon mat-card-avatar fontSet="material-symbols-outlined" aria-hidden="true">
-                  {{ shortcut.icon }}
-                </mat-icon>
+                <span mat-card-avatar class="card-icon" aria-hidden="true">
+                  <mat-icon fontSet="material-symbols-outlined">{{ shortcut.icon }}</mat-icon>
+                </span>
                 <mat-card-title>{{ shortcut.title }}</mat-card-title>
               </mat-card-header>
               <mat-card-content>
@@ -107,7 +107,10 @@ export const PANEL_SHORTCUTS: readonly Shortcut[] = [
         height: 100%;
       }
 
-      mat-icon {
+      .card-icon {
+        display: grid;
+        place-items: center;
+        background: var(--mat-sys-primary-container);
         color: var(--bios-brand-green);
       }
 
