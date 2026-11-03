@@ -150,7 +150,11 @@ the top bar menu reads: on save, the API's response applies in both places, with
   enabled only once it is filled in, and a wrong password keeps the dialog open, with the error on the
   field. Once deleted, the local session is cleared (the API already ended it) and the app goes back to
   the home page with a notice (`/?conta=excluida`).
-- Email change (FE-13) comes in as another section of this page.
+- **Change email:** asks for the new address and the current password; the link goes to the new
+  address, and until it is opened the account's email stays the current one. The response is the same
+  for a free address and for one that belongs to another account. The link opens
+  `/confirmar-novo-email/:token` (public: it may be opened on another device), which applies the change
+  and, with a session, reloads the account.
 
 ## Screen states and errors
 

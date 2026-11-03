@@ -38,6 +38,7 @@ import { AsyncState } from '../../../shared/states/async-state';
 import { FormErrorSummary } from '../../../shared/states/form-error-summary';
 import { accountChanges, accountFormValue } from '../account-changes';
 import { confirmAccountDeletion } from '../delete-account-dialog/delete-account-dialog';
+import { EmailChange } from '../email-change/email-change';
 
 /** O aviso que a página inicial mostra depois da exclusão (`/?conta=excluida`). */
 export const ACCOUNT_DELETED_PARAM = { conta: 'excluida' } as const;
@@ -49,13 +50,14 @@ export const ACCOUNT_DELETED_PARAM = { conta: 'excluida' } as const;
  * envia `address: null`.
  *
  * "Excluir conta" (UC05, fluxos 1.2 e 1.3; #30) abre a confirmação com a senha; excluída, a sessão
- * local some e o app volta à página inicial, com o aviso. A troca de e-mail (FE-13) entra como
- * outra seção desta página.
+ * local some e o app volta à página inicial, com o aviso. "Trocar e-mail" (#29) pede o novo
+ * endereço e a senha atual; o e-mail mostrado continua o atual até a confirmação pelo link.
  */
 @Component({
   selector: 'bios-account-page',
   imports: [
     AsyncState,
+    EmailChange,
     FormErrorSummary,
     MatButtonModule,
     MatFormFieldModule,

@@ -1,0 +1,45 @@
+@if (requested(); as requested) {
+  <div class="requested">
+    <p class="message" role="status">{{ requested.message }}</p>
+    <p>
+      Até você abrir o link, o e-mail da conta continua sendo
+      <strong>{{ currentEmail() }}</strong
+      >.
+    </p>
+    <button mat-stroked-button type="button" (click)="startOver()">
+      Trocar por outro endereço
+    </button>
+    <bios-mail-preview
+      [to]="requested.newEmail"
+      kind="confirmar-novo-email"
+      [since]="requested.requestedAt"
+    />
+  </div>
+} @else {
+  <p class="lead">
+    O link de confirmação vai para o novo endereço. A troca só vale depois que você abrir o link;
+    até lá, entre com o e-mail atual.
+  </p>
+
+  <bios-form-error-summary [messages]="formErrors()" />
+
+  <form [formGroup]="form" (ngSubmit)="request()" novalidate>
+    <mat-form-field appearance="outline" class="field">
+      <mat-label>Novo e-mail</mat-label>
+      <input matInput type="email" formControlName="new_email" autocomplete="email" />
+      <mat-error>{{ messageOf(form.controls.new_email) }}</mat-error>
+    </mat-form-field>
+
+    <bios-password-field
+      [control]="form.controls.current_password"
+      label="Senha atual"
+      autocomplete="current-password"
+    />
+
+    <div class="actions">
+      <button mat-flat-button type="submit" [disabled]="requesting()">
+        {{ requesting() ? 'Enviando…' : 'Enviar link de confirmação' }}
+      </button>
+    </div>
+  </form>
+}

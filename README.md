@@ -147,7 +147,10 @@ lê: ao salvar, a resposta da API passa a valer nos dois lugares, sem outra leit
 - **Excluir conta:** o diálogo lista o que será apagado e pede a senha; "Excluir conta" só habilita com
   ela preenchida, e senha errada mantém o diálogo aberto, com o erro no campo. Excluída, a sessão local
   some (a API já a encerrou) e o app volta à página inicial com o aviso (`/?conta=excluida`).
-- A troca de e-mail (FE-13) entra como outra seção desta página.
+- **Trocar e-mail:** pede o novo endereço e a senha atual; o link vai para o novo endereço, e até ele
+  ser aberto o e-mail da conta continua o atual. A resposta é a mesma para um endereço livre e para um
+  de outra conta. O link abre `/confirmar-novo-email/:token` (pública: pode ser aberta em outro
+  aparelho), que efetiva a troca e, com sessão, recarrega a conta.
 
 ## Estados de tela e erros
 

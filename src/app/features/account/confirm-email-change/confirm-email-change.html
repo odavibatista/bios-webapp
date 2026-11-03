@@ -1,0 +1,33 @@
+<div aria-live="polite">
+  @if (confirmation.isLoading()) {
+    <h1>Confirmando o novo e-mail</h1>
+    <bios-loading label="Confirmando o novo e-mail…" />
+  } @else if (confirmation.hasValue()) {
+    <h1>E-mail atualizado</h1>
+    <p class="lead">{{ confirmation.value().message }} Use o novo endereço para entrar.</p>
+    <div class="actions">
+      @if (signedIn()) {
+        <a mat-flat-button routerLink="/conta">Ver minha conta</a>
+      } @else {
+        <a mat-flat-button routerLink="/entrar">Entrar</a>
+      }
+    </div>
+  } @else if (refusal(); as refusal) {
+    <h1>Não foi possível trocar o e-mail</h1>
+    <p class="lead">{{ refusal.message }}</p>
+    @if (refusal.emailTaken) {
+      <p>
+        O endereço passou a ser usado por outra conta antes da confirmação. O e-mail da sua conta
+        continua o mesmo; peça a troca para outro endereço.
+      </p>
+    } @else {
+      <p>O e-mail da sua conta continua o mesmo. Peça a troca de novo para receber outro link.</p>
+    }
+    <div class="actions">
+      <a mat-flat-button routerLink="/conta">Pedir a troca de novo</a>
+    </div>
+  } @else {
+    <h1>Não foi possível trocar o e-mail</h1>
+    <bios-error-state [error]="confirmation.error()" (retry)="confirmation.reload()" />
+  }
+</div>

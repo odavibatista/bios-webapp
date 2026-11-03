@@ -5,6 +5,7 @@ import {
   emailRules,
   fieldMessage,
   nameRules,
+  oldPasswordRules,
   PASSWORD_POLICY,
   passwordRules,
   RULES_ERROR_KEY,
@@ -71,6 +72,14 @@ describe('regras da conta (iguais às da API)', () => {
     ['x'.repeat(129), ['A senha deve ter no máximo 128 caracteres.']],
   ])('senha atual %j: só precisa existir, sem a política da senha nova', (value, expected) => {
     expect(messages(currentPasswordRules, value)).toEqual(expected);
+  });
+
+  it('numa troca (senha, e-mail), a senha atual vazia tem a mensagem que a API usa nesses pedidos', () => {
+    expect(messages(oldPasswordRules, '')).toEqual(['Informe a senha atual.']);
+    expect(messages(oldPasswordRules, 'a')).toEqual([]);
+    expect(messages(oldPasswordRules, 'x'.repeat(129))).toEqual([
+      'A senha deve ter no máximo 128 caracteres.',
+    ]);
   });
 
   it('a política de senha descreve as mesmas regras', () => {
