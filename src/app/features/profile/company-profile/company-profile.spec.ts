@@ -40,6 +40,7 @@ describe('CompanyProfile', () => {
     expect(await screen.findByRole('heading', { level: 1, name: PROFILE.legal_name })).toBeTruthy();
     expect(screen.getByText('CNPJ 00.990.842/0001-38')).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Dados cadastrais' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Índices por ODS' })).toBeTruthy();
     expect(getCompanyProfile).toHaveBeenCalledWith({ path: { cnpj: '00990842000138' } });
     expect(TestBed.inject(Title).getTitle()).toBe(`${PROFILE.legal_name} — BIOS`);
   });

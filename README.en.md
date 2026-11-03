@@ -194,7 +194,11 @@ external links; otherwise, the identifier appears as text. A finding without eit
 as unverified, without its confirming summary. `UNKNOWN` and `NOT_FOUND` have distinct explanations;
 provenance indicates collection, stored data, pending updates or an unavailable source, with a
 suggested retry time when provided. Sanction dates are source data and do not assert current legal
-effect. Per-SDG indices and explanations follow in later deliveries.
+effect. The "Índices por ODS" section shows each active SDG in its own card, with score and
+confidence side by side and no combined index or comparison between SDGs. A neutral scale marks
+zero and appears only for calculated scores. Pending scores and missing conclusive evidence have
+different explanations; source coverage and suggested retry time are shown in text. Contribution
+details follow in FE-19.
 
 ## API keys
 
