@@ -89,6 +89,14 @@ describe('EnvironmentalEvidences', () => {
     ).toContain('Isso não confirma ausência de registros');
   });
 
+  it('registro desatualizado recomenda conferir a fonte sem tratá-lo como dado atual', async () => {
+    const profile = structuredClone(ACO);
+    profile.evidences[0].evidences[0].state = 'OUTDATED';
+    await render(EnvironmentalEvidences, { inputs: { profile } });
+    expect(screen.getByText('Dados desatualizados')).toBeTruthy();
+    expect(screen.getByText(/Os dados venceram desde a coleta/)).toBeTruthy();
+  });
+
   it('o botão de atualização emite o pedido ao perfil', async () => {
     const user = userEvent.setup();
     const refreshed = vi.fn();

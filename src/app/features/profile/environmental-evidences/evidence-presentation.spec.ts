@@ -44,6 +44,13 @@ describe('apresentação das evidências', () => {
     expect(view.sanctionPeriod).toBeNull();
   });
 
+  it('um achado vencido conserva a referência, mas mantém o estado desatualizado', () => {
+    const view = presentEvidence({ ...ibama, state: 'OUTDATED', signal: null });
+    expect(view.state).toBe('OUTDATED');
+    expect(view.stateLabel).toBe('Dados desatualizados');
+    expect(view.reference).toBe('343440-D');
+  });
+
   it('não confunde sem registro com não verificado e não inventa sinal ou conteúdo', () => {
     const group = acoCearense.body.evidences[1].evidences;
     expect(presentEvidence(group[0] as CompanyEvidence).state).toBe('NOT_FOUND');
