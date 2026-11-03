@@ -15,6 +15,7 @@ import { describeError } from '../../../shared/errors/describe-error';
 import { ErrorState } from '../../../shared/states/error-state';
 import { LoadingState } from '../../../shared/states/loading-state';
 import { COMPANIES_PATH, CnpjSearch } from '../cnpj-search/cnpj-search';
+import { EnvironmentalEvidences } from '../environmental-evidences/environmental-evidences';
 import { RegistrationData } from '../registration-data/registration-data';
 
 /** O que a tela mostra quando não há perfil. */
@@ -22,8 +23,8 @@ type Problem = 'invalid' | 'not-found' | 'failure';
 
 /**
  * Perfil da empresa (`/empresas/:cnpj`; UC06; #24). Esta entrega traz o cabeçalho e os dados
- * cadastrais; as evidências, os índices por ODS e a explicação (FE-17 a FE-19) entram como novas
- * seções desta página, a partir do mesmo `getCompanyProfile`.
+ * cadastrais e as evidências do mesmo `getCompanyProfile`. Índices e explicação (FE-18 e FE-19)
+ * entram como novas seções desta página.
  *
  * - CNPJ inválido na URL não chega à API (fluxo 2.1).
  * - CNPJ válido com máscara ou minúsculas troca a URL pela forma normalizada.
@@ -32,7 +33,14 @@ type Problem = 'invalid' | 'not-found' | 'failure';
  */
 @Component({
   selector: 'bios-company-profile',
-  imports: [CnpjSearch, ErrorState, LoadingState, RegistrationData, RouterLink],
+  imports: [
+    CnpjSearch,
+    EnvironmentalEvidences,
+    ErrorState,
+    LoadingState,
+    RegistrationData,
+    RouterLink,
+  ],
   templateUrl: './company-profile.html',
   styleUrl: './company-profile.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
