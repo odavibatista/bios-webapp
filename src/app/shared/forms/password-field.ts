@@ -23,7 +23,7 @@ import { fieldMessage, PASSWORD_POLICY } from './account-rules';
     ReactiveFormsModule,
   ],
   template: `
-    <mat-form-field appearance="outline" class="field">
+    <mat-form-field appearance="outline" floatLabel="always" class="field">
       <mat-label>{{ label() }}</mat-label>
       <input
         matInput
