@@ -25,13 +25,21 @@
 }
 
 .topbar {
-  gap: 1rem;
   background: var(--bios-brand-green);
   color: #fff;
   // Cor do texto da barra pelo token do Material, que o `mat-toolbar` repassa aos botões de texto
   // dentro dela (menu da conta). Um `color` no botão empata em especificidade com o do Material e
   // perde quando os estilos são reinseridos (ao sair e entrar de novo): texto escuro sobre o verde.
   --mat-toolbar-container-text-color: #fff;
+}
+
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: min(1500px, 100%);
+  min-width: 0;
+  margin-inline: auto;
 }
 
 .brand {
@@ -78,7 +86,7 @@
 
 .content {
   flex: 1;
-  width: min(1200px, 100% - 2rem);
+  width: min(1500px, 100% - 2rem);
   margin: 0 auto;
   padding: 2rem 0;
 

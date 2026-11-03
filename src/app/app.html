@@ -1,19 +1,21 @@
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
 <mat-toolbar class="topbar" role="banner">
-  <a class="brand" routerLink="/" aria-label="BIOS, página inicial">
-    <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">eco</mat-icon>
-    <span class="brand-name">BIOS</span>
-  </a>
-  <span class="brand-tagline">Business Intelligence on Sustainability</span>
-  @if (signedIn()) {
-    @defer {
-      <bios-cnpj-search class="toolbar-search" variant="toolbar" />
+  <div class="topbar-inner">
+    <a class="brand" routerLink="/" aria-label="BIOS, página inicial">
+      <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">eco</mat-icon>
+      <span class="brand-name">BIOS</span>
+    </a>
+    <span class="brand-tagline">Business Intelligence on Sustainability</span>
+    @if (signedIn()) {
+      @defer {
+        <bios-cnpj-search class="toolbar-search" variant="toolbar" />
+      }
+      @defer {
+        <bios-user-menu class="user-menu" />
+      }
     }
-    @defer {
-      <bios-user-menu class="user-menu" />
-    }
-  }
+  </div>
 </mat-toolbar>
 
 <main #main id="conteudo" class="content" tabindex="-1">
