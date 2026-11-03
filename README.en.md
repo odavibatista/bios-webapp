@@ -253,6 +253,11 @@ a button to search in each.
 When ordered by score, companies without a calculation stay last in both directions and are visually
 separated. Ties use higher confidence, then CNPJ. The table header announces the sort direction.
 
+When results exist, **Exportar XLSX** downloads the full list using the URL filters and order, without
+pagination. The file and its name come from the captured API response; the browser does not generate
+the spreadsheet. Searches without a captured file explain the presentation version's limit. Empty
+lists, oversized exports, and rate limits are reported beside the results.
+
 ## Sectors
 
 `/setores` shows how a sector's (CNAE division) average score for an SDG evolves month by month
