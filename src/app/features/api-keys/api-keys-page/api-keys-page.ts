@@ -10,7 +10,7 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormGroup, FormGroupDirective, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -75,6 +75,7 @@ export class ApiKeysPage {
   protected readonly revokeError = signal<string | null>(null);
 
   private readonly listHeading = viewChild<ElementRef<HTMLElement>>('listHeading');
+  private readonly formDirective = viewChild.required(FormGroupDirective);
 
   protected async create(): Promise<void> {
     if (this.creating()) return;
@@ -105,10 +106,11 @@ export class ApiKeysPage {
       this.creating.set(false);
     }
 
-    this.form.reset();
     this.keys.reload();
     // A chave completa só passa pelo diálogo; fechado, nada aqui a guarda.
     await showCreatedKey(this.dialog, created);
+    // Depois que o diálogo devolve o foco, limpa valor, toque e `submitted` juntos.
+    this.formDirective().resetForm();
     this.notice.set(`Chave “${created.name}” gerada.`);
   }
 
