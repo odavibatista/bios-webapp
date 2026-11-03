@@ -41,7 +41,7 @@
 
     <section class="card" aria-labelledby="titulo-editar">
       <h2 id="titulo-editar">Editar dados</h2>
-      <p class="lead">O e-mail é a forma de entrar e não muda por aqui.</p>
+      <p class="lead">Para trocar o e-mail, use a seção “Trocar e-mail”, logo abaixo.</p>
 
       <bios-form-error-summary [messages]="formErrors()" />
 
@@ -129,6 +129,11 @@
         </div>
         <p class="notice" role="status">{{ notice() }}</p>
       </form>
+    </section>
+
+    <section class="card" aria-labelledby="titulo-trocar-email">
+      <h2 id="titulo-trocar-email">Trocar e-mail</h2>
+      <bios-email-change [currentEmail]="saved.email" />
     </section>
 
     <section class="card" aria-labelledby="titulo-seguranca">

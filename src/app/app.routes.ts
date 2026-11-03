@@ -47,6 +47,17 @@ export const routes: Routes = [
           import('./features/auth/confirm-email/confirm-email').then((m) => m.ConfirmEmail),
       },
       {
+        // O caminho do link ao novo endereço (template `EMAIL_CHANGE_CONFIRMATION`). Pública: o
+        // link pode ser aberto em outro aparelho, sem sessão.
+        path: 'confirmar-novo-email/:token',
+        title: 'Confirmar novo e-mail — BIOS',
+        data: { public: true },
+        loadComponent: () =>
+          import('./features/account/confirm-email-change/confirm-email-change').then(
+            (m) => m.ConfirmEmailChange,
+          ),
+      },
+      {
         path: 'reenviar-confirmacao',
         title: 'Novo link de confirmação — BIOS',
         data: { public: true },

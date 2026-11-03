@@ -55,7 +55,7 @@ describe('ChangePassword', () => {
     await fixture.whenStable();
 
     expect(changeSpy).not.toHaveBeenCalled();
-    expect(screen.getByText('Informe a senha.')).toBeTruthy();
+    expect(screen.getByText('Informe a senha atual.')).toBeTruthy();
     expect(screen.getByText('A senha deve ter ao menos 8 caracteres.')).toBeTruthy();
     expect(document.activeElement).toBe(screen.getByLabelText('Senha atual'));
   });

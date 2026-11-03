@@ -15,7 +15,7 @@ import { LOGIN_PATH } from '../../../core/session/session.service';
 import { SessionStore } from '../../../core/session/session-store';
 import { describeError } from '../../../shared/errors/describe-error';
 import { applyApiErrors, setApiError } from '../../../shared/errors/form-errors';
-import { currentPasswordRules, passwordRules } from '../../../shared/forms/account-rules';
+import { oldPasswordRules, passwordRules } from '../../../shared/forms/account-rules';
 import { PasswordField } from '../../../shared/forms/password-field';
 import { FormErrorSummary } from '../../../shared/states/form-error-summary';
 
@@ -41,7 +41,7 @@ export class ChangePassword {
   protected readonly form = new FormGroup({
     current_password: new FormControl('', {
       nonNullable: true,
-      validators: [currentPasswordRules],
+      validators: [oldPasswordRules],
     }),
     new_password: new FormControl('', { nonNullable: true, validators: [passwordRules] }),
   });

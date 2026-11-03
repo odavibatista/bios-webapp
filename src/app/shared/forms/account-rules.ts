@@ -68,17 +68,28 @@ export const passwordRules = rules((value) => [
   ...(/\d/.test(value) ? [] : ['A senha deve conter ao menos um número.']),
 ]);
 
+/** Senha que já existe: basta que seja informada, até 128 caracteres. */
+function existingPasswordRules(emptyMessage: string): ValidatorFn {
+  return rules((value) => [
+    ...(value.length ? [] : [emptyMessage]),
+    ...(value.length > PASSWORD_MAX_LENGTH
+      ? [`A senha deve ter no máximo ${PASSWORD_MAX_LENGTH} caracteres.`]
+      : []),
+  ]);
+}
+
 /**
- * Senha de quem entra (login, confirmação com a senha atual): basta que exista, até 128
+ * Senha de quem entra ou confirma uma ação (login, exclusão da conta): basta que exista, até 128
  * caracteres. A política da senha nova não se aplica, como na API: validar força aqui revelaria a
  * regra e trancaria contas de senha antiga.
  */
-export const currentPasswordRules = rules((value) => [
-  ...(value.length ? [] : ['Informe a senha.']),
-  ...(value.length > PASSWORD_MAX_LENGTH
-    ? [`A senha deve ter no máximo ${PASSWORD_MAX_LENGTH} caracteres.`]
-    : []),
-]);
+export const currentPasswordRules = existingPasswordRules('Informe a senha.');
+
+/**
+ * Senha atual pedida numa troca (de senha ou de e-mail): a mesma regra, com a mensagem que a API
+ * usa nesses pedidos (`current_password`).
+ */
+export const oldPasswordRules = existingPasswordRules('Informe a senha atual.');
 
 /**
  * O que o `mat-error` do campo mostra: as regras que o valor quebra ou, depois do envio, o que a
