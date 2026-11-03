@@ -40,8 +40,8 @@ export const PANEL_SHORTCUTS: readonly Shortcut[] = [
   imports: [CnpjSearch, MatCardModule, MatIconModule, RouterLink],
   template: `
     <h1>Olá, {{ firstName() }}</h1>
-    <section class="lookup" aria-labelledby="titulo-consulta-cnpj">
-      <h2 id="titulo-consulta-cnpj">Consultar uma empresa pelo CNPJ</h2>
+    <section class="lookup" aria-labelledby="titulo-consulta-empresa">
+      <h2 id="titulo-consulta-empresa">Buscar uma empresa pelo CNPJ ou nome</h2>
       <bios-cnpj-search />
     </section>
     <p class="lead">Ou comece por aqui:</p>

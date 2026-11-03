@@ -177,6 +177,12 @@ algorithm of the API's value object (`shared/cnpj/cnpj.ts`: numeric and alphanum
 rejection of single-character sequences), and the profile opens at `/empresas/<cnpj>` with the
 normalized CNPJ, without the mask in the URL.
 
+The same field accepts a legal or trade name. Text of up to 100 characters with at least one
+three-character word opens `/empresas?nome=...`, using `searchCompanies` over the local database
+with 20 results per page. The name and page stay in the URL when returning from a profile. Invalid
+text is rejected before a call. An empty result explains that only companies previously looked up
+by CNPJ appear and offers the same field for a CNPJ lookup.
+
 The profile shows the legal name, the trade name and the "Dados cadastrais" (registration data)
 section: status in Portuguese (an unrecognized one with the provider's text), company size, address,
 CNAEs with formatted code and description, and when the source last updated the record. "Company not
