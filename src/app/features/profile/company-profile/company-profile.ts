@@ -16,6 +16,7 @@ import { ErrorState } from '../../../shared/states/error-state';
 import { LoadingState } from '../../../shared/states/loading-state';
 import { COMPANIES_PATH, CnpjSearch } from '../cnpj-search/cnpj-search';
 import { EnvironmentalEvidences } from '../environmental-evidences/environmental-evidences';
+import { OdsScores } from '../ods-scores/ods-scores';
 import { RegistrationData } from '../registration-data/registration-data';
 
 /** O que a tela mostra quando não há perfil. */
@@ -36,6 +37,7 @@ type Problem = 'invalid' | 'not-found' | 'failure';
   imports: [
     CnpjSearch,
     EnvironmentalEvidences,
+    OdsScores,
     ErrorState,
     LoadingState,
     RegistrationData,

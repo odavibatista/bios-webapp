@@ -1,0 +1,65 @@
+<section class="scores" aria-labelledby="titulo-indices">
+  <h2 id="titulo-indices">Índices por ODS</h2>
+  <p class="context">
+    Cada índice indica aderência às evidências daquele ODS, de −100 a 100. A confiança, de 0 a 1,
+    informa a cobertura das evidências. Os valores são separados e os ODS não são comparáveis entre
+    si.
+  </p>
+
+  @if (profile().provenance.scores_pending) {
+    <p class="pending-notice" role="status">Os índices estão em recálculo. {{ retry() }}</p>
+  }
+
+  <ul class="cards">
+    @for (score of scores(); track score.ods_number) {
+      <li>
+        <article class="card" [attr.aria-labelledby]="'indice-ods-' + score.ods_number">
+          <h3 [id]="'indice-ods-' + score.ods_number">ODS {{ score.ods_number }}</h3>
+          <div class="metrics">
+            <div>
+              <span class="metric-label">Índice de aderência</span>
+              <strong>{{ score.scoreLabel }}</strong>
+            </div>
+            <div>
+              <span class="metric-label">Confiança</span>
+              <strong>{{ score.confidenceLabel }}</strong>
+            </div>
+          </div>
+
+          @if (score.position !== null) {
+            <div
+              class="scale"
+              role="img"
+              [attr.aria-label]="
+                'Índice do ODS ' +
+                score.ods_number +
+                ': ' +
+                score.scoreLabel +
+                ' numa escala de −100 a 100, com zero no centro'
+              "
+            >
+              <div class="track" aria-hidden="true">
+                <span class="zero"></span>
+                <span class="marker" [style.left.%]="score.position"></span>
+              </div>
+              <div class="ticks" aria-hidden="true">
+                <span>−100</span><span>0</span><span>100</span>
+              </div>
+            </div>
+          }
+
+          @if (score.pending) {
+            <p>O índice deste ODS ainda não foi calculado. Isso não é uma nota baixa.</p>
+          } @else {
+            @if (score.index_status === 'UNAVAILABLE') {
+              <p>Não há evidência conclusiva para calcular o índice deste ODS.</p>
+            }
+            @if (score.coverageLabel) {
+              <p class="coverage">{{ score.coverageLabel }}</p>
+            }
+          }
+        </article>
+      </li>
+    }
+  </ul>
+</section>
