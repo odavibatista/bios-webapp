@@ -1,0 +1,57 @@
+<h1>Empresas</h1>
+<p class="lead">Busque uma empresa pelo CNPJ, razão social ou nome fantasia.</p>
+<bios-cnpj-search [initial]="cnpj() ?? name()" />
+
+@if (name()) {
+  <section class="results" aria-labelledby="titulo-resultados">
+    <h2 id="titulo-resultados">Resultados para “{{ name() }}”</h2>
+    @if (nameError(); as error) {
+      <p role="alert">{{ error }}</p>
+    } @else if (results.error()) {
+      <bios-error-state [error]="results.error()" (retry)="results.reload()" />
+    } @else {
+      <bios-async-state
+        [loading]="results.isLoading()"
+        [empty]="results.hasValue() && results.value().data.length === 0"
+        emptyMessage="Nenhuma empresa encontrada. A busca por nome inclui apenas empresas já consultadas pelo CNPJ. Tente outro nome ou busque pelo CNPJ no campo acima."
+        loadingLabel="Buscando empresas…"
+      >
+        @if (results.hasValue()) {
+          <p role="status">
+            {{
+              results.value().pagination.total === 1
+                ? '1 empresa encontrada'
+                : results.value().pagination.total + ' empresas encontradas'
+            }}
+          </p>
+          <bios-search-results
+            [items]="results.value().data"
+            [layout]="cards() ? 'cards' : 'table'"
+          />
+          <nav class="pager" aria-label="Páginas dos resultados">
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="page() <= 1"
+              (click)="goToPage(page() - 1)"
+            >
+              Página anterior
+            </button>
+            <span
+              >Página {{ results.value().pagination.page }} de
+              {{ results.value().pagination.total_pages }}</span
+            >
+            <button
+              mat-stroked-button
+              type="button"
+              [disabled]="page() >= results.value().pagination.total_pages"
+              (click)="goToPage(page() + 1)"
+            >
+              Próxima página
+            </button>
+          </nav>
+        }
+      </bios-async-state>
+    }
+  </section>
+}

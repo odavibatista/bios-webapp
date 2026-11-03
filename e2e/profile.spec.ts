@@ -13,7 +13,7 @@ async function signIn(page: Page) {
 
 /** O campo de CNPJ do conteúdo (o da barra tem outro rótulo). */
 function cnpjField(page: Page) {
-  return page.getByRole('main').getByLabel('CNPJ', { exact: true });
+  return page.getByRole('main').getByLabel('CNPJ ou nome da empresa', { exact: true });
 }
 
 test.describe('perfil da empresa (#24)', () => {
@@ -42,7 +42,7 @@ test.describe('perfil da empresa (#24)', () => {
     await signIn(page);
 
     await cnpjField(page).fill('00.990.842/0001-39');
-    await page.getByRole('button', { name: 'Consultar', exact: true }).click();
+    await page.getByRole('button', { name: 'Buscar', exact: true }).click();
 
     await expect(
       page.getByText('CNPJ inválido. Confira os dígitos e tente de novo.'),
@@ -87,7 +87,7 @@ test.describe('perfil da empresa (#24)', () => {
     test.skip(testInfo.project.name === 'celular', 'a barra só tem o campo em tela larga');
     await signIn(page);
 
-    const toolbarField = page.getByRole('banner').getByLabel('Consultar empresa por CNPJ');
+    const toolbarField = page.getByRole('banner').getByLabel('Buscar empresa por CNPJ ou nome');
     await toolbarField.fill('47960950000121');
     await toolbarField.press('Enter');
 

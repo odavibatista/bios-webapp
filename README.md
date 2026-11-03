@@ -173,6 +173,12 @@ algoritmo do value object da API (`shared/cnpj/cnpj.ts`: numérico e alfanuméri
 verificadores, recusa de sequência de um caractere só), e o perfil abre em `/empresas/<cnpj>` com o
 CNPJ normalizado, sem a máscara na URL.
 
+O mesmo campo aceita razão social ou nome fantasia. Texto com até 100 caracteres e ao menos uma
+palavra de três caracteres abre `/empresas?nome=...`, que usa `searchCompanies` sobre a base local,
+com 20 resultados por página. Nome e página ficam na URL para preservar a busca ao voltar do perfil.
+Texto curto ou longo é recusado antes da chamada. Sem resultados, a tela explica que só aparecem
+empresas já consultadas pelo CNPJ e oferece o próprio campo para essa consulta.
+
 O perfil mostra a razão social, o nome fantasia e a seção "Dados cadastrais": situação em português
 (a não reconhecida com o texto do provedor), porte, endereço, CNAEs com o código formatado e a
 descrição, e a data em que a fonte atualizou o cadastro. "Empresa não encontrada" (`404`) e
