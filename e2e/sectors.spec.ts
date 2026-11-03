@@ -71,6 +71,8 @@ test.describe('evolução por setor (#26)', () => {
   }) => {
     await signIn(page);
     await navigateInApp(page, '/setores');
+    // A página está pronta quando os ODS chegam; antes, o envio pode cair no meio da carga.
+    await expect(page.getByRole('combobox', { name: 'ODS' })).toContainText('ODS 13');
 
     await page.getByRole('combobox', { name: 'Setor (CNAE)' }).fill('2431');
     await page.keyboard.press('Escape');
