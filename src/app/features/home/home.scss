@@ -47,7 +47,10 @@ h2 {
 .ods-card {
   height: 100%;
 
-  mat-icon {
+  .card-icon {
+    display: grid;
+    place-items: center;
+    background: var(--mat-sys-primary-container);
     color: var(--bios-brand-green);
   }
 }
