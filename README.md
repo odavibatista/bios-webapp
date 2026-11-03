@@ -193,8 +193,11 @@ período das sanções é apresentado como dado histórico da fonte, sem afirmar
 "Índices por ODS" mostra cada ODS ativo em um cartão próprio, com índice e confiança lado a lado,
 sem índice geral nem comparação entre ODS. A escala neutra marca o zero e só aparece quando há
 índice calculado; índice pendente e ausência de evidência conclusiva têm textos distintos. A
-cobertura das fontes e o prazo sugerido para recálculo aparecem em texto. A explicação das
-contribuições do score entra na FE-19.
+cobertura das fontes e o prazo sugerido para recálculo aparecem em texto. Cada cartão oferece
+"Como o índice foi calculado": as contribuições mostram fonte, categoria, referência, peso,
+sinal e pontos, com a soma final. Peso reduzido e evidência vencida recebem avisos próprios. Um
+botão leva à evidência no mesmo perfil e o endereço original é oferecido quando for HTTPS válido.
+Os centésimos do índice são preservados para a soma exibida reproduzir o valor do cartão.
 
 ## Chaves de API
 

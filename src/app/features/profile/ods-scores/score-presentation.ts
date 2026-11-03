@@ -1,5 +1,12 @@
 import type { CompanyOdsScore } from '../../../core/api/generated';
-import { formatConfidence, formatScore } from '../../search/search-format';
+import { formatConfidence } from '../../search/search-format';
+
+const SCORE = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
+
+/** Preserva os centésimos usados nas contribuições do índice. */
+export function formatScorePoints(value: number): string {
+  return SCORE.format(value);
+}
 
 const COVERAGE: Record<NonNullable<CompanyOdsScore['coverage_status']>, string> = {
   HAS_RECORDS: 'Há registros nas fontes consultadas para este ODS.',
@@ -21,7 +28,7 @@ export function presentScore(score: CompanyOdsScore) {
       ? 'Índice pendente'
       : value === null
         ? 'Sem evidência conclusiva'
-        : formatScore(value),
+        : formatScorePoints(value),
     confidenceLabel: pending ? 'Pendente' : formatConfidence(score.confidence_value),
     coverageLabel: pending ? null : score.coverage_status ? COVERAGE[score.coverage_status] : null,
     position: value === null ? null : (value + 100) / 2,

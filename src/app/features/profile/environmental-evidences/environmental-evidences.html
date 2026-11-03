@@ -38,7 +38,12 @@
         <ul class="entries">
           @for (evidence of section.evidences; track evidence.id) {
             <li>
-              <article class="evidence" [class.outdated]="evidence.state === 'OUTDATED'">
+              <article
+                class="evidence"
+                [id]="'evidencia-' + evidence.id"
+                tabindex="-1"
+                [class.outdated]="evidence.state === 'OUTDATED'"
+              >
                 <div class="evidence-heading">
                   <h4>{{ evidence.source }}</h4>
                   <span class="state" [class.confirmed]="evidence.state === 'CONFIRMED'">{{

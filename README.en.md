@@ -198,7 +198,11 @@ effect. The "Índices por ODS" section shows each active SDG in its own card, wi
 confidence side by side and no combined index or comparison between SDGs. A neutral scale marks
 zero and appears only for calculated scores. Pending scores and missing conclusive evidence have
 different explanations; source coverage and suggested retry time are shown in text. Contribution
-details follow in FE-19.
+details are available from each SDG card through "Como o índice foi calculado": each contribution
+shows its source, category, reference, weight, signal and points, followed by their sum. Reduced
+weights and outdated evidence have explicit notices. A button focuses the corresponding evidence
+in the same profile; a source link appears only for a valid HTTPS address. The profile preserves
+score hundredths so the displayed sum matches the card.
 
 ## API keys
 
