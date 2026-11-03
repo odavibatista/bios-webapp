@@ -1,5 +1,5 @@
 import type { Params } from '@angular/router';
-import type { SearchCompaniesData } from '../../core/api/generated';
+import type { ExportCompaniesXlsxData, SearchCompaniesData } from '../../core/api/generated';
 
 /** Siglas das 27 unidades da federação, na ordem da API (UC08, regra 4). */
 export const BRAZILIAN_UFS = [
@@ -173,5 +173,15 @@ export function toApiQuery(criteria: SearchCriteria): NonNullable<SearchCompanie
     if (criteria.order !== null) query.order = criteria.order;
   }
 
+  return query;
+}
+
+/** A exportação usa os mesmos filtros e ordem, sem paginação (UC09, regra 4). */
+export function toExportQuery(
+  criteria: SearchCriteria,
+): NonNullable<ExportCompaniesXlsxData['query']> {
+  const query = { ...toApiQuery(criteria) };
+  delete query.page;
+  delete query.page_size;
   return query;
 }
