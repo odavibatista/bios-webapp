@@ -1,7 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { fireEvent, render, screen } from '@testing-library/angular';
-import { userEvent } from '@testing-library/user-event';
 import { ApiError } from '../../../core/api/api-error';
 import { BiosApi } from '../../../core/api/bios-api';
 import { confirmAccountDeletion, DELETED_ON_ACCOUNT_REMOVAL } from './delete-account-dialog';
@@ -31,8 +30,7 @@ async function openDialog(deleteOwnAccount: ReturnType<typeof vi.fn>) {
   });
   await screen.findByRole('alertdialog', { name: 'Excluir a sua conta?' });
 
-  // O user-event só entra quando pedido: ver o teste da exclusão confirmada.
-  return { user: () => userEvent.setup(), answer: () => answer };
+  return { answer: () => answer };
 }
 
 const deleteButton = () => screen.getByRole('button', { name: 'Excluir conta' });
@@ -71,13 +69,24 @@ describe('confirmAccountDeletion', () => {
   });
 
   it('"Excluir conta" só habilita com a senha preenchida', async () => {
-    const user = (await openDialog(vi.fn())).user();
+    await openDialog(vi.fn());
+    // O botão segue um sinal do `valueChanges`: chega à tela na detecção seguinte, que com a
+    // máquina carregada pode vir depois da conferência.
+    const disabledBecomes = (expected: boolean) =>
+      vi.waitFor(() => {
+        expect(deleteButton().hasAttribute('disabled')).toBe(expected);
+      });
+    // `fireEvent`: o foco inicial do diálogo chega depois de abrir e, com a máquina carregada, no
+    // meio da digitação do user-event, que perderia os caracteres.
+    const typePassword = (value: string) => {
+      fireEvent.input(screen.getByLabelText('Senha'), { target: { value } });
+    };
 
-    expect(deleteButton().hasAttribute('disabled')).toBe(true);
-    await user.type(screen.getByLabelText('Senha'), 'x');
-    expect(deleteButton().hasAttribute('disabled')).toBe(false);
-    await user.clear(screen.getByLabelText('Senha'));
-    expect(deleteButton().hasAttribute('disabled')).toBe(true);
+    await disabledBecomes(true);
+    typePassword('x');
+    await disabledBecomes(false);
+    typePassword('');
+    await disabledBecomes(true);
   });
 
   it('com a senha certa, exclui e fecha com true', async () => {
@@ -122,10 +131,9 @@ describe('confirmAccountDeletion', () => {
 
   it('cancelar fecha sem excluir', async () => {
     const remove = vi.fn();
-    const { user: setupUser, answer } = await openDialog(remove);
-    const user = setupUser();
+    const { answer } = await openDialog(remove);
 
-    await user.click(screen.getByRole('button', { name: 'Cancelar' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
 
     await vi.waitFor(() => {
       expect(answer()).toBe(false);

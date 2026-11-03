@@ -61,6 +61,11 @@ describe('routes', () => {
     ['/cadastro', 'Criar conta — BIOS', 'Criar conta'],
     ['/reenviar-confirmacao', 'Novo link de confirmação — BIOS', 'Pedir novo link de confirmação'],
     ['/confirmar-email/token-qualquer', 'Confirmar e-mail — BIOS', 'Confirmando o e-mail'],
+    [
+      '/confirmar-novo-email/token-qualquer',
+      'Confirmar novo e-mail — BIOS',
+      'Confirmando o novo e-mail',
+    ],
     ['/esqueci-senha', 'Esqueci a senha — BIOS', 'Esqueci a senha'],
     ['/redefinir-senha/token-qualquer', 'Redefinir a senha — BIOS', 'Definir nova senha'],
   ])('"%s" é pública, fora do painel', async (url, title, heading) => {

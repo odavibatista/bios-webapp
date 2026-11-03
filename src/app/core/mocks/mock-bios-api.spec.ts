@@ -531,6 +531,19 @@ describe('MockBiosApi', () => {
       );
     });
 
+    it('primeiras chamadas simultâneas carregam e semeiam uma vez só', async () => {
+      // As duas chegam antes de a carga das capturas terminar, como o menu e a página no app.
+      const [session] = await Promise.all([
+        api.login({ body: { email: ADMIN, password: PASSWORD } }),
+        api.login({ body: { email: USER, password: PASSWORD } }),
+      ]);
+      credentials.setAccessToken(session.access_token);
+
+      await expect(api.listBlockedEmailDomains()).resolves.toMatchObject({
+        pagination: { total: 20 },
+      });
+    });
+
     it('ADMIN lista paginado, inclui, recusa duplicado e inválido, e remove', async () => {
       await signIn(ADMIN);
       await expect(

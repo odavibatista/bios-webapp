@@ -123,6 +123,8 @@ export class MockBiosApi extends BiosApi {
   private readonly files = inject(MockFiles);
 
   private data?: typeof MockData;
+  /** A carga em andamento, para chamadas simultâneas esperarem a mesma, e não semearem de novo. */
+  private loading?: Promise<void>;
   private sequence = 0;
   private readonly accounts: Account[] = [];
   private readonly linkTokens: LinkToken[] = [];
@@ -137,9 +139,17 @@ export class MockBiosApi extends BiosApi {
     return this.data!;
   }
 
-  /** Carrega as capturas e monta o estado inicial da demonstração, uma vez. */
-  private async load(): Promise<void> {
-    if (this.data) return;
+  /**
+   * Carrega as capturas e monta o estado inicial da demonstração, uma vez. As primeiras chamadas
+   * costumam chegar juntas (menu da conta e página): todas esperam a mesma carga.
+   */
+  private load(): Promise<void> {
+    this.loading ??= this.seed();
+
+    return this.loading;
+  }
+
+  private async seed(): Promise<void> {
     this.data = await import('./mock-data');
 
     const address = this.d.capturedBody<Api.AccountResponse>('updateOwnAccount/endereco').address;

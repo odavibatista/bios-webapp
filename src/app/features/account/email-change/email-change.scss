@@ -1,0 +1,35 @@
+:host {
+  display: block;
+}
+
+.lead {
+  margin: -0.5rem 0 1rem;
+  color: var(--bios-brand-moss);
+}
+
+form {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 32rem;
+}
+
+.field {
+  width: 100%;
+}
+
+.actions {
+  padding-top: 0.25rem;
+}
+
+.requested {
+  p {
+    margin: 0 0 0.75rem;
+    overflow-wrap: anywhere;
+  }
+
+  .message {
+    padding: 0.5rem 1rem;
+    border-left: 4px solid var(--mat-sys-primary);
+    background: var(--mat-sys-surface-container);
+  }
+}
