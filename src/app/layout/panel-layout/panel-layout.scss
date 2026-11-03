@@ -4,8 +4,13 @@
 }
 
 .panel-menu {
-  width: 240px;
-  border-right: 1px solid var(--mat-sys-outline-variant);
+  width: 256px;
+  border: 0;
+  border-radius: 0;
+
+  nav {
+    padding-inline: 0.5rem;
+  }
 }
 
 .panel-content {
