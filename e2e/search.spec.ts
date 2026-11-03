@@ -1,4 +1,5 @@
 import type { Page } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import { expectAccessible } from './support/accessibility';
 import { expect, test } from './support/test';
 
@@ -106,6 +107,32 @@ test.describe('pesquisa de empresas (#25)', () => {
     await page.goBack();
     await expect(page).toHaveURL('/pesquisa?cnae=24&ods=13&ordem=desc');
     await expect(order).toContainText('Maior índice primeiro');
+  });
+
+  test('exporta a planilha capturada com filtros e ordem, mesmo em outra página', async ({
+    page,
+  }, testInfo) => {
+    await signInToSearch(page, '?cnae=24&ods=13&ordem=desc&pagina=2&por_pagina=5');
+    await expect(page.getByRole('status')).toHaveText('10 empresas encontradas');
+    await expect(page.getByText('Página 2 de 2')).toBeVisible();
+    await expectAccessible(page, testInfo, 'exportação da pesquisa');
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Exportar XLSX' }).click();
+    const download = await downloadPromise;
+    expect(download.suggestedFilename()).toBe('empresas-bios-2026-10-30.xlsx');
+    const bytes = await readFile(await download.path());
+    expect(bytes.subarray(0, 2).toString()).toBe('PK');
+    expect(bytes.length).toBeGreaterThan(3000);
+  });
+
+  test('exportação não capturada explica a limitação da apresentação', async ({ page }) => {
+    await signInToSearch(page, '?uf=MG');
+    await expect(page.getByRole('status')).toHaveText('4 empresas encontradas');
+    await page.getByRole('button', { name: 'Exportar XLSX' }).click();
+    await expect(page.getByRole('alert')).toContainText(
+      'não está disponível na versão de apresentação',
+    );
   });
 
   test('ODS fora dos calculados mostra os disponíveis', async ({ page }) => {
