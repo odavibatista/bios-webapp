@@ -84,8 +84,24 @@ test.describe('pesquisa de empresas (#25)', () => {
         testInfo.project.name === 'celular'
           ? page.locator('.cards article dl > div:nth-child(5) dd')
           : page.locator('tbody tr:has(th a) td:nth-last-child(2)');
-      await expect(scoreCells).toHaveCount(10);
-      const scores = await scoreCells.allTextContents();
+      let scores: string[] = [];
+      await expect
+        .poll(async () => {
+          scores = await scoreCells.allTextContents();
+          const values = scores
+            .filter((score) => score.trim() !== 'Sem índice')
+            .map((score) => Number(score.trim().replace(',', '.')));
+          return (
+            scores.length === 10 &&
+            values.length > 0 &&
+            values.every(
+              (value, index) =>
+                index === 0 ||
+                (direction === 'asc' ? values[index - 1] <= value : values[index - 1] >= value),
+            )
+          );
+        })
+        .toBe(true);
       const numeric = scores
         .filter((score) => score.trim() !== 'Sem índice')
         .map((score) => Number(score.trim().replace(',', '.')));
