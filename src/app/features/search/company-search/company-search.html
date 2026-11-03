@@ -63,6 +63,22 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline">
+        <mat-label>Ordenar pelo índice</mat-label>
+        <mat-select formControlName="order">
+          <mat-option [value]="null">Sem ordenação por índice</mat-option>
+          <mat-option value="desc">Maior índice primeiro</mat-option>
+          <mat-option value="asc">Menor índice primeiro</mat-option>
+        </mat-select>
+        <mat-hint>
+          {{
+            form.controls.ods.value === null
+              ? 'Escolha um ODS para ordenar'
+              : 'Empresas sem índice ficam ao fim'
+          }}
+        </mat-hint>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
         <mat-label>Índice mínimo</mat-label>
         <input matInput formControlName="min_score" inputmode="decimal" autocomplete="off" />
         <mat-hint>
@@ -134,12 +150,16 @@
             Índice de aderência ao {{ ods }} (de −100 a 100) e confiança (de 0 a 1) ficam lado a
             lado e não se combinam. "Sem índice" quer dizer que o BIOS ainda não calculou o
             {{ ods }} para a empresa; não é nota baixa.
+            @if (criteria().order !== null) {
+              Empresas sem índice aparecem ao fim em ambas as direções.
+            }
           </p>
         }
 
         <bios-search-results
           [items]="results.value().data"
           [odsLabel]="odsLabel()"
+          [order]="criteria().order"
           [layout]="cards() ? 'cards' : 'table'"
         />
 
