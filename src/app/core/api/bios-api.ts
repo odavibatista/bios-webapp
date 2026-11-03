@@ -1,5 +1,6 @@
 import { InjectionToken } from '@angular/core';
 import type * as Api from './generated';
+import type { ExportedFile } from './export-file';
 
 /** Entrada de uma operação: o corpo, o caminho e a busca do tipo gerado, sem a URL. */
 export type ApiInput<TData> = Omit<TData, 'url'>;
@@ -89,7 +90,7 @@ export abstract class BiosApi {
   ): Promise<Api.SearchCompaniesResponse>;
   abstract exportCompaniesXlsx(
     input?: ApiInput<Api.ExportCompaniesXlsxData>,
-  ): Promise<Api.ExportCompaniesXlsxResponse>;
+  ): Promise<ExportedFile>;
 
   // ODS e setores (UC07, UC10).
   abstract listOds(input?: ApiInput<Api.ListOdsData>): Promise<Api.ListOdsResponse>;
