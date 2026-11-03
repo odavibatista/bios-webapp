@@ -72,12 +72,18 @@ describe('confirmAccountDeletion', () => {
 
   it('"Excluir conta" só habilita com a senha preenchida', async () => {
     const user = (await openDialog(vi.fn())).user();
+    // O botão segue um sinal do `valueChanges`: chega à tela na detecção seguinte, que com a
+    // máquina carregada pode vir depois da conferência.
+    const disabledBecomes = (expected: boolean) =>
+      vi.waitFor(() => {
+        expect(deleteButton().hasAttribute('disabled')).toBe(expected);
+      });
 
-    expect(deleteButton().hasAttribute('disabled')).toBe(true);
+    await disabledBecomes(true);
     await user.type(screen.getByLabelText('Senha'), 'x');
-    expect(deleteButton().hasAttribute('disabled')).toBe(false);
+    await disabledBecomes(false);
     await user.clear(screen.getByLabelText('Senha'));
-    expect(deleteButton().hasAttribute('disabled')).toBe(true);
+    await disabledBecomes(true);
   });
 
   it('com a senha certa, exclui e fecha com true', async () => {
