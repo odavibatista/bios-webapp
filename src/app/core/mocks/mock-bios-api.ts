@@ -1,6 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { ApiCredentials } from '../api/api-credentials';
 import { ApiError } from '../api/api-error';
+import { filenameFromDisposition } from '../api/export-file';
 import { BiosApi, type ApiInput, type BiosOperation } from '../api/bios-api';
 import type * as Api from '../api/generated';
 import { EMAIL_DOMAIN_PATTERN, normalizeEmailDomain } from '../../shared/forms/domain-rules';
@@ -670,7 +671,12 @@ export class MockBiosApi extends BiosApi {
 
       const file = this.d.capturedExportFile(input?.query);
 
-      if (file) return this.files.load('exportCompaniesXlsx', file.file, file.contentType);
+      if (file) {
+        return {
+          blob: await this.files.load('exportCompaniesXlsx', file.file, file.contentType),
+          filename: filenameFromDisposition(file.disposition),
+        };
+      }
 
       const { total } = this.d.searchProfiles({
         ...input?.query,

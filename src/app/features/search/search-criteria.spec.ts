@@ -5,6 +5,7 @@ import {
   hasCriterion,
   type SearchCriteria,
   toApiQuery,
+  toExportQuery,
 } from './search-criteria';
 
 const EMPTY: SearchCriteria = {
@@ -165,5 +166,19 @@ describe('critérios da pesquisa', () => {
     expect(
       toApiQuery({ ...EMPTY, cnae: '24', minScore: 10, minConfidence: 0.5, order: 'asc' }),
     ).toEqual({ page: 1, page_size: 20, cnae: '24' });
+  });
+
+  it('exporta os mesmos filtros e ordem sem paginação', () => {
+    expect(
+      toExportQuery({
+        ...EMPTY,
+        cnae: '24',
+        ods: 13,
+        minScore: -20,
+        order: 'desc',
+        page: 3,
+        pageSize: 5,
+      }),
+    ).toEqual({ cnae: '24', ods: 13, min_score: -20, order: 'desc' });
   });
 });

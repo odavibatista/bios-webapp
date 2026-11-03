@@ -246,6 +246,11 @@ contêiner. ODS fora dos calculados mostra os disponíveis, com botão para pesq
 Ao ordenar pelo índice, empresas sem cálculo ficam ao fim nos dois sentidos e são separadas visualmente;
 empates usam confiança maior e depois CNPJ. O cabeçalho da tabela anuncia a direção da ordenação.
 
+Com resultados, **Exportar XLSX** baixa a lista inteira com os filtros e a ordem da URL, sem paginação.
+O arquivo e seu nome vêm da resposta capturada da API; a planilha não é gerada no navegador. Uma
+pesquisa sem planilha capturada informa a limitação da versão de apresentação. Erros de lista vazia,
+teto excedido e limite de requisições aparecem junto aos resultados.
+
 ## Setores
 
 `/setores` mostra a evolução do índice médio de um setor (divisão CNAE) num ODS, mês a mês

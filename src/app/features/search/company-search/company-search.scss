@@ -66,6 +66,13 @@ h2 {
   color: var(--mat-sys-on-surface-variant);
 }
 
+.export-limit {
+  padding: 1rem;
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-error-container);
+  color: var(--mat-sys-on-error-container);
+}
+
 .unavailable {
   padding: 1rem;
   border-radius: var(--mat-sys-corner-medium);

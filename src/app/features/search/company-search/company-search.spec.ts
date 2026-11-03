@@ -8,14 +8,19 @@ import { of } from 'rxjs';
 import { InMemoryApiCredentials } from '../../../core/api/api-credentials';
 import { BiosApi } from '../../../core/api/bios-api';
 import { provideMockBiosApi } from '../../../core/mocks/provide-mock-bios-api';
+import type { MockApiConfig } from '../../../core/mocks/mock-config';
+import { MockFiles } from '../../../core/mocks/mock-files';
 import { CompanySearch, NO_CRITERION_MESSAGE } from './company-search';
 
 /** Abre `/pesquisa` com a URL dada, já com sessão no mock, e espia a pesquisa. */
-async function openSearch(url = '/pesquisa', { narrow = false } = {}) {
+async function openSearch(
+  url = '/pesquisa',
+  { narrow = false, config = {} }: { narrow?: boolean; config?: Partial<MockApiConfig> } = {},
+) {
   TestBed.configureTestingModule({
     providers: [
       provideRouter([{ path: 'pesquisa', component: CompanySearch }]),
-      provideMockBiosApi({ latencyMs: 0 }),
+      provideMockBiosApi({ latencyMs: 0, ...config }),
       {
         provide: BreakpointObserver,
         useValue: { observe: () => of({ matches: narrow, breakpoints: {} }) },
@@ -28,9 +33,10 @@ async function openSearch(url = '/pesquisa', { narrow = false } = {}) {
   });
   TestBed.inject(InMemoryApiCredentials).setAccessToken(session.access_token);
   const search = vi.spyOn(api, 'searchCompanies');
+  const exportFile = vi.spyOn(api, 'exportCompaniesXlsx');
   const harness = await RouterTestingHarness.create(url);
 
-  return { harness, search, user: userEvent.setup(), router: TestBed.inject(Router) };
+  return { harness, search, exportFile, user: userEvent.setup(), router: TestBed.inject(Router) };
 }
 
 async function resultRows() {
@@ -56,6 +62,7 @@ describe('CompanySearch', () => {
     expect((await screen.findByRole('alert')).textContent).toContain(NO_CRITERION_MESSAGE);
     expect(router.url).toBe('/pesquisa');
     expect(search).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Exportar XLSX' })).toBeNull();
     expect(screen.getByRole('button', { name: 'Pesquisar' }).getAttribute('aria-describedby')).toBe(
       'dica-criterio',
     );
@@ -221,6 +228,99 @@ describe('CompanySearch', () => {
         'Nenhuma empresa atende aos filtros. Tente afrouxá-los: retire um critério ou diminua os mínimos.',
       ),
     ).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Exportar XLSX' })).toBeNull();
+  });
+
+  it('exporta a lista inteira com filtros e ordem da URL, usando o nome da API', async () => {
+    const { user, exportFile } = await openSearch(
+      '/pesquisa?cnae=24&ods=13&ordem=desc&pagina=2&por_pagina=5',
+    );
+    const load = vi.spyOn(TestBed.inject(MockFiles), 'load').mockResolvedValue(new Blob(['xlsx']));
+    const createUrl = vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:teste');
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      expect(this.download).toBe('empresas-bios-2026-10-30.xlsx');
+    });
+
+    await expectRows(6);
+    await user.click(screen.getByRole('button', { name: 'Exportar XLSX' }));
+
+    await vi.waitFor(() =>
+      expect(exportFile).toHaveBeenCalledWith({
+        query: { cnae: '24', ods: 13, order: 'desc' },
+      }),
+    );
+    await vi.waitFor(() => expect(click).toHaveBeenCalledOnce());
+    expect(load).toHaveBeenCalledWith(
+      'exportCompaniesXlsx',
+      'setor-ods-13-desc.xlsx',
+      expect.any(String),
+    );
+    expect(createUrl).toHaveBeenCalledWith(expect.any(Blob));
+    expect(screen.getByRole('button', { name: 'Exportar XLSX' }).hasAttribute('disabled')).toBe(
+      false,
+    );
+    click.mockRestore();
+    createUrl.mockRestore();
+  });
+
+  it('teto excedido informa o total e pede para refinar os critérios', async () => {
+    const { user } = await openSearch('/pesquisa?cnae=24', { config: { exportMaxCompanies: 3 } });
+    await expectRows(10);
+    await user.click(screen.getByRole('button', { name: 'Exportar XLSX' }));
+
+    expect((await screen.findByRole('alert')).textContent).toContain('10 empresas');
+    expect(screen.getByRole('alert').textContent).toContain('até 3');
+    expect(screen.getByRole('alert').textContent).toContain('Refine os critérios');
+  });
+
+  it('durante a exportação mostra progresso e bloqueia outro clique', async () => {
+    const { user, exportFile } = await openSearch('/pesquisa?cnae=24');
+    await expectRows(10);
+    let rejectExport!: (error: unknown) => void;
+    exportFile.mockImplementation(
+      () =>
+        new Promise<Awaited<ReturnType<BiosApi['exportCompaniesXlsx']>>>((_resolve, reject) => {
+          rejectExport = reject;
+        }),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Exportar XLSX' }));
+    const button = screen.getByRole('button', { name: 'Exportando XLSX…' });
+    expect(button.hasAttribute('disabled')).toBe(true);
+    expect(button.getAttribute('aria-busy')).toBe('true');
+    expect(exportFile).toHaveBeenCalledTimes(1);
+
+    rejectExport(new Error('falha de teste'));
+    await screen.findByRole('alert');
+    expect(screen.getByRole('button', { name: 'Exportar XLSX' }).hasAttribute('disabled')).toBe(
+      false,
+    );
+  });
+
+  it('404 da exportação informa que não há lista para baixar', async () => {
+    const { user } = await openSearch('/pesquisa?cnae=24', {
+      config: { forcedErrors: { exportCompaniesXlsx: 'exportCompaniesXlsx/sem-resultado' } },
+    });
+    await expectRows(10);
+    await user.click(screen.getByRole('button', { name: 'Exportar XLSX' }));
+    expect((await screen.findByRole('alert')).textContent).toContain('Nenhuma empresa');
+  });
+
+  it('429 da exportação informa quando poderá tentar de novo', async () => {
+    const { user } = await openSearch('/pesquisa?cnae=24', {
+      config: { forcedErrors: { exportCompaniesXlsx: 'exportCompaniesXlsx/limite-excedido' } },
+    });
+    await expectRows(10);
+    await user.click(screen.getByRole('button', { name: 'Exportar XLSX' }));
+
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'Você poderá tentar de novo em 1 min',
+    );
+    expect(screen.getByRole('button', { name: 'Tentar de novo' }).hasAttribute('disabled')).toBe(
+      true,
+    );
   });
 
   it('critério fora da regra não sai da tela e marca o campo', async () => {
