@@ -44,6 +44,18 @@ test.describe('perfil da empresa (#24)', () => {
     await expect(
       scores.getByRole('img', { name: /Índice do ODS 15: -80 numa escala de −100 a 100/ }),
     ).toBeVisible();
+    const ods15 = scores.getByRole('article', { name: 'ODS 15' });
+    await ods15.getByText('Como o índice foi calculado para o ODS 15').click();
+    await expect(ods15.getByText('Soma dos pontos:')).toContainText('-80');
+    await expect(ods15.getByText('Pontos: -40')).toHaveCount(2);
+    await ods15.getByRole('button', { name: 'Ver evidência no perfil' }).first().click();
+    await expect(
+      page
+        .getByRole('region', { name: 'Evidências' })
+        .getByRole('article')
+        .filter({ hasText: '343440-D' }),
+    ).toBeFocused();
+    await expect(page).toHaveURL('/empresas/00990842000138');
     await expectAccessible(page, testInfo, 'perfil da empresa');
   });
 

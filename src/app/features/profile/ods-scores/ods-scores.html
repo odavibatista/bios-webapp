@@ -57,6 +57,56 @@
             @if (score.coverageLabel) {
               <p class="coverage">{{ score.coverageLabel }}</p>
             }
+            <details class="explanation">
+              <summary>Como o índice foi calculado para o ODS {{ score.ods_number }}</summary>
+              @if (score.explanation.contributions.length) {
+                <p>Cada linha mostra o peso aplicado, o sinal e os pontos desta evidência.</p>
+                <ul class="contributions">
+                  @for (item of score.explanation.contributions; track $index) {
+                    <li>
+                      <strong>{{ item.source }}</strong>
+                      <span>{{ item.category }}</span>
+                      @if (item.reference) {
+                        <span>Referência na fonte: {{ item.reference }}</span>
+                      }
+                      <span>Peso: {{ item.weightLabel }}</span>
+                      <span>Sinal: {{ item.signalLabel }}</span>
+                      <span>Pontos: {{ item.pointsLabel }}</span>
+                      @if (item.weightReason) {
+                        <span>{{ item.weightReason }}</span>
+                      }
+                      @if (item.outdated) {
+                        <span
+                          >A evidência venceu desde o cálculo. Confira a situação atual na
+                          fonte.</span
+                        >
+                      }
+                      @if (item.evidenceAnchor) {
+                        <button
+                          type="button"
+                          class="evidence-link"
+                          (click)="showEvidence(item.evidenceAnchor)"
+                        >
+                          Ver evidência no perfil
+                        </button>
+                      } @else {
+                        <span>Esta evidência não está disponível no perfil atual.</span>
+                      }
+                      @if (item.sourceUrl) {
+                        <a [href]="item.sourceUrl" target="_blank" rel="noopener noreferrer"
+                          >Consultar na fonte original</a
+                        >
+                      }
+                    </li>
+                  }
+                </ul>
+                <p class="total">
+                  Soma dos pontos: <strong>{{ score.explanation.totalLabel }}</strong>
+                </p>
+              } @else {
+                <p>Não houve evidência conclusiva que contribuísse para este índice.</p>
+              }
+            </details>
           }
         </article>
       </li>
