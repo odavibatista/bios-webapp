@@ -142,8 +142,25 @@
           <p role="status">
             {{ page.total === 1 ? '1 empresa encontrada' : page.total + ' empresas encontradas' }}
           </p>
-          <!-- A exportação em XLSX (FE-22) entra aqui, ao lado do total. -->
+          <button
+            mat-stroked-button
+            type="button"
+            [disabled]="exporting()"
+            [attr.aria-busy]="exporting()"
+            (click)="exportResults()"
+          >
+            {{ exporting() ? 'Exportando XLSX…' : 'Exportar XLSX' }}
+          </button>
         </div>
+
+        @if (exportLimit(); as limit) {
+          <p class="export-limit" role="alert">
+            A pesquisa tem {{ limit.total }} empresas e a exportação aceita até {{ limit.max }}.
+            Refine os critérios para exportar.
+          </p>
+        } @else if (exportError(); as error) {
+          <bios-error-state [error]="error" (retry)="exportResults()" />
+        }
 
         @if (odsLabel(); as ods) {
           <p class="score-note">
