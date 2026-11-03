@@ -37,6 +37,7 @@ import {
   type SearchCriteria,
   type SearchOrder,
   toApiQuery,
+  toExportQuery,
 } from '../search-criteria';
 import {
   cityRule,
@@ -140,6 +141,18 @@ export class CompanySearch {
 
   /** Erros do formulário fora dos campos (ex.: nenhum critério). */
   protected readonly formErrors = signal<string[]>([]);
+  protected readonly exporting = signal(false);
+  protected readonly exportError = signal<unknown>(null);
+
+  protected readonly exportLimit = computed(() => {
+    const error = this.exportError();
+    if (!isApiError(error) || error.code !== 'EXPORT_TOO_LARGE') return null;
+
+    const details = error.details as { total?: unknown; max?: unknown } | undefined;
+    return typeof details?.total === 'number' && typeof details.max === 'number'
+      ? { total: details.total, max: details.max }
+      : null;
+  });
 
   protected readonly cards = toSignal(
     inject(BreakpointObserver)
@@ -193,6 +206,7 @@ export class CompanySearch {
 
       untracked(() => {
         this.fillForm(criteria);
+        this.exportError.set(null);
       });
     });
 
@@ -240,6 +254,35 @@ export class CompanySearch {
 
   protected async changePageSize(value: string): Promise<void> {
     await this.go({ ...this.criteria(), pageSize: Number(value), page: 1 });
+  }
+
+  /** Baixa a lista inteira; a API aplica os critérios da URL sem paginação (UC09). */
+  protected async exportResults(): Promise<void> {
+    if (
+      this.exporting() ||
+      !this.results.hasValue() ||
+      this.results.value().pagination.total === 0
+    ) {
+      return;
+    }
+
+    this.exporting.set(true);
+    this.exportError.set(null);
+    try {
+      const file = await this.api.exportCompaniesXlsx({ query: toExportQuery(this.criteria()) });
+      const url = URL.createObjectURL(file.blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = file.filename;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    } catch (error) {
+      this.exportError.set(error);
+    } finally {
+      this.exporting.set(false);
+    }
   }
 
   /** Pesquisa um dos ODS disponíveis, mantendo os demais critérios (fluxo 3.1). */

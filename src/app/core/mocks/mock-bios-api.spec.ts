@@ -675,9 +675,10 @@ describe('MockBiosApi', () => {
     });
 
     it('exportação: a planilha real capturada', async () => {
-      const blob = await api.exportCompaniesXlsx({ query: { cnae: '24', ods: 13, order: 'desc' } });
+      const file = await api.exportCompaniesXlsx({ query: { cnae: '24', ods: 13, order: 'desc' } });
 
-      expect(blob).toBeInstanceOf(Blob);
+      expect(file.blob).toBeInstanceOf(Blob);
+      expect(file.filename).toBe('empresas-bios-2026-10-30.xlsx');
       expect(files.load).toHaveBeenCalledWith(
         'exportCompaniesXlsx',
         'setor-ods-13-desc.xlsx',

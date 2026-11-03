@@ -276,13 +276,18 @@ export function capturedSearch(query: SearchQuery | undefined): SearchCompaniesR
 /** Planilha capturada para estes critérios, se houver (a planilha é sempre a da API real). */
 export function capturedExportFile(
   query: object | undefined,
-): { file: string; contentType: string } | null {
+): { file: string; contentType: string; disposition: string | undefined } | null {
   const wanted = criteriaOf(query);
   const found = capturesOf('exportCompaniesXlsx').find(
     (item) => item.status === 200 && sameCriteria(criteriaOf(item.request.query), wanted),
   );
 
-  return found ? (found.body as { file: string; contentType: string }) : null;
+  return found
+    ? {
+        ...(found.body as { file: string; contentType: string }),
+        disposition: found.headers['content-disposition'],
+      }
+    : null;
 }
 
 /** Evolução setorial (UC10): a série capturada da divisão e do ODS pedidos. */
