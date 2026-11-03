@@ -189,8 +189,12 @@ absoluta e sem credenciais vira link externo; sem ela, a referência aparece com
 sem link válido nem referência é mostrado como não verificado, sem seu resumo confirmatório.
 `UNKNOWN` e `NOT_FOUND` têm explicações diferentes; a proveniência informa coleta, persistência,
 atualização pendente ou fonte indisponível e, quando houver, o prazo sugerido para recarregar. O
-período das sanções é apresentado como dado histórico da fonte, sem afirmar vigência. Índices e
-explicação por ODS entram em entregas seguintes.
+período das sanções é apresentado como dado histórico da fonte, sem afirmar vigência. A seção
+"Índices por ODS" mostra cada ODS ativo em um cartão próprio, com índice e confiança lado a lado,
+sem índice geral nem comparação entre ODS. A escala neutra marca o zero e só aparece quando há
+índice calculado; índice pendente e ausência de evidência conclusiva têm textos distintos. A
+cobertura das fontes e o prazo sugerido para recálculo aparecem em texto. A explicação das
+contribuições do score entra na FE-19.
 
 ## Chaves de API
 
