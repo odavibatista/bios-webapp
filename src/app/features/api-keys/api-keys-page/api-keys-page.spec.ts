@@ -150,6 +150,13 @@ describe('ApiKeysPage', () => {
     expect(rowOf('Painel de compras')).toBeTruthy();
     expect(screen.getByText('3 de 10 chaves ativas.')).toBeTruthy();
     expect(screen.getByLabelText<HTMLInputElement>('Nome de identificação').value).toBe('');
+    expect(
+      screen
+        .getByLabelText('Nome de identificação')
+        .closest('mat-form-field')
+        ?.classList.contains('mat-form-field-invalid'),
+    ).toBe(false);
+    expect(screen.queryByText('O nome deve ter ao menos 2 caracteres.')).toBeNull();
   });
 
   it('com 10 chaves ativas, a recusa da API explica o limite e sugere revogar (regra 5)', async () => {

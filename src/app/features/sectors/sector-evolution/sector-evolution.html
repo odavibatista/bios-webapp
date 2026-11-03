@@ -6,7 +6,7 @@
 
 <form [formGroup]="form" (ngSubmit)="show()" novalidate aria-label="Setor e ODS">
   <div class="fields">
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>Setor (CNAE)</mat-label>
       <input matInput formControlName="cnae" autocomplete="off" [matAutocomplete]="sectorList" />
       <mat-autocomplete #sectorList="matAutocomplete">
@@ -20,7 +20,7 @@
       <mat-error>{{ messageOf(form.controls.cnae) }}</mat-error>
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
+    <mat-form-field appearance="outline" subscriptSizing="dynamic">
       <mat-label>ODS</mat-label>
       <mat-select formControlName="ods">
         @for (ods of odsOptions(); track ods.ods_number) {
