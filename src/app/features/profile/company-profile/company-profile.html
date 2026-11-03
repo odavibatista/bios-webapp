@@ -31,7 +31,12 @@
       </header>
 
       <bios-registration-data class="section" [profile]="profile.value()" />
-      <!-- Evidências (FE-17) e índices por ODS (FE-18, FE-19) entram aqui, como novas seções. -->
+      <bios-environmental-evidences
+        class="environmental"
+        [profile]="profile.value()"
+        (refresh)="profile.reload()"
+      />
+      <!-- Índices por ODS e explicação (FE-18, FE-19) entram aqui. -->
     } @else {
       <h1>Empresa</h1>
       <bios-loading label="Consultando a empresa…" />
