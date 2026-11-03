@@ -187,8 +187,14 @@ The profile shows the legal name, the trade name and the "Dados cadastrais" (reg
 section: status in Portuguese (an unrecognized one with the provider's text), company size, address,
 CNAEs with formatted code and description, and when the source last updated the record. "Company not
 found" (`404`) and temporary unavailability (`503`, with "Tentar de novo") are different screens.
-Evidence and the per-SDG indices come as new sections of the same page, from the same
-`getCompanyProfile`.
+The "Evidências" section uses the same `getCompanyProfile` response and separates environmental
+infractions, administrative conduct and GHG inventories. Each entry shows its source, state and
+publication, collection and validity dates. Only absolute HTTPS URLs without credentials become
+external links; otherwise, the identifier appears as text. A finding without either is displayed
+as unverified, without its confirming summary. `UNKNOWN` and `NOT_FOUND` have distinct explanations;
+provenance indicates collection, stored data, pending updates or an unavailable source, with a
+suggested retry time when provided. Sanction dates are source data and do not assert current legal
+effect. Per-SDG indices and explanations follow in later deliveries.
 
 ## API keys
 
