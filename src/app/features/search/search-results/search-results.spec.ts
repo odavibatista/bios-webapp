@@ -1,6 +1,7 @@
 import { provideRouter } from '@angular/router';
 import { render, screen, within } from '@testing-library/angular';
 import type { CompanySearchItem } from '../../../core/api/generated';
+import type { SearchOrder } from '../search-criteria';
 import { SearchResults } from './search-results';
 
 const SCORED: CompanySearchItem = {
@@ -27,9 +28,10 @@ async function renderResults(
   layout: 'table' | 'cards',
   odsLabel: string | null,
   items: CompanySearchItem[] = [SCORED, UNSCORED],
+  order: SearchOrder | null = null,
 ) {
   return render(SearchResults, {
-    inputs: { items, odsLabel, layout },
+    inputs: { items, odsLabel, layout, order },
     providers: [provideRouter([])],
   });
 }
@@ -91,6 +93,34 @@ describe('SearchResults', () => {
     expect(within(region).getByRole('table')).toBeTruthy();
   });
 
+  it.each([
+    ['asc', 'ascending'],
+    ['desc', 'descending'],
+  ] as const)(
+    'tabela ordenada em %s expõe aria-sort e separa empresas sem índice',
+    async (order, ariaSort) => {
+      await renderResults('table', 'ODS 13', [SCORED, UNSCORED], order);
+
+      expect(
+        screen.getByRole('columnheader', { name: 'Índice no ODS 13' }).getAttribute('aria-sort'),
+      ).toBe(ariaSort);
+      const rows = screen.getAllByRole('row');
+      expect(rows).toHaveLength(4);
+      expect(rows[1].textContent).toContain(SCORED.legal_name);
+      expect(rows[2].textContent).toContain('Sem índice calculado — apresentados ao fim');
+      expect(rows[3].textContent).toContain(UNSCORED.legal_name);
+    },
+  );
+
+  it('sem ordenação, não anuncia aria-sort nem insere separador', async () => {
+    await renderResults('table', 'ODS 13');
+
+    expect(
+      screen.getByRole('columnheader', { name: 'Índice no ODS 13' }).hasAttribute('aria-sort'),
+    ).toBe(false);
+    expect(screen.queryByText('Sem índice calculado — apresentados ao fim')).toBeNull();
+  });
+
   it('cartões: os mesmos dados, com "Sem índice" em vez de zero', async () => {
     await renderResults('cards', 'ODS 13');
 
@@ -105,5 +135,17 @@ describe('SearchResults', () => {
     expect(cards[1].textContent).toContain('Sem índice');
     expect(cards[1].textContent).not.toMatch(/Índice no ODS 13\s*0\b/);
     expect(screen.queryByRole('table')).toBeNull();
+  });
+
+  it('cartões ordenados separam as empresas sem índice', async () => {
+    await renderResults('cards', 'ODS 13', [SCORED, UNSCORED], 'desc');
+
+    const cards = within(screen.getByRole('list', { name: 'Empresas encontradas' })).getAllByRole(
+      'listitem',
+    );
+    expect(cards).toHaveLength(3);
+    expect(cards[0].textContent).toContain(SCORED.legal_name);
+    expect(cards[1].textContent).toContain('Sem índice calculado — apresentados ao fim');
+    expect(cards[2].textContent).toContain(UNSCORED.legal_name);
   });
 });
