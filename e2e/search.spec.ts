@@ -23,6 +23,20 @@ test.describe('pesquisa de empresas (#25)', () => {
     await expect(page.getByLabel('Índice mínimo')).toBeDisabled();
   });
 
+  test('dicas dos filtros de índice alinham com as demais', async ({ page }) => {
+    await signInToSearch(page);
+    const offsets = await page.locator('.fields mat-form-field').evaluateAll((fields) =>
+      fields.map((field) => {
+        const hint = field.querySelector('mat-hint');
+        return hint ? hint.getBoundingClientRect().x - field.getBoundingClientRect().x : null;
+      }),
+    );
+    expect(offsets).toHaveLength(8);
+    for (const offset of offsets.slice(5)) {
+      expect(Math.abs(offset! - offsets[0]!)).toBeLessThanOrEqual(0.5);
+    }
+  });
+
   test('pesquisa por CNAE e ODS, pagina e volta pelo navegador', async ({ page }, testInfo) => {
     await signInToSearch(page);
     await expectAccessible(page, testInfo, 'formulário da pesquisa');
@@ -60,6 +74,26 @@ test.describe('pesquisa de empresas (#25)', () => {
     } else {
       await expect(page.getByRole('columnheader', { name: 'Confiança no ODS 15' })).toBeVisible();
     }
+  });
+
+  test('índice e confiança do ODS ficam visíveis sem rolar a tabela a 1280 px', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'A tabela é exibida no desktop.');
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await signInToSearch(page, '?cnae=24&ods=13&ordem=desc');
+    await expect(page.getByRole('status')).toHaveText('10 empresas encontradas');
+
+    const scroll = page.getByRole('region', { name: 'Empresas encontradas' });
+    const area = await scroll.boundingBox();
+    expect(area).not.toBeNull();
+    for (const label of ['Índice no ODS 13', 'Confiança no ODS 13']) {
+      const column = await page.getByRole('columnheader', { name: label }).boundingBox();
+      expect(column).not.toBeNull();
+      expect(column!.x).toBeGreaterThanOrEqual(area!.x);
+      expect(column!.x + column!.width).toBeLessThanOrEqual(area!.x + area!.width);
+    }
+    expect(await scroll.evaluate((element) => element.scrollLeft)).toBe(0);
   });
 
   test('resultados e exportação cabem no painel em todas as larguras', async ({
