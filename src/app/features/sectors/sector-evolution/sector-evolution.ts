@@ -9,12 +9,14 @@ import {
   Injector,
   resource,
   untracked,
+  viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -57,6 +59,7 @@ function searchable(text: string): string {
     MatAutocompleteModule,
     MatButtonModule,
     MatFormFieldModule,
+    MatIconModule,
     MatInputModule,
     MatSelectModule,
     ReactiveFormsModule,
@@ -73,6 +76,7 @@ export class SectorEvolution {
   private readonly route = inject(ActivatedRoute);
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly sectorInput = viewChild.required<ElementRef<HTMLInputElement>>('sectorInput');
 
   protected readonly messageOf = fieldMessage;
 
@@ -105,7 +109,7 @@ export class SectorEvolution {
     }),
   });
 
-  private readonly typedCnae = toSignal(this.form.controls.cnae.valueChanges, {
+  protected readonly typedCnae = toSignal(this.form.controls.cnae.valueChanges, {
     initialValue: '',
   });
 
@@ -204,6 +208,11 @@ export class SectorEvolution {
       relativeTo: this.route,
       queryParams: sectorCriteriaToParams({ cnae: sectorCnaeDigits(cnae.trim()), ods }),
     });
+  }
+
+  protected clearSector(): void {
+    this.form.controls.cnae.setValue('');
+    this.sectorInput().nativeElement.focus();
   }
 
   private focusFirstInvalid(): void {
