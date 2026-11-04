@@ -22,6 +22,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
 import { BiosApi } from '../../../core/api/bios-api';
+import { PRESENTATION_MODE } from '../../../core/presentation-mode';
 import { describeError } from '../../../shared/errors/describe-error';
 import { applyApiErrors } from '../../../shared/errors/form-errors';
 import { fieldMessage } from '../../../shared/forms/account-rules';
@@ -76,6 +77,9 @@ export class SectorEvolution {
   private readonly route = inject(ActivatedRoute);
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  /** Na apresentação, a série é reconstruída, e a tela precisa dizer isso. */
+  protected readonly presentation = inject(PRESENTATION_MODE);
   private readonly sectorInput = viewChild.required<ElementRef<HTMLInputElement>>('sectorInput');
 
   protected readonly messageOf = fieldMessage;

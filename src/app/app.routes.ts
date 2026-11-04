@@ -1,4 +1,5 @@
 import { Route, Routes } from '@angular/router';
+import { DEMO_ENTRY_PATH, enterDemo } from './core/session/demo-entry.guard';
 import { privateByDefault } from './core/session/private-by-default.guard';
 import { requireRole, withSession } from './core/session/role.guards';
 
@@ -24,6 +25,13 @@ export const routes: Routes = [
         title: 'BIOS',
         data: { public: true },
         loadComponent: () => import('./features/home/home').then((m) => m.Home),
+      },
+      {
+        // O QR Code da apresentação: entra com a conta de demonstração e leva ao painel.
+        path: DEMO_ENTRY_PATH,
+        data: { public: true },
+        canActivate: [enterDemo],
+        children: [],
       },
       {
         // `LOGIN_PATH`: para onde o guard e a renovação da sessão mandam quem não tem sessão.
