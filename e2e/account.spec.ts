@@ -20,6 +20,36 @@ async function openAccount(page: Page, email: string, name: RegExp) {
 }
 
 test.describe('conta (#23)', () => {
+  test('endereço preenchido e troca de e-mail mantêm espaço entre os campos', async ({ page }) => {
+    await openAccount(page, 'apresentacao@example.com', /Conta de Demonstração/);
+
+    const address = page.locator('.address');
+    for (const [above, below] of [
+      ['.cep', '.number'],
+      ['.number', '.neighborhood'],
+      ['.neighborhood', '.city'],
+    ]) {
+      const first = await address.locator(above).boundingBox();
+      const second = await address.locator(below).boundingBox();
+      expect(first).not.toBeNull();
+      expect(second).not.toBeNull();
+      expect(second!.y - (first!.y + first!.height)).toBeGreaterThanOrEqual(11);
+    }
+
+    const emailChange = page.getByRole('region', { name: 'Trocar e-mail' });
+    const email = await emailChange
+      .getByLabel('Novo e-mail')
+      .locator('xpath=ancestor::mat-form-field')
+      .boundingBox();
+    const password = await emailChange
+      .getByLabel('Senha atual')
+      .locator('xpath=ancestor::mat-form-field')
+      .boundingBox();
+    expect(email).not.toBeNull();
+    expect(password).not.toBeNull();
+    expect(password!.y - (email!.y + email!.height)).toBeGreaterThanOrEqual(15);
+  });
+
   test('edita o nome: "Salvar" só com mudança, e o nome novo aparece na barra', async ({
     page,
   }, testInfo) => {
