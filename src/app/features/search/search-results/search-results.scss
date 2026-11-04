@@ -21,6 +21,46 @@ table {
   font: var(--mat-sys-body-medium);
 }
 
+.with-ods {
+  min-width: 60rem;
+  table-layout: fixed;
+
+  thead th {
+    white-space: normal;
+  }
+
+  thead th:nth-child(1) {
+    width: 24%;
+  }
+
+  thead th:nth-child(2) {
+    width: 12%;
+  }
+
+  thead th:nth-child(3) {
+    width: 16%;
+  }
+
+  thead th:nth-child(4) {
+    width: 24%;
+  }
+
+  thead th:nth-child(5),
+  thead th:nth-child(6) {
+    width: 12%;
+  }
+
+  tbody th {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .cnae-description {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
 th,
 td {
   padding: 0.625rem 0.75rem;
@@ -53,6 +93,7 @@ tbody th {
   white-space: nowrap;
 }
 
+.cnpj,
 .trade-name,
 .cnae-description {
   display: block;

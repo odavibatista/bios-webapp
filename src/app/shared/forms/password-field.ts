@@ -52,12 +52,16 @@ import { fieldMessage, PASSWORD_POLICY } from './account-rules';
   styles: `
     :host {
       display: block;
-      /* O alvo de toque do botão de sufixo ultrapassa 4px a borda do campo. */
-      padding-inline-end: 0.25rem;
     }
 
     .field {
       width: 100%;
+    }
+
+    button[matSuffix] {
+      /* O alvo de toque do Material ocupa 48px; o botão precisa contê-lo. */
+      inline-size: 3rem;
+      block-size: 3rem;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

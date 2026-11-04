@@ -1,13 +1,12 @@
 @if (layout() === 'table') {
   <div class="table-scroll" role="region" aria-label="Empresas encontradas" tabindex="0">
-    <table>
+    <table [class.with-ods]="odsLabel()">
       <caption class="visually-hidden">
         Empresas encontradas
       </caption>
       <thead>
         <tr>
           <th scope="col">Empresa</th>
-          <th scope="col">CNPJ</th>
           <th scope="col">Situação</th>
           <th scope="col">Município</th>
           <th scope="col">CNAE principal</th>
@@ -29,7 +28,7 @@
         @for (item of items(); track item.cnpj; let index = $index) {
           @if (index === firstMissingIndex()) {
             <tr class="unscored-divider">
-              <td [attr.colspan]="odsLabel() ? 7 : 5">
+              <td [attr.colspan]="odsLabel() ? 6 : 4">
                 Sem índice calculado — apresentados ao fim
               </td>
             </tr>
@@ -37,11 +36,11 @@
           <tr>
             <th scope="row">
               <a [routerLink]="['/empresas', item.cnpj]">{{ item.legal_name }}</a>
+              <span class="cnpj">{{ cnpj(item.cnpj) }}</span>
               @if (item.trade_name) {
                 <span class="trade-name">{{ item.trade_name }}</span>
               }
             </th>
-            <td class="nowrap">{{ cnpj(item.cnpj) }}</td>
             <td>{{ status(item.registration_status) }}</td>
             <td>{{ item.city }}/{{ item.uf }}</td>
             <td>

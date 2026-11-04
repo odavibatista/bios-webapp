@@ -30,9 +30,21 @@ const ORIGIN_LABELS: Record<Origin, string> = {
   UNAVAILABLE: 'Indisponível no momento',
 };
 
+const GHG_NO_INVENTORY_MESSAGE =
+  'Não há inventário localizado para esta empresa no registro voluntário. Isso não confirma ausência de inventário.';
+
+function ghgWithoutLocatedInventory(source: CompanySourceProvenance): boolean {
+  return (
+    source.source_slug === 'GHG_PROTOCOL' &&
+    source.origin === 'UNAVAILABLE' &&
+    source.evidence_state === 'UNKNOWN'
+  );
+}
+
 interface EvidenceSection {
   category: Category;
   label: string;
+  ghgNoInventory: boolean;
   evidences: EvidenceView[];
   sources: {
     slug: string;
@@ -48,6 +60,9 @@ function emptySourceStatus(source: CompanySourceProvenance): {
   message: string;
   retryable: boolean;
 } {
+  if (ghgWithoutLocatedInventory(source)) {
+    return { message: GHG_NO_INVENTORY_MESSAGE, retryable: false };
+  }
   if (source.origin === 'PENDING') {
     return { message: 'Consulta em andamento; ainda não há resposta atual.', retryable: true };
   }
@@ -86,6 +101,7 @@ function emptySourceStatus(source: CompanySourceProvenance): {
 export class EnvironmentalEvidences {
   readonly profile = input.required<CompanyFullProfileResponse>();
   readonly refresh = output<void>();
+  protected readonly ghgNoInventoryMessage = GHG_NO_INVENTORY_MESSAGE;
 
   protected readonly retry = computed(() =>
     retryHint(this.profile().provenance.retry_after_seconds),
@@ -98,6 +114,8 @@ export class EnvironmentalEvidences {
     return (Object.keys(CATEGORY_LABELS) as Category[]).map((category) => ({
       category,
       label: CATEGORY_LABELS[category],
+      ghgNoInventory:
+        category === 'EMISSAO_GEE' && profile.provenance.sources.some(ghgWithoutLocatedInventory),
       evidences: (
         profile.evidences.find((group) => group.category === category)?.evidences ?? []
       ).map(presentEvidence),
@@ -116,9 +134,10 @@ export class EnvironmentalEvidences {
                 slug,
                 label: SOURCE_LABELS[slug],
                 origin: source.origin,
-                originLabel:
-                  (source.origin === 'COLLECTION' || source.origin === 'PERSISTED') &&
-                  lastCollection
+                originLabel: ghgWithoutLocatedInventory(source)
+                  ? GHG_NO_INVENTORY_MESSAGE
+                  : (source.origin === 'COLLECTION' || source.origin === 'PERSISTED') &&
+                      lastCollection
                     ? `Consultada em ${formatDateTime(lastCollection)}`
                     : ORIGIN_LABELS[source.origin],
                 emptyMessage: emptyStatus.message,
