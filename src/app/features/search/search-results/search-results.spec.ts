@@ -43,7 +43,6 @@ describe('SearchResults', () => {
     const headers = screen.getAllByRole('columnheader').map((cell) => cell.textContent.trim());
     expect(headers).toEqual([
       'Empresa',
-      'CNPJ',
       'Situação',
       'Município',
       'CNAE principal',
@@ -52,11 +51,11 @@ describe('SearchResults', () => {
     ]);
 
     const [, first, second] = screen.getAllByRole('row');
+    expect(within(first).getByRole('rowheader').textContent).toContain('33.592.510/0001-54');
     const firstCells = within(first)
       .getAllByRole('cell')
       .map((cell) => cell.textContent.trim());
     expect(firstCells).toEqual([
-      '33.592.510/0001-54',
       'Ativa',
       'OURO BRANCO/MG',
       expect.stringContaining('2451200'),
@@ -67,7 +66,7 @@ describe('SearchResults', () => {
       .getAllByRole('cell')
       .map((cell) => cell.textContent.trim());
     expect(secondCells.slice(-2)).toEqual(['Sem índice', 'Sem cálculo']);
-    expect(secondCells[1]).toBe('Baixada');
+    expect(secondCells[0]).toBe('Baixada');
   });
 
   it('o nome leva ao perfil da empresa', async () => {
@@ -81,7 +80,7 @@ describe('SearchResults', () => {
   it('sem ODS escolhido, não há colunas de índice', async () => {
     await renderResults('table', null);
 
-    expect(screen.getAllByRole('columnheader')).toHaveLength(5);
+    expect(screen.getAllByRole('columnheader')).toHaveLength(4);
     expect(screen.queryByText(/Índice no/)).toBeNull();
   });
 
