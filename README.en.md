@@ -98,6 +98,9 @@ In the presentation version, the provider is `MockBiosApi` (`src/app/core/mocks/
 
 ## Panel
 
+`/demonstracao` signs in with the demo account and opens the panel: it is where the presentation QR
+Code points. The password is not in the URL, and outside the presentation version the route leads to login.
+
 `/painel` is where login leads (UC18, RF34): the search and the companies whose index changed most
 recently, in cards that open the profile. Each card shows, per SDG, the current index and confidence and
 the direction, cause and date of the change, never the previous index or the variation (IND03). The order

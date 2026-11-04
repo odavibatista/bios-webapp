@@ -70,4 +70,17 @@ test.describe('tela principal com as movimentações (#168)', () => {
       await expect(lookup.getByLabel('CNPJ ou nome da empresa')).toHaveValue('00990842000138');
     }
   });
+
+  test('o link do QR Code abre o painel sem pedir login', async ({ browser }) => {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    await page.goto('/demonstracao');
+
+    await expect(page).toHaveURL('/painel');
+    await expect(page.locator('bios-movement-card').first()).toBeVisible();
+    await page.reload();
+    await expect(page).toHaveURL('/painel');
+    await context.close();
+  });
 });

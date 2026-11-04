@@ -97,6 +97,9 @@ Na versão de apresentação, o provedor é o `MockBiosApi` (`src/app/core/mocks
 
 ## Painel
 
+`/demonstracao` entra com a conta de demonstração e leva ao painel: é o destino do QR Code da
+apresentação. A senha não vai na URL, e fora da versão de apresentação a rota leva ao login.
+
 `/painel` é a tela para onde o login leva (UC18, RF34): a busca e as empresas cujo índice mudou por
 último, em cartões que abrem o perfil. Cada cartão mostra, por ODS, o índice e a confiança atuais e o
 sentido, a causa e a data da mudança, nunca o índice anterior ou a variação (IND03). A ordem é só
