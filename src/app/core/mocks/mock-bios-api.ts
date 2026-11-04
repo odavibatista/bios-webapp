@@ -7,6 +7,7 @@ import type * as Api from '../api/generated';
 import { EMAIL_DOMAIN_PATTERN, normalizeEmailDomain } from '../../shared/forms/domain-rules';
 import type { CaptureKey } from './fixtures';
 import { MOCK_API_CONFIG } from './mock-config';
+import { CompanyArchive, type ArchivedCompany } from './company-archive';
 import type * as MockData from './mock-data';
 import { MockFiles } from './mock-files';
 import { MockMailbox, type MockEmail } from './mock-mailbox';
@@ -122,6 +123,8 @@ export class MockBiosApi extends BiosApi {
   private readonly credentials = inject(ApiCredentials);
   private readonly mailbox = inject(MockMailbox);
   private readonly files = inject(MockFiles);
+  /** A base publicada; sem ela (nos testes, por exemplo), valem as capturas de `fixtures/`. */
+  private readonly archive = inject(CompanyArchive, { optional: true });
 
   private data?: typeof MockData;
   /** A carga em andamento, para chamadas simultâneas esperarem a mesma, e não semearem de novo. */
@@ -611,15 +614,18 @@ export class MockBiosApi extends BiosApi {
   // ------------------------------------------------------------------------------------------
 
   getCompanyProfile({ path: params }: ApiInput<Api.GetCompanyProfileData>) {
-    return this.run('getCompanyProfile', () => {
-      this.authenticated(`/companies/${params.cnpj}`);
+    return this.run('getCompanyProfile', async () => {
+      const path = `/companies/${params.cnpj}`;
+      this.authenticated(path);
 
-      return this.d.companyProfile(params.cnpj, this.now());
+      if (!this.archive) return this.d.companyProfile(params.cnpj, this.now());
+
+      return (await this.archivedCompany(params.cnpj, path)).profile;
     });
   }
 
   getScoreExplanation({ path: params }: ApiInput<Api.GetScoreExplanationData>) {
-    return this.run('getScoreExplanation', () => {
+    return this.run('getScoreExplanation', async () => {
       const path = `/companies/${params.cnpj}/scores/${params.odsNumber}/explanation`;
       this.authenticated(path);
       const cnpj = this.d.normalizeCnpj(params.cnpj);
@@ -627,6 +633,15 @@ export class MockBiosApi extends BiosApi {
       if (!this.d.isValidCnpj(cnpj)) throw this.error('getCompanyProfile/cnpj-invalido', path);
       if (!this.d.activeOds().includes(Number(params.odsNumber))) {
         throw this.error('getScoreExplanation/ods-nao-calculado', path);
+      }
+
+      if (this.archive) {
+        const company = await this.archivedCompany(cnpj, path);
+        const explanation = company.explanations[Number(params.odsNumber)];
+
+        if (!explanation) throw this.error('getCompanyProfile/nao-encontrada', path);
+
+        return explanation;
       }
 
       const found = this.d
@@ -650,12 +665,14 @@ export class MockBiosApi extends BiosApi {
   }
 
   searchCompanies(input?: ApiInput<Api.SearchCompaniesData>) {
-    return this.run('searchCompanies', () => {
+    return this.run('searchCompanies', async () => {
       const path = this.d.pathWithQuery('/companies', input?.query);
       this.authenticated(path);
       const error = this.d.searchCriteriaError(input?.query, path, this.now());
 
       if (error) throw error;
+
+      if (this.archive) return this.d.searchEntries(await this.archive.entries(), input?.query);
 
       return this.d.capturedSearch(input?.query) ?? this.d.searchProfiles(input?.query);
     });
@@ -668,6 +685,8 @@ export class MockBiosApi extends BiosApi {
       const error = this.d.searchCriteriaError(input?.query, path, this.now());
 
       if (error) throw error;
+
+      if (this.archive) return this.generatedExport(this.archive, input?.query, path);
 
       const file = this.d.capturedExportFile(input?.query);
 
@@ -709,16 +728,27 @@ export class MockBiosApi extends BiosApi {
   }
 
   listSectors() {
-    return this.run('listSectors', () => {
+    return this.run('listSectors', async () => {
       this.authenticated('/sectors');
+
+      if (this.archive) return this.archive.sectors();
 
       return this.d.capturedBody<Api.ListSectorsResponse>('listSectors/sucesso');
     });
   }
 
   getSectorEvolution({ path: params, query }: ApiInput<Api.GetSectorEvolutionData>) {
-    return this.run('getSectorEvolution', () => {
+    return this.run('getSectorEvolution', async () => {
       this.authenticated(`/sectors/${params.cnae}/evolution?ods=${query.ods}`);
+
+      if (this.archive) {
+        const division = this.d.sectorDivision(params.cnae, query.ods, this.now());
+        const series = await this.archive.evolution(division, query.ods);
+
+        if (!series) throw this.d.sectorNotAvailable(params.cnae, query.ods, this.now());
+
+        return series;
+      }
 
       return this.d.sectorEvolution(params.cnae, query.ods, this.now());
     });
@@ -727,6 +757,45 @@ export class MockBiosApi extends BiosApi {
   // ------------------------------------------------------------------------------------------
   // Apoio
   // ------------------------------------------------------------------------------------------
+
+  /** A empresa na base publicada, ou o erro que a API daria (UC06, fluxos 2.1 e 3.3). */
+  private async archivedCompany(cnpj: string, path: string): Promise<ArchivedCompany> {
+    const normalized = this.d.normalizeCnpj(cnpj);
+
+    if (!this.d.isValidCnpj(normalized)) throw this.error('getCompanyProfile/cnpj-invalido', path);
+
+    const company = await this.archive?.company(normalized);
+
+    if (!company) throw this.error('getCompanyProfile/nao-encontrada', path);
+
+    return company;
+  }
+
+  /** A planilha da pesquisa, montada no navegador com as colunas da API (UC09). */
+  private async generatedExport(
+    archive: CompanyArchive,
+    query: Api.ExportCompaniesXlsxData['query'],
+    path: string,
+  ) {
+    const matches = this.d.matchEntries(await archive.entries(), query);
+    const total = matches.length;
+    const max = this.config.exportMaxCompanies;
+
+    if (total === 0) throw this.error('exportCompaniesXlsx/sem-resultado', path);
+    if (total > max) {
+      throw this.error('exportCompaniesXlsx/acima-do-teto', path, {
+        message: `A pesquisa tem ${total} empresas e uma exportação aceita até ${max}. Refine os critérios.`,
+        details: { total, max },
+      });
+    }
+
+    const { companiesWorkbook } = await import('./companies-workbook');
+
+    return {
+      blob: await companiesWorkbook(matches, this.d.activeOds()),
+      filename: `empresas-bios-${new Date(this.now()).toISOString().slice(0, 10)}.xlsx`,
+    };
+  }
 
   /** Espera simulada, cenário forçado e a operação em si, sempre assíncrona. */
   private async run<T>(operation: BiosOperation, handler: () => T | Promise<T>): Promise<T> {

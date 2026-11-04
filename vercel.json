@@ -4,5 +4,11 @@
   "installCommand": "npx --yes npm@11.21.1 ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist/bios-webapp/browser",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "headers": [
+    {
+      "source": "/presentation/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+    }
+  ],
+  "rewrites": [{ "source": "/((?!presentation/).*)", "destination": "/index.html" }]
 }

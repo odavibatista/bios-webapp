@@ -2,6 +2,7 @@
 src/app/core/api/generated/
 api/openapi.json
 src/app/core/mocks/fixtures/
+public/presentation/
 
 # Saídas de build, cache e testes.
 dist/

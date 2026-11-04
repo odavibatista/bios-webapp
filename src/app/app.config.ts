@@ -4,6 +4,7 @@ import localePt from '@angular/common/locales/pt';
 import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
+import { COMPANY_ARCHIVE_PROVIDERS } from './core/mocks/company-archive.providers';
 import { provideMockBiosApi } from './core/mocks/provide-mock-bios-api';
 import { provideSession } from './core/session/provide-session';
 
@@ -18,6 +19,7 @@ export const appConfig: ApplicationConfig = {
     { provide: LOCALE_ID, useValue: 'pt-BR' },
     // Versão de apresentação: a camada de dados responde com as capturas da API real (#14).
     provideMockBiosApi(),
+    COMPANY_ARCHIVE_PROVIDERS,
     // Sessão: o token vem dela, e o contrato renova o acesso sozinho (#15). Depois da API.
     provideSession(),
   ],
