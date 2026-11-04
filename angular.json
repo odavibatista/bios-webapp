@@ -39,7 +39,7 @@
             ],
             "styles": [
               "@fontsource-variable/inter/index.css",
-              "material-symbols/outlined.css",
+              "src/styles/icons.css",
               "src/styles.scss"
             ]
           },
