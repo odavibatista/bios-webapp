@@ -74,8 +74,9 @@ OpenAPI usada pelo app, com entrada e saída dos tipos gerados. Falhas chegam co
 `code`, `message`, `details`), com o texto da API. O provedor é escolhido em `app.config.ts`; integrar
 com a API real é trocar só ele.
 
-**Sessão** (`src/app/core/session/`): o `SessionStore` guarda a sessão só em memória (recarregar a
-página encerra a sessão local) e fornece o token ao provedor. O `BiosApi` que as telas recebem renova o
+**Sessão** (`src/app/core/session/`): o `SessionStore` guarda a sessão só em memória e fornece o
+token ao provedor. Só a versão de apresentação fornece `TabStorage`, em que a sessão do mock sobrevive a
+recarregar a página e acaba ao fechar a aba. O `BiosApi` que as telas recebem renova o
 access token sozinho: um `401 NOT_AUTHENTICATED` com sessão aberta dispara um único `refreshSession`
 (chamadas simultâneas esperam o mesmo) e repete a operação; se a renovação falhar, a sessão é apagada e
 o app vai para `/entrar?voltar=<rota>&sessao=encerrada`. Toda rota é privada por padrão
@@ -86,8 +87,8 @@ Na versão de apresentação, o provedor é o `MockBiosApi` (`src/app/core/mocks
 - **Leitura** vem das respostas capturadas (perfis, explicações, setores, ODS); a pesquisa é refeita
   sobre os perfis capturados, e um teste confere que ela dá o mesmo resultado de cada pesquisa real
   capturada. As capturas carregam sob demanda (chunk `mock-data`), fora do bundle inicial.
-- **O que a demo altera** (contas, sessões, links de e-mail, chaves de API, blacklist) vive em memória e
-  recomeça ao recarregar. Contas prontas: `apresentacao@example.com` (`USER`) e
+- **O que a demo altera** (contas, sessões, links de e-mail, chaves de API, blacklist) fica na aba
+  (`sessionStorage`), só com o resumo das senhas, e acaba ao fechá-la. Contas prontas: `apresentacao@example.com` (`USER`) e
   `administracao@example.com` (`ADMIN`), senha `Apresentacao2026`. Os links que os e-mails trariam ficam
   em `MockMailbox`.
 - **Determinismo:** latência e cenários de falha (`forcedErrors`) vêm de `MOCK_API_CONFIG`, nunca de

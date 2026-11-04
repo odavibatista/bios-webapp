@@ -2,7 +2,7 @@ import type { Page, TestInfo } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
 import { expect, test } from './support/test';
 
-/** Entra e abre as chaves pelo menu do painel, sem recarregar (recarregar encerra a sessão). */
+/** Entra e abre as chaves pelo menu do painel, sem recarregar. */
 async function openApiKeys(page: Page, testInfo: TestInfo) {
   await page.goto('/entrar');
   await page.getByLabel('E-mail').fill('apresentacao@example.com');

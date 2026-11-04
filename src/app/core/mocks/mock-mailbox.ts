@@ -1,4 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable, signal } from '@angular/core';
+import { TabStorage } from '../session/tab-storage';
+
+const MAILBOX_KEY = 'bios.caixa-de-saida.v1';
 
 /** E-mail que a API mandaria, com o link que ele traria. */
 export interface MockEmail {
@@ -15,13 +18,17 @@ export interface MockEmail {
  */
 @Injectable({ providedIn: 'root' })
 export class MockMailbox {
-  private readonly sent = signal<readonly MockEmail[]>([]);
+  private readonly storage = inject(TabStorage, { optional: true });
+  private readonly sent = signal<readonly MockEmail[]>(
+    this.storage?.read<MockEmail[]>(MAILBOX_KEY) ?? [],
+  );
 
   /** Todos os e-mails, do mais antigo ao mais novo. */
   readonly emails = this.sent.asReadonly();
 
   send(email: MockEmail): void {
     this.sent.update((emails) => [...emails, email]);
+    this.storage?.write(MAILBOX_KEY, this.sent());
   }
 
   /** O e-mail mais recente para este endereço e deste tipo. */
