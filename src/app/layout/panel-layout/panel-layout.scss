@@ -1,6 +1,9 @@
 .panel {
   min-height: 60vh;
   background: transparent;
+  // O documento controla a rolagem vertical; o container do Material nao precisa
+  // criar outra area rolavel em torno das paginas do painel.
+  overflow: visible;
 }
 
 .panel-menu {
@@ -17,6 +20,7 @@
   // Sem largura mínima: conteúdo largo (tabelas) rola dentro dele, nunca na página (NFIN02).
   min-width: 0;
   padding: 0 0 0 1.5rem;
+  overflow: visible;
 
   @media (max-width: 959.98px) {
     padding: 0;
