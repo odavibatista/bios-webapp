@@ -183,18 +183,23 @@ empresas já consultadas pelo CNPJ e oferece o próprio campo para essa consulta
 O perfil mostra a razão social, o nome fantasia e a seção "Dados cadastrais": situação em português
 (a não reconhecida com o texto do provedor), porte, endereço, CNAEs com o código formatado e a
 descrição, e a data em que a fonte atualizou o cadastro. "Empresa não encontrada" (`404`) e
-indisponibilidade temporária (`503`, com "Tentar de novo") são telas diferentes. A seção "Evidências"
+indisponibilidade temporária (`503`, com "Tentar de novo") são telas diferentes.
+
+A seção "Evidências"
 usa o mesmo `getCompanyProfile` e separa infrações ambientais, conduta administrativa e inventários
 de GEE. Cada registro mostra fonte, estado e datas de publicação, coleta e validade. Só URL HTTPS
 absoluta e sem credenciais vira link externo; sem ela, a referência aparece como texto. Um achado
 sem link válido nem referência é mostrado como não verificado, sem seu resumo confirmatório.
 `UNKNOWN` e `NOT_FOUND` têm explicações diferentes; a proveniência informa coleta, persistência,
 atualização pendente ou fonte indisponível e, quando houver, o prazo sugerido para recarregar. O
-período das sanções é apresentado como dado histórico da fonte, sem afirmar vigência. A seção
-"Índices por ODS" mostra cada ODS ativo em um cartão próprio, com índice e confiança lado a lado,
+período das sanções é apresentado como dado histórico da fonte, sem afirmar vigência.
+
+A seção "Índices por ODS" mostra cada ODS ativo em um cartão próprio, com índice e confiança lado a lado,
 sem índice geral nem comparação entre ODS. A escala neutra marca o zero e só aparece quando há
 índice calculado; índice pendente e ausência de evidência conclusiva têm textos distintos. A
-cobertura das fontes e o prazo sugerido para recálculo aparecem em texto. Cada cartão oferece
+cobertura das fontes e o prazo sugerido para recálculo aparecem em texto.
+
+Cada cartão oferece
 "Como o índice foi calculado": as contribuições mostram fonte, categoria, referência, peso,
 sinal e pontos, com a soma final. Peso reduzido e evidência vencida recebem avisos próprios. Um
 botão leva à evidência no mesmo perfil e o endereço original é oferecido quando for HTTPS válido.

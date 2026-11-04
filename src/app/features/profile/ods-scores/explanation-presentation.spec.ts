@@ -1,11 +1,13 @@
 import type { CompanyFullProfileResponse } from '../../../core/api/generated';
 import acoCearense from '../../../core/mocks/fixtures/getCompanyProfile/aco-cearense';
+import atuante from '../../../core/mocks/fixtures/getCompanyProfile/atuante';
 import foxStore from '../../../core/mocks/fixtures/getCompanyProfile/fox-store';
 import { PROFILES } from '../../../core/mocks/mock-companies';
 import { presentExplanation } from './explanation-presentation';
 import { presentScore } from './score-presentation';
 
 const ACO = acoCearense.body as CompanyFullProfileResponse;
+const ATUANTE = atuante.body as CompanyFullProfileResponse;
 const FOX = foxStore.body as CompanyFullProfileResponse;
 
 describe('presentExplanation', () => {
@@ -50,6 +52,17 @@ describe('presentExplanation', () => {
     expect(explanation.totalLabel).toBe('-6,25');
     expect(explanation.contributions[0].weightLabel).toBe('1,25');
     expect(explanation.contributions[0].weightReason).toContain('período informado');
+  });
+
+  it('explica as contribuições de peso positivo sem pontos quando o teto foi atingido', () => {
+    const score = ATUANTE.ods_scores.find((item) => item.ods_number === 15)!;
+    const explanation = presentExplanation(score, ATUANTE.evidences);
+    const capped = explanation.contributions.filter((item) => item.pointsLabel === '0');
+
+    expect(capped).toHaveLength(2);
+    expect(capped.every((item) => item.weightLabel === '5')).toBe(true);
+    expect(capped.every((item) => item.zeroPointsReason?.includes('teto da categoria'))).toBe(true);
+    expect(explanation.totalLabel).toBe(presentScore(score).scoreLabel);
   });
 
   it('avisa sobre evidência vencida e não cria links para destino ausente ou inseguro', () => {

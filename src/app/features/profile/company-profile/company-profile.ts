@@ -23,9 +23,8 @@ import { RegistrationData } from '../registration-data/registration-data';
 type Problem = 'invalid' | 'not-found' | 'failure';
 
 /**
- * Perfil da empresa (`/empresas/:cnpj`; UC06; #24). Esta entrega traz o cabeçalho e os dados
- * cadastrais e as evidências do mesmo `getCompanyProfile`. Índices e explicação (FE-18 e FE-19)
- * entram como novas seções desta página.
+ * Perfil da empresa (`/empresas/:cnpj`; UC06; #24). A página mostra cabeçalho, dados cadastrais,
+ * índices com explicação e evidências do mesmo `getCompanyProfile`.
  *
  * - CNPJ inválido na URL não chega à API (fluxo 2.1).
  * - CNPJ válido com máscara ou minúsculas troca a URL pela forma normalizada.

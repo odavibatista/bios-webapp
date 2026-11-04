@@ -35,12 +35,17 @@ async function renderProfile(
 
 describe('CompanyProfile', () => {
   it('mostra a razão social, o CNPJ formatado e os dados cadastrais, com a empresa na aba', async () => {
-    const { getCompanyProfile } = await renderProfile(PROFILE.cnpj, () => Promise.resolve(PROFILE));
+    const { getCompanyProfile, container } = await renderProfile(PROFILE.cnpj, () =>
+      Promise.resolve(PROFILE),
+    );
 
     expect(await screen.findByRole('heading', { level: 1, name: PROFILE.legal_name })).toBeTruthy();
     expect(screen.getByText('CNPJ 00.990.842/0001-38')).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Dados cadastrais' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Índices por ODS' })).toBeTruthy();
+    expect(
+      [...container.querySelectorAll('h2')].map((heading) => heading.textContent?.trim()),
+    ).toEqual(['Dados cadastrais', 'Índices por ODS', 'Evidências', 'Fontes consultadas']);
     expect(getCompanyProfile).toHaveBeenCalledWith({ path: { cnpj: '00990842000138' } });
     expect(TestBed.inject(Title).getTitle()).toBe(`${PROFILE.legal_name} — BIOS`);
   });
