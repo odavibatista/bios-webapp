@@ -14,7 +14,7 @@ async function signIn(page: Page, password: string) {
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
 }
 
-/** Navega dentro do app, sem recarregar a página (recarregar encerra a sessão local). */
+/** Navega dentro do app, sem recarregar a página. */
 async function navigateInApp(page: Page, path: string) {
   await page.evaluate((target) => {
     history.pushState({}, '', target);

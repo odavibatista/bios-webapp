@@ -81,9 +81,7 @@ describe('CompanyProfile', () => {
       await screen.findByRole('heading', { level: 1, name: 'Empresa não encontrada' }),
     ).toBeTruthy();
     expect(screen.getByText('Empresa não encontrada para o CNPJ informado.')).toBeTruthy();
-    expect(screen.getByText(/Nenhuma das fontes cadastrais consultadas/).textContent).toContain(
-      '99.999.998/0001-47',
-    );
+    expect(screen.getByText(/Confira o número/).textContent).toContain('99.999.998/0001-47');
     expect(screen.queryByRole('button', { name: 'Tentar de novo' })).toBeNull();
   });
 

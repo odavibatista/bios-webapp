@@ -71,6 +71,12 @@ describe('MockBiosApi com a base publicada', () => {
     );
   });
 
+  it('empresa fora da base não é apresentada como inexistente nas fontes oficiais', async () => {
+    await expect(api.getCompanyProfile({ path: { cnpj: '60894730000105' } })).rejects.toThrow(
+      'Este CNPJ não está na base da apresentação',
+    );
+  });
+
   it('pesquisa na base, e não nas respostas capturadas dos mesmos critérios', async () => {
     const found = await api.searchCompanies({ query: { cnae: '24', ods: 13, order: 'desc' } });
 

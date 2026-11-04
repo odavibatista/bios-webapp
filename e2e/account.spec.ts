@@ -4,7 +4,7 @@ import { expect, test } from './support/test';
 
 const PASSWORD = 'Apresentacao2026';
 
-/** Entra e abre "Minha conta" pelo menu da barra, sem recarregar (recarregar perde a sessão). */
+/** Entra e abre "Minha conta" pelo menu da barra, sem recarregar. */
 async function openAccount(page: Page, email: string, name: RegExp) {
   await page.goto('/entrar');
   await page.getByLabel('E-mail').fill(email);
