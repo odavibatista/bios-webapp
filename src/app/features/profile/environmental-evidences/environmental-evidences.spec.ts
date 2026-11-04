@@ -68,15 +68,14 @@ describe('EnvironmentalEvidences', () => {
     profile.provenance.retry_after_seconds = 120;
     await render(EnvironmentalEvidences, { inputs: { profile } });
 
-    expect(screen.getByRole('region', { name: 'Conduta administrativa' }).textContent).toContain(
-      'CGU — CEIS: Atualização em andamento',
+    const sources = screen.getByRole('region', { name: 'Fontes consultadas' }).textContent;
+    expect(sources).toContain('CGU — CEIS: Consulta em andamento');
+    expect(sources).toContain(
+      'GHG Protocol — Registro Público de Emissões: Indisponível no momento',
     );
-    expect(screen.getByRole('region', { name: 'Conduta administrativa' }).textContent).toContain(
-      'Recarregue o perfil em cerca de 2 minutos',
-    );
-    expect(
-      screen.getByRole('region', { name: 'Inventários de emissões de GEE' }).textContent,
-    ).toContain('Fonte indisponível nesta consulta');
+    expect(sources).toContain('Consultada em');
+    expect(sources).not.toContain('Dados armazenados');
+    expect(sources).toContain('Recarregue o perfil em cerca de 2 minutos');
     expect(screen.getByRole('link', { name: 'Consultar na fonte: 343440-D' })).toBeTruthy();
   });
 

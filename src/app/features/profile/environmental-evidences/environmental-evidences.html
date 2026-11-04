@@ -19,21 +19,6 @@
           registro histórico não confirma vigência atual.
         </p>
       }
-      @if (section.sources.length) {
-        <ul class="sources" aria-label="Situação das fontes">
-          @for (source of section.sources; track source.slug) {
-            <li
-              [class.pending]="source.origin === 'PENDING'"
-              [class.unavailable]="source.origin === 'UNAVAILABLE'"
-            >
-              <strong>{{ source.label }}:</strong> {{ source.originLabel }}.
-              @if (source.origin === 'PENDING') {
-                {{ retry() }}
-              }
-            </li>
-          }
-        </ul>
-      }
       @if (section.evidences.length) {
         <ul class="entries">
           @for (evidence of section.evidences; track evidence.id) {
@@ -113,4 +98,18 @@
       }
     </section>
   }
+</section>
+
+<section class="source-status" aria-labelledby="titulo-fontes">
+  <h2 id="titulo-fontes">Fontes consultadas</h2>
+  <ul class="sources">
+    @for (source of sources(); track source.slug) {
+      <li>
+        <strong>{{ source.label }}:</strong> {{ source.originLabel }}.
+        @if (source.origin === 'PENDING' && profile().provenance.retry_after_seconds !== null) {
+          {{ retry() }}
+        }
+      </li>
+    }
+  </ul>
 </section>

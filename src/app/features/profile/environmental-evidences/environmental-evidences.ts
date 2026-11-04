@@ -5,6 +5,7 @@ import type {
   CompanySourceProvenance,
   EvidenceCategoryGroup,
 } from '../../../core/api/generated';
+import { formatDateTime } from '../../../shared/format/date-time';
 import {
   CATEGORY_LABELS,
   presentEvidence,
@@ -24,9 +25,9 @@ const CATEGORY_SOURCES: Record<Category, readonly CompanySourceProvenance['sourc
 
 const ORIGIN_LABELS: Record<Origin, string> = {
   COLLECTION: 'Consultada nesta atualização',
-  PERSISTED: 'Dados armazenados',
-  PENDING: 'Atualização em andamento',
-  UNAVAILABLE: 'Fonte indisponível nesta consulta',
+  PERSISTED: 'Consulta anterior disponível',
+  PENDING: 'Consulta em andamento',
+  UNAVAILABLE: 'Indisponível no momento',
 };
 
 interface EvidenceSection {
@@ -89,6 +90,9 @@ export class EnvironmentalEvidences {
   protected readonly retry = computed(() =>
     retryHint(this.profile().provenance.retry_after_seconds),
   );
+  protected readonly sources = computed(() =>
+    this.sections().flatMap((section) => section.sources),
+  );
   protected readonly sections = computed<EvidenceSection[]>(() => {
     const profile = this.profile();
     return (Object.keys(CATEGORY_LABELS) as Category[]).map((category) => ({
@@ -100,13 +104,23 @@ export class EnvironmentalEvidences {
       sources: CATEGORY_SOURCES[category].flatMap((slug) => {
         const source = profile.provenance.sources.find((item) => item.source_slug === slug);
         const emptyStatus = source && emptySourceStatus(source);
+        const lastCollection = profile.evidences
+          .flatMap((group) => group.evidences)
+          .filter((evidence) => evidence.source_slug === slug)
+          .map((evidence) => evidence.collected_at)
+          .sort()
+          .at(-1);
         return source && emptyStatus
           ? [
               {
                 slug,
                 label: SOURCE_LABELS[slug],
                 origin: source.origin,
-                originLabel: ORIGIN_LABELS[source.origin],
+                originLabel:
+                  (source.origin === 'COLLECTION' || source.origin === 'PERSISTED') &&
+                  lastCollection
+                    ? `Consultada em ${formatDateTime(lastCollection)}`
+                    : ORIGIN_LABELS[source.origin],
                 emptyMessage: emptyStatus.message,
                 retryable: emptyStatus.retryable,
               },
