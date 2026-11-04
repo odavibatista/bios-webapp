@@ -1,5 +1,6 @@
 import type {
   CompanyFullProfileResponse,
+  CompanyMovementItem,
   ListSectorsResponse,
   ScoreExplanationResponse,
   SectorEvolution,
@@ -39,6 +40,8 @@ export interface ArchivedCompany {
 export abstract class CompanyArchive {
   abstract entries(): Promise<readonly CompanyEntry[]>;
   abstract company(cnpj: string): Promise<ArchivedCompany | null>;
+  /** As empresas de movimentação mais recente, já na ordem da lista. */
+  abstract movements(): Promise<readonly CompanyMovementItem[]>;
   abstract sectors(): Promise<ListSectorsResponse>;
   abstract evolution(division: string, ods: number): Promise<SectorEvolution | null>;
 }

@@ -1,5 +1,6 @@
 [
   "account_circle",
+  "add_circle",
   "admin_panel_settings",
   "check",
   "content_copy",
@@ -17,8 +18,11 @@
   "menu",
   "monitoring",
   "person",
+  "remove_circle",
   "search",
   "thermostat",
+  "trending_down",
+  "trending_up",
   "visibility",
   "visibility_off",
   "warning"

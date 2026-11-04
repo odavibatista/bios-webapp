@@ -720,6 +720,27 @@ export class MockBiosApi extends BiosApi {
     });
   }
 
+  listCompanyMovements(input?: ApiInput<Api.ListCompanyMovementsData>) {
+    return this.run('listCompanyMovements', async () => {
+      this.authenticated('/companies/movements');
+
+      const { page = 1, page_size: pageSize = 20 } = input?.query ?? {};
+      const items = this.archive
+        ? await this.archive.movements()
+        : this.d.capturedMovements(this.now());
+
+      return {
+        data: items.slice((page - 1) * pageSize, page * pageSize),
+        pagination: {
+          page,
+          page_size: pageSize,
+          total: items.length,
+          total_pages: Math.ceil(items.length / pageSize),
+        },
+      };
+    });
+  }
+
   searchCompanies(input?: ApiInput<Api.SearchCompaniesData>) {
     return this.run('searchCompanies', async () => {
       const path = this.d.pathWithQuery('/companies', input?.query);

@@ -1,0 +1,76 @@
+<h1>Olá, {{ firstName() }}</h1>
+
+<section class="lookup" aria-labelledby="titulo-consulta-empresa">
+  <h2 id="titulo-consulta-empresa">Buscar uma empresa pelo CNPJ ou nome</h2>
+  <bios-cnpj-search />
+</section>
+
+<section aria-labelledby="titulo-movimentacoes">
+  <h2 id="titulo-movimentacoes">Movimentações recentes</h2>
+  <p class="lead">
+    Empresas cujo índice mudou por último, da mudança mais recente para a mais antiga. Cada mudança
+    aponta a evidência que a causou e não diz que a conduta da empresa melhorou ou piorou.
+  </p>
+
+  <bios-async-state
+    [loading]="movements.isLoading()"
+    [error]="movements.error()"
+    [empty]="items().length === 0"
+    [emptyMessage]="emptyMessage()"
+    loadingLabel="Carregando as movimentações…"
+    (retry)="movements.reload()"
+  >
+    <ul class="movement-list">
+      @for (item of items(); track item.cnpj) {
+        <li><bios-movement-card [item]="item" /></li>
+      }
+    </ul>
+  </bios-async-state>
+
+  @if (pagination(); as pagination) {
+    @if (pagination.total_pages > 1) {
+      <nav class="pager" aria-label="Páginas das movimentações">
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="pagination.page <= 1"
+          (click)="goToPage(pagination.page - 1)"
+        >
+          Página anterior
+        </button>
+        <span>Página {{ pagination.page }} de {{ pagination.total_pages }}</span>
+        <button
+          mat-stroked-button
+          type="button"
+          [disabled]="pagination.page >= pagination.total_pages"
+          (click)="goToPage(pagination.page + 1)"
+        >
+          Próxima página
+        </button>
+      </nav>
+    }
+
+    @if (pagination.total === 0) {
+      <p class="lead">Enquanto isso, comece por aqui:</p>
+      <ul class="shortcuts">
+        @for (shortcut of shortcuts; track shortcut.path) {
+          <li>
+            <a class="shortcut" [routerLink]="shortcut.path">
+              <mat-card appearance="outlined">
+                <mat-card-header>
+                  <span mat-card-avatar class="card-icon" aria-hidden="true">
+                    <mat-icon fontSet="material-symbols-outlined">{{ shortcut.icon }}</mat-icon>
+                  </span>
+                  <mat-card-title>{{ shortcut.title }}</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <p>{{ shortcut.description }}</p>
+                </mat-card-content>
+              </mat-card>
+            </a>
+          </li>
+        }
+      </ul>
+    }
+  }
+</section>
