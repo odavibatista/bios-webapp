@@ -9,7 +9,7 @@
 As respostas vêm de uma API local com empresas reais, capturadas por `scripts/capture-api.mjs`, e não
 de dados inventados: a demonstração mostra o comportamento verdadeiro da API, inclusive os erros.
 
-A versão publicada lê `public/presentation/v1`, com respostas da API real para 110.372 empresas,
+A versão publicada lê `public/presentation/v2`, com respostas da API real para 110.372 empresas,
 580.166 evidências e 86 setores, geradas por `scripts/build-presentation-data.mjs`. O cadastro veio
 do dump oficial da Receita e as sanções, dos arquivos oficiais da CGU, processados pela API real.
 Os testes e2e continuam usando as capturas de fixtures. A evolução setorial traz 24 meses:
