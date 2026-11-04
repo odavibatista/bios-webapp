@@ -225,7 +225,10 @@ de dados inventados: a demonstração mostra o comportamento verdadeiro da API, 
 A versão publicada lê `public/presentation/v1`, com respostas da API real para 110.372 empresas,
 580.166 evidências e 86 setores, geradas por `scripts/build-presentation-data.mjs`. O cadastro veio
 do dump oficial da Receita e as sanções, dos arquivos oficiais da CGU, processados pela API real.
-Os testes e2e continuam usando as capturas de fixtures.
+Os testes e2e continuam usando as capturas de fixtures. A lista da tela principal
+(`movements.json.gz`) traz as 5.000 empresas de movimentação mais recente, reconstruídas pela regra
+da API (UC15, regra 8), com a data do fato registrado, e o gerador roda com
+`node --experimental-strip-types`, porque reaproveita essa regra do código do app.
 
 - **Uma captura por arquivo:** `src/app/core/mocks/fixtures/<operationId>/<cenário>.ts`, com
   `satisfies CapturedResponse<...>` sobre o tipo gerado da operação e do status. Se a API mudar a forma
