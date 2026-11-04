@@ -9,6 +9,9 @@
 //
 // Antes de gravar, o script reproduz o índice atual de cada empresa e a média de cada setor. Se a
 // regra não reproduzir o que a API calculou, nada é publicado.
+//
+// Os arquivos de `public/presentation` são servidos como imutáveis por um ano: quem regravar um deles
+// precisa publicar a base numa pasta de versão nova, ou quem já visitou o site continua com o antigo.
 import { createReadStream, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { delimiter, join, resolve } from 'node:path';
 import { createInterface } from 'node:readline';
