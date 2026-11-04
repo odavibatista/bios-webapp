@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { expectAccessible } from './support/accessibility';
 import { expect, test } from './support/test';
 
-/** Entra pela tela de login e cai na pesquisa (recarregar a página encerraria a sessão). */
+/** Entra pela tela de login e cai na pesquisa. */
 async function signInToSearch(page: Page, query = '') {
   await page.goto(`/entrar?voltar=${encodeURIComponent(`/pesquisa${query}`)}`);
   await page.getByLabel('E-mail').fill('apresentacao@example.com');

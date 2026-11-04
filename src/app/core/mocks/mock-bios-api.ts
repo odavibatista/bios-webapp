@@ -5,6 +5,7 @@ import { filenameFromDisposition } from '../api/export-file';
 import { BiosApi, type ApiInput, type BiosOperation } from '../api/bios-api';
 import type * as Api from '../api/generated';
 import { EMAIL_DOMAIN_PATTERN, normalizeEmailDomain } from '../../shared/forms/domain-rules';
+import { TabStorage } from '../session/tab-storage';
 import type { CaptureKey } from './fixtures';
 import { MOCK_API_CONFIG } from './mock-config';
 import { CompanyArchive, type ArchivedCompany } from './company-archive';
@@ -16,7 +17,8 @@ interface Account {
   id: string;
   name: string;
   email: string;
-  password: string;
+  /** Só o resumo: este estado vai para o navegador, e a senha digitada não pode ir. */
+  passwordDigest: string;
   address: Api.Address | null;
   role: 'USER' | 'ADMIN';
   confirmed: boolean;
@@ -51,6 +53,18 @@ interface Detail {
   message: string;
 }
 
+/** O que o usuário altera na demonstração, guardado por aba em `TabStorage`. */
+interface DemoState {
+  sequence: number;
+  accounts: Account[];
+  linkTokens: LinkToken[];
+  sessions: Session[];
+  apiKeys: ApiKey[];
+  domains: Api.BlockedEmailDomain[];
+  removedDomains: Api.BlockedEmailDomain[];
+}
+
+const DEMO_STATE_KEY = 'bios.demonstracao.v1';
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const STATES = [
   'AC',
@@ -86,11 +100,21 @@ const BLOCK_SECONDS = 15 * 60;
 const EXPORT_NOT_CAPTURED =
   'A exportação desta pesquisa não está disponível na versão de apresentação: as planilhas são ' +
   'as reais da API, capturadas para as pesquisas de demonstração.';
+const OUT_OF_BASE =
+  'Este CNPJ não está na base da apresentação, que reúne parte das empresas do Brasil.';
 
 /** Regras de chave de API do bios-core-api (UC11, regras 4 e 5). */
 const API_KEY_NAME_MAX_LENGTH = 60;
 const MAX_ACTIVE_API_KEYS = 10;
 const API_KEY_NAME_TOO_LONG = `O nome deve ter no máximo ${API_KEY_NAME_MAX_LENGTH} caracteres.`;
+
+/** O identificador da conta entra no resumo para duas contas com a mesma senha não coincidirem. */
+async function digestOf(accountId: string, password: string): Promise<string> {
+  const text = new TextEncoder().encode(`${accountId}:${password}`);
+  const digest = await crypto.subtle.digest('SHA-256', text);
+
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+}
 
 /**
  * Teto de chaves ativas (`ApiKeyLimitReachedException`). Sem captura (chegar ao teto pediria 10
@@ -111,8 +135,8 @@ function apiKeyLimitReached(path: string, now: number): ApiError {
  * Implementação mockada do contrato (#14), usada na versão de apresentação.
  *
  * O que é leitura vem das respostas reais capturadas da API; o que o usuário altera na demo
- * (contas, sessões, links de e-mail, chaves, blacklist) vive em memória e recomeça ao recarregar.
- * Erros usam o texto e o código que a API real devolveu. Sem sorteio: latência e cenários de
+ * (contas, sessões, links de e-mail, chaves, blacklist) fica em memória e, com `TabStorage`, na
+ * aba: sobrevive a recarregar a página e acaba ao fechá-la. Erros usam o texto e o código que a API real devolveu. Sem sorteio: latência e cenários de
  * falha vêm de `MOCK_API_CONFIG`.
  *
  * As capturas são carregadas na primeira chamada (`mock-data`, chunk separado do bundle inicial).
@@ -125,6 +149,7 @@ export class MockBiosApi extends BiosApi {
   private readonly files = inject(MockFiles);
   /** A base publicada; sem ela (nos testes, por exemplo), valem as capturas de `fixtures/`. */
   private readonly archive = inject(CompanyArchive, { optional: true });
+  private readonly storage = inject(TabStorage, { optional: true });
 
   private data?: typeof MockData;
   /** A carga em andamento, para chamadas simultâneas esperarem a mesma, e não semearem de novo. */
@@ -156,6 +181,14 @@ export class MockBiosApi extends BiosApi {
   private async seed(): Promise<void> {
     this.data = await import('./mock-data');
 
+    const saved = this.storage?.read<DemoState>(DEMO_STATE_KEY);
+
+    if (saved) {
+      this.restore(saved);
+
+      return;
+    }
+
     const address = this.d.capturedBody<Api.AccountResponse>('updateOwnAccount/endereco').address;
     const [seedKey] = this.d.capturedBody<Api.ApiKeyListResponse>(
       'listApiKeys/apos-revogacao',
@@ -165,7 +198,7 @@ export class MockBiosApi extends BiosApi {
       this.accounts.push({
         ...account,
         email: account.email.toLowerCase(),
-        password: this.config.demoPassword,
+        passwordDigest: await digestOf(account.id, this.config.demoPassword),
         address: account.role === 'USER' ? address : null,
         confirmed: true,
         failedLogins: 0,
@@ -181,12 +214,34 @@ export class MockBiosApi extends BiosApi {
     );
   }
 
+  private restore(saved: DemoState): void {
+    this.sequence = saved.sequence;
+    this.accounts.push(...saved.accounts);
+    this.linkTokens.push(...saved.linkTokens);
+    this.sessions.push(...saved.sessions);
+    this.apiKeys.push(...saved.apiKeys);
+    this.domains.push(...saved.domains);
+    this.removedDomains.push(...saved.removedDomains);
+  }
+
+  private state(): DemoState {
+    return {
+      sequence: this.sequence,
+      accounts: this.accounts,
+      linkTokens: this.linkTokens,
+      sessions: this.sessions,
+      apiKeys: this.apiKeys,
+      domains: this.domains,
+      removedDomains: this.removedDomains,
+    };
+  }
+
   // ------------------------------------------------------------------------------------------
   // Cadastro e confirmação (UC01)
   // ------------------------------------------------------------------------------------------
 
   registerAccount({ body }: ApiInput<Api.RegisterAccountData>) {
-    return this.run('registerAccount', () => {
+    return this.run('registerAccount', async () => {
       const path = '/accounts';
       const email = body.email.trim().toLowerCase();
       const details = [
@@ -201,11 +256,12 @@ export class MockBiosApi extends BiosApi {
 
       // E-mail já cadastrado: a mesma resposta do sucesso, sem enviar nada (RF01 b).
       if (!this.accountByEmail(email)) {
+        const id = this.id();
         const account: Account = {
-          id: this.id(),
+          id,
           name: body.name.trim(),
           email,
-          password: body.password,
+          passwordDigest: await digestOf(id, body.password),
           address: null,
           role: 'USER',
           confirmed: false,
@@ -251,7 +307,7 @@ export class MockBiosApi extends BiosApi {
   // ------------------------------------------------------------------------------------------
 
   login({ body }: ApiInput<Api.LoginData>) {
-    return this.run('login', () => {
+    return this.run('login', async () => {
       const path = '/auth/login';
       const email = body.email.trim().toLowerCase();
       const details: Detail[] = [
@@ -269,7 +325,7 @@ export class MockBiosApi extends BiosApi {
           details: { retry_after_seconds: Math.ceil((account.blockedUntil - this.now()) / 1000) },
         });
       }
-      if (account?.password !== body.password) {
+      if (!account || !(await this.hasPassword(account, body.password))) {
         if (account) this.countFailure(account);
         throw this.error('login/credenciais-invalidas', path);
       }
@@ -328,20 +384,20 @@ export class MockBiosApi extends BiosApi {
   // ------------------------------------------------------------------------------------------
 
   changePassword({ body }: ApiInput<Api.ChangePasswordData>) {
-    return this.run('changePassword', () => {
+    return this.run('changePassword', async () => {
       const path = '/auth/change-password';
       const { account } = this.authenticated(path);
       const details = this.passwordDetails(body.new_password, 'new_password');
 
       if (details.length)
         throw this.d.validationError('changePassword/validacao', path, this.now(), details);
-      if (body.current_password !== account.password) {
+      if (!(await this.hasPassword(account, body.current_password))) {
         throw this.error('changePassword/senha-atual-incorreta', path);
       }
-      if (body.new_password === account.password)
+      if (await this.hasPassword(account, body.new_password))
         throw this.error('changePassword/senha-igual', path);
 
-      account.password = body.new_password;
+      account.passwordDigest = await digestOf(account.id, body.new_password);
       this.revokeAll(account.id);
     });
   }
@@ -358,7 +414,7 @@ export class MockBiosApi extends BiosApi {
   }
 
   resetPassword({ body }: ApiInput<Api.ResetPasswordData>) {
-    return this.run('resetPassword', () => {
+    return this.run('resetPassword', async () => {
       const path = '/auth/reset-password';
       const details = this.passwordDetails(body.new_password, 'new_password');
 
@@ -376,7 +432,7 @@ export class MockBiosApi extends BiosApi {
       const account = this.accountById(link.accountId);
 
       if (account) {
-        account.password = body.new_password;
+        account.passwordDigest = await digestOf(account.id, body.new_password);
         this.revokeAll(account.id);
       }
     });
@@ -420,7 +476,7 @@ export class MockBiosApi extends BiosApi {
   }
 
   requestEmailChange({ body }: ApiInput<Api.RequestEmailChangeData>) {
-    return this.run('requestEmailChange', () => {
+    return this.run('requestEmailChange', async () => {
       const path = '/accounts/me/email-change';
       const { account } = this.authenticated(path);
       const email = body.new_email.trim().toLowerCase();
@@ -428,7 +484,7 @@ export class MockBiosApi extends BiosApi {
 
       if (details.length)
         throw this.d.validationError('registerAccount/validacao', path, this.now(), details);
-      if (body.current_password !== account.password) {
+      if (!(await this.hasPassword(account, body.current_password))) {
         throw this.error('requestEmailChange/senha-incorreta', path);
       }
       if (email === account.email) throw this.error('requestEmailChange/mesmo-email', path);
@@ -458,11 +514,11 @@ export class MockBiosApi extends BiosApi {
   }
 
   deleteOwnAccount({ body }: ApiInput<Api.DeleteOwnAccountData>) {
-    return this.run('deleteOwnAccount', () => {
+    return this.run('deleteOwnAccount', async () => {
       const path = '/accounts/me';
       const { account } = this.authenticated(path);
 
-      if (body.password !== account.password)
+      if (!(await this.hasPassword(account, body.password)))
         throw this.error('deleteOwnAccount/senha-incorreta', path);
 
       // Remove a conta e tudo o que é do titular, sem remoção lógica (UC05, regra 6).
@@ -766,7 +822,9 @@ export class MockBiosApi extends BiosApi {
 
     const company = await this.archive?.company(normalized);
 
-    if (!company) throw this.error('getCompanyProfile/nao-encontrada', path);
+    if (!company) {
+      throw this.error('getCompanyProfile/nao-encontrada', path, { message: OUT_OF_BASE });
+    }
 
     return company;
   }
@@ -808,7 +866,15 @@ export class MockBiosApi extends BiosApi {
 
     if (forced) throw this.d.capturedError(forced, `/${operation}`, this.now());
 
-    return handler();
+    try {
+      return await handler();
+    } finally {
+      this.storage?.write(DEMO_STATE_KEY, this.state());
+    }
+  }
+
+  private async hasPassword(account: Account, password: string): Promise<boolean> {
+    return account.passwordDigest === (await digestOf(account.id, password));
   }
 
   private now(): number {

@@ -7,6 +7,7 @@ import { routes } from './app.routes';
 import { COMPANY_ARCHIVE_PROVIDERS } from './core/mocks/company-archive.providers';
 import { provideMockBiosApi } from './core/mocks/provide-mock-bios-api';
 import { provideSession } from './core/session/provide-session';
+import { TabStorage } from './core/session/tab-storage';
 
 // Datas, números e moeda no formato brasileiro (`1.234,5`, `29/10/2026`).
 registerLocaleData(localePt);
@@ -20,6 +21,8 @@ export const appConfig: ApplicationConfig = {
     // Versão de apresentação: a camada de dados responde com as capturas da API real (#14).
     provideMockBiosApi(),
     COMPANY_ARCHIVE_PROVIDERS,
+    // Só com o mock: recarregar a página mantém a demonstração, e fechar a aba a encerra.
+    TabStorage,
     // Sessão: o token vem dela, e o contrato renova o acesso sozinho (#15). Depois da API.
     provideSession(),
   ],
