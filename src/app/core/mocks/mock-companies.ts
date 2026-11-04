@@ -1,13 +1,16 @@
 import type {
   CompanyFullProfileResponse,
+  CompanyMovementItem,
   CompanySearchItem,
   OdsListResponse,
+  ScoreExplanationResponse,
   SearchCompaniesData,
   SearchCompaniesResponse,
   SectorEvolution,
 } from '../api/generated';
 import type { ApiError } from '../api/api-error';
 import type { CompanyEntry } from './company-archive';
+import { byMostRecentMovement, companyMovementOf } from './company-movements';
 import { capturedBody, capturedError, capturesOf, notInPresentation } from './mock-captures';
 
 /**
@@ -281,6 +284,29 @@ export function matchEntries(
 }
 
 /** Pesquisa paginada sobre a base (paginação estável). */
+/**
+ * As empresas capturadas na lista de movimentações. A captura guarda um retrato só, sem histórico
+ * de recálculos: a movimentação é reconstruída como a API a reconstrói (`company-movements.ts`).
+ */
+export function capturedMovements(now: number): CompanyMovementItem[] {
+  return [...PROFILES.values()]
+    .flatMap((profile) => {
+      const explanations = Object.fromEntries(
+        capturesOf('getScoreExplanation').flatMap((capture) => {
+          const explanation = capture.body as ScoreExplanationResponse;
+
+          return capture.status === 200 && explanation.cnpj === profile.cnpj
+            ? [[explanation.ods_number, explanation]]
+            : [];
+        }),
+      ) as Record<number, ScoreExplanationResponse>;
+      const movement = companyMovementOf({ profile, explanations }, now);
+
+      return movement ? [movement] : [];
+    })
+    .sort(byMostRecentMovement);
+}
+
 export function searchEntries(
   entries: readonly CompanyEntry[],
   query: SearchQuery | undefined,

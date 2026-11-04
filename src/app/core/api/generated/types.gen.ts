@@ -695,6 +695,95 @@ export type CompanySearchOdsScore = {
 };
 
 /**
+ * Página de empresas com movimentação recente
+ */
+export type CompanyMovementsResponse = {
+    /**
+     * Itens da página
+     */
+    data: Array<CompanyMovementItem>;
+    pagination: PaginationMeta;
+};
+
+/**
+ * Empresa com movimentação registrada
+ */
+export type CompanyMovementItem = {
+    /**
+     * CNPJ, sem pontuação
+     */
+    cnpj: string;
+    /**
+     * Razão social
+     */
+    legal_name: string;
+    /**
+     * Nome fantasia
+     */
+    trade_name: string | null;
+    /**
+     * Município
+     */
+    city: string;
+    /**
+     * Unidade da federação (sigla)
+     */
+    uf: string;
+    /**
+     * Movimentação mais recente da empresa
+     */
+    moved_at: string;
+    /**
+     * Um item por ODS ativo
+     */
+    ods: Array<CompanyMovementOds>;
+};
+
+/**
+ * Situação da empresa em um ODS ativo
+ */
+export type CompanyMovementOds = {
+    /**
+     * Número do ODS
+     */
+    ods_number: number;
+    /**
+     * Índice atual; nulo quando o ODS não tem índice (IND02)
+     */
+    score_value: number | null;
+    /**
+     * Confiança atual; nula quando o ODS não foi calculado
+     */
+    confidence_value: number | null;
+    /**
+     * Última movimentação; nula quando o ODS não tem movimentação registrada
+     */
+    movement: OdsMovement | null;
+};
+
+/**
+ * Última movimentação do índice no ODS
+ */
+export type OdsMovement = {
+    /**
+     * Sentido da mudança: INCREASED (subiu), DECREASED (desceu), AVAILABLE (passou a ter índice) ou UNAVAILABLE (deixou de ter)
+     */
+    direction: 'INCREASED' | 'DECREASED' | 'AVAILABLE' | 'UNAVAILABLE';
+    /**
+     * O que mudou: EVIDENCE_ADDED (entrou evidência), EVIDENCE_REMOVED (saiu evidência) ou WEIGHT_CHANGED (mudou o peso efetivo)
+     */
+    cause: 'EVIDENCE_ADDED' | 'EVIDENCE_REMOVED' | 'WEIGHT_CHANGED';
+    /**
+     * Categoria da evidência de maior efeito na mudança
+     */
+    evidence_category: 'INFRACAO_AMBIENTAL' | 'CONDUTA_ADMINISTRATIVA' | 'EMISSAO_GEE';
+    /**
+     * Data da mudança
+     */
+    moved_at: string;
+};
+
+/**
  * Evidências ambientais da empresa, agrupadas por categoria
  */
 export type CompanyEnvironmentalEvidencesResponse = {
@@ -1929,6 +2018,48 @@ export type ExportCompaniesXlsxResponses = {
 };
 
 export type ExportCompaniesXlsxResponse = ExportCompaniesXlsxResponses[keyof ExportCompaniesXlsxResponses];
+
+export type ListCompanyMovementsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Página solicitada (a partir de 1)
+         */
+        page?: number;
+        /**
+         * Quantidade de itens por página (máximo de 100)
+         */
+        page_size?: number;
+    };
+    url: '/companies/movements';
+};
+
+export type ListCompanyMovementsErrors = {
+    /**
+     * UNAUTHORIZED
+     */
+    401: ErrorResponse;
+    /**
+     * UNPROCESSABLE_ENTITY
+     */
+    422: ErrorResponse;
+    /**
+     * TOO_MANY_REQUESTS
+     */
+    429: ErrorResponse;
+};
+
+export type ListCompanyMovementsError = ListCompanyMovementsErrors[keyof ListCompanyMovementsErrors];
+
+export type ListCompanyMovementsResponses = {
+    /**
+     * Página de empresas com movimentação recente
+     */
+    200: CompanyMovementsResponse;
+};
+
+export type ListCompanyMovementsResponse = ListCompanyMovementsResponses[keyof ListCompanyMovementsResponses];
 
 export type GetCompanyEvidencesData = {
     body?: never;
