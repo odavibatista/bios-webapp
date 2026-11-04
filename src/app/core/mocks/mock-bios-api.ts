@@ -86,6 +86,8 @@ const BLOCK_SECONDS = 15 * 60;
 const EXPORT_NOT_CAPTURED =
   'A exportação desta pesquisa não está disponível na versão de apresentação: as planilhas são ' +
   'as reais da API, capturadas para as pesquisas de demonstração.';
+const OUT_OF_BASE =
+  'Este CNPJ não está na base da apresentação, que reúne parte das empresas do Brasil.';
 
 /** Regras de chave de API do bios-core-api (UC11, regras 4 e 5). */
 const API_KEY_NAME_MAX_LENGTH = 60;
@@ -766,7 +768,9 @@ export class MockBiosApi extends BiosApi {
 
     const company = await this.archive?.company(normalized);
 
-    if (!company) throw this.error('getCompanyProfile/nao-encontrada', path);
+    if (!company) {
+      throw this.error('getCompanyProfile/nao-encontrada', path, { message: OUT_OF_BASE });
+    }
 
     return company;
   }
