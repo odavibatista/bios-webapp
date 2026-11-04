@@ -31,10 +31,20 @@
               >
                 <div class="evidence-heading">
                   <h4>{{ evidence.source }}</h4>
-                  <span class="state">{{ evidence.stateLabel }}</span>
+                  <span class="state">{{
+                    section.ghgNoInventory && evidence.state === 'UNKNOWN'
+                      ? 'Inventário não localizado no registro voluntário'
+                      : evidence.stateLabel
+                  }}</span>
                 </div>
                 @if (evidence.state === 'UNKNOWN') {
-                  <p>Esta fonte não pôde ser verificada; isso não confirma ausência de registro.</p>
+                  @if (section.ghgNoInventory) {
+                    <p>{{ ghgNoInventoryMessage }}</p>
+                  } @else {
+                    <p>
+                      Esta fonte não pôde ser verificada; isso não confirma ausência de registro.
+                    </p>
+                  }
                 } @else if (evidence.state === 'NOT_FOUND') {
                   <p>A consulta à fonte não encontrou registro para esta empresa.</p>
                 } @else {
@@ -103,7 +113,10 @@
   <ul class="sources">
     @for (source of sources(); track source.slug) {
       <li>
-        <strong>{{ source.label }}:</strong> {{ source.originLabel }}.
+        <strong>{{ source.label }}:</strong> {{ source.originLabel }}
+        @if (!source.originLabel.endsWith('.')) {
+          .
+        }
         @if (source.origin === 'PENDING' && profile().provenance.retry_after_seconds !== null) {
           {{ retry() }}
         }

@@ -24,6 +24,23 @@ async function navigateInApp(page: Page, path: string) {
 }
 
 test.describe('login (#20)', () => {
+  test('e-mail e senha têm a mesma largura, com botão de senha acessível', async ({ page }) => {
+    await page.goto('/entrar');
+
+    const email = page.getByLabel('E-mail').locator('xpath=ancestor::mat-form-field');
+    const password = page
+      .getByLabel('Senha', { exact: true })
+      .locator('xpath=ancestor::mat-form-field');
+    const emailBox = await email.boundingBox();
+    const passwordBox = await password.boundingBox();
+    expect(emailBox).not.toBeNull();
+    expect(passwordBox).not.toBeNull();
+    expect(Math.abs(emailBox!.width - passwordBox!.width)).toBeLessThanOrEqual(0.5);
+
+    await page.getByRole('button', { name: 'Mostrar senha' }).click();
+    await expect(page.getByLabel('Senha', { exact: true })).toHaveAttribute('type', 'text');
+  });
+
   test('USER entra pelo destino guardado e vê o painel sem a administração', async ({
     page,
   }, testInfo) => {

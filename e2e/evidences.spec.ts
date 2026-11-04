@@ -31,8 +31,11 @@ test.describe('evidências do perfil (#32)', () => {
     await expect(link).toHaveAttribute('target', '_blank');
     await expect(link).toHaveAttribute('rel', /noopener/);
     await expect(administrative).toContainText('Sem registro na fonte');
-    await expect(ghg).toContainText('Não foi possível verificar');
-    await expect(ghg).toContainText('isso não confirma ausência de registro');
+    await expect(ghg).toContainText('Inventário não localizado no registro voluntário');
+    await expect(ghg).toContainText('Isso não confirma ausência de inventário');
+    await expect(page.getByRole('region', { name: 'Fontes consultadas' })).toContainText(
+      'Não há inventário localizado para esta empresa no registro voluntário',
+    );
   });
 
   test('sanções ficam em conduta administrativa, com período sem afirmar vigência', async ({

@@ -70,30 +70,28 @@
           <mat-option value="desc">Maior índice primeiro</mat-option>
           <mat-option value="asc">Menor índice primeiro</mat-option>
         </mat-select>
-        <mat-hint>
-          {{
-            form.controls.ods.value === null
-              ? 'Escolha um ODS para ordenar'
-              : 'Empresas sem índice ficam ao fim'
-          }}
-        </mat-hint>
+        <mat-hint>{{
+          form.controls.ods.value === null
+            ? 'Escolha um ODS para ordenar'
+            : 'Empresas sem índice ficam ao fim'
+        }}</mat-hint>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Índice mínimo</mat-label>
         <input matInput formControlName="min_score" inputmode="decimal" autocomplete="off" />
-        <mat-hint>
-          {{ form.controls.ods.value === null ? 'Escolha um ODS para usar' : 'De −100 a 100' }}
-        </mat-hint>
+        <mat-hint>{{
+          form.controls.ods.value === null ? 'Escolha um ODS para usar' : 'De −100 a 100'
+        }}</mat-hint>
         <mat-error>{{ messageOf(form.controls.min_score) }}</mat-error>
       </mat-form-field>
 
       <mat-form-field appearance="outline">
         <mat-label>Confiança mínima</mat-label>
         <input matInput formControlName="min_confidence" inputmode="decimal" autocomplete="off" />
-        <mat-hint>
-          {{ form.controls.ods.value === null ? 'Escolha um ODS para usar' : 'De 0 a 1' }}
-        </mat-hint>
+        <mat-hint>{{
+          form.controls.ods.value === null ? 'Escolha um ODS para usar' : 'De 0 a 1'
+        }}</mat-hint>
         <mat-error>{{ messageOf(form.controls.min_confidence) }}</mat-error>
       </mat-form-field>
     </div>
