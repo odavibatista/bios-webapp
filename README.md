@@ -97,6 +97,11 @@ Na versão de apresentação, o provedor é o `MockBiosApi` (`src/app/core/mocks
 
 ## Painel
 
+`/painel` é a tela para onde o login leva (UC18, RF34): a busca e as empresas cujo índice mudou por
+último, em cartões que abrem o perfil. Cada cartão mostra, por ODS, o índice e a confiança atuais e o
+sentido, a causa e a data da mudança, nunca o índice anterior ou a variação (IND03). A ordem é só
+cronológica, e a página fica na URL (`?pagina=2`), para o "voltar" devolver à mesma página.
+
 As rotas privadas moram na casca do painel (`src/app/layout/`): menu lateral fixo em tela larga e
 gaveta em tela estreita, com o item atual marcado por `aria-current`. O menu vem de `PANEL_NAV`
 (`panel-nav.ts`), filtrado pelo papel; só o `ADMIN` vê a administração. A barra do topo mostra quem

@@ -98,6 +98,11 @@ In the presentation version, the provider is `MockBiosApi` (`src/app/core/mocks/
 
 ## Panel
 
+`/painel` is where login leads (UC18, RF34): the search and the companies whose index changed most
+recently, in cards that open the profile. Each card shows, per SDG, the current index and confidence and
+the direction, cause and date of the change, never the previous index or the variation (IND03). The order
+is chronological only, and the page lives in the URL (`?pagina=2`), so "back" returns to the same page.
+
 Private routes live in the panel shell (`src/app/layout/`): a fixed side menu on wide screens and a
 drawer on narrow ones, with the current item marked by `aria-current`. The menu comes from `PANEL_NAV`
 (`panel-nav.ts`), filtered by role; only `ADMIN` sees the administration. The top bar shows who is
