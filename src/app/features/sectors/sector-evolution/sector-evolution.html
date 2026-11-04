@@ -8,7 +8,24 @@
   <div class="fields">
     <mat-form-field appearance="outline">
       <mat-label>Setor (CNAE)</mat-label>
-      <input matInput formControlName="cnae" autocomplete="off" [matAutocomplete]="sectorList" />
+      <input
+        #sectorInput
+        matInput
+        formControlName="cnae"
+        autocomplete="off"
+        [matAutocomplete]="sectorList"
+      />
+      @if (typedCnae()) {
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          aria-label="Limpar setor"
+          (click)="clearSector()"
+        >
+          <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">close</mat-icon>
+        </button>
+      }
       <mat-autocomplete #sectorList="matAutocomplete">
         @for (sector of sectorSuggestions(); track sector.cnae_division) {
           <mat-option [value]="sector.cnae_division">

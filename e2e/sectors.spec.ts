@@ -19,6 +19,23 @@ async function navigateInApp(page: Page, path: string) {
 }
 
 test.describe('evolução por setor (#26)', () => {
+  test('limpa o CNAE e permite escolher outro setor', async ({ page }) => {
+    await signIn(page);
+    await navigateInApp(page, '/setores?cnae=24&ods=13');
+    const sector = page.getByRole('combobox', { name: 'Setor (CNAE)' });
+    await expect(sector).toHaveValue('24');
+
+    await page.getByRole('button', { name: 'Limpar setor' }).click();
+    await expect(sector).toHaveValue('');
+    await expect(sector).toBeFocused();
+    await expect(page.getByRole('combobox', { name: 'ODS' })).toContainText('ODS 13');
+
+    await sector.fill('47');
+    await page.getByRole('option', { name: /^47 — / }).click();
+    await page.getByRole('button', { name: 'Ver evolução' }).click();
+    await expect(page).toHaveURL('/setores?cnae=47&ods=13');
+  });
+
   test('escolhe o setor pela sugestão e vê o histórico real: insuficiente, com o mês registrado', async ({
     page,
   }, testInfo) => {
