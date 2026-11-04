@@ -721,11 +721,13 @@ export class MockBiosApi extends BiosApi {
   }
 
   listCompanyMovements(input?: ApiInput<Api.ListCompanyMovementsData>) {
-    return this.run('listCompanyMovements', () => {
+    return this.run('listCompanyMovements', async () => {
       this.authenticated('/companies/movements');
 
       const { page = 1, page_size: pageSize = 20 } = input?.query ?? {};
-      const items = this.d.capturedMovements(this.now());
+      const items = this.archive
+        ? await this.archive.movements()
+        : this.d.capturedMovements(this.now());
 
       return {
         data: items.slice((page - 1) * pageSize, page * pageSize),

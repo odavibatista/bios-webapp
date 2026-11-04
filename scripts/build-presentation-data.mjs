@@ -1,6 +1,6 @@
 // Monta a base publicada a partir das respostas da API guardadas pelo rastreador.
 //
-// Uso: node scripts/build-presentation-data.mjs <pasta do dump>
+// Uso: node --experimental-strip-types scripts/build-presentation-data.mjs <pasta do dump>
 //
 // Entrada: <dump>/NNN.jsonl (uma empresa por linha, com perfil e explicações, como a API respondeu)
 // e <dump>/sectors.json (setores e séries). Saída: public/presentation/v1:
@@ -8,6 +8,7 @@
 //   search.json.gz           índice leve da pesquisa, com tabelas para não repetir texto
 //   companies/NNN.json.gz    empresas cujo CNPJ começa em NNN, sem alterar as respostas da API
 //   sectors.json.gz          setores e evolução por divisão e ODS
+//   movements.json.gz        as empresas de movimentação mais recente, já na ordem da lista
 //
 // A publicação falha se a base trouxer indício de dado pessoal (INL02) ou se a soma das
 // contribuições de um índice não reproduzir o valor exibido (RF12): dado errado não vai ao ar.
@@ -24,6 +25,11 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline';
 import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
+import {
+  byMostRecentMovement,
+  companyMovementOf,
+  PUBLISHED_MOVEMENTS_LIMIT,
+} from '../src/app/core/mocks/company-movements.ts';
 
 const [dump] = process.argv.slice(2);
 if (!dump) throw new Error('Informe a pasta do dump.');
@@ -34,6 +40,8 @@ const CPF_FORMATTED = /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/;
 const CPF_DIGITS = /(?<![\w.\-/])\d{11}(?![\w.\-/])/;
 const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]+/;
 const PERSONAL_KEYS = /^(qsa|socios?|email|telefone|phone|ddd|cpf)/i;
+const DIRECTIONS = ['INCREASED', 'DECREASED', 'AVAILABLE', 'UNAVAILABLE'];
+const NOW = Date.now();
 
 const problems = [];
 const problem = (cnpj, text) => {
@@ -67,6 +75,15 @@ function checkScores(cnpj, explanations) {
   }
 }
 
+/** A reconstrução já é a da tela: aqui só se recusa o que a tela não saberia mostrar. */
+function checkMovement(item) {
+  for (const { movement } of item.ods) {
+    if (movement && !DIRECTIONS.includes(movement.direction)) {
+      problem(item.cnpj, `sentido ${movement.direction}`);
+    }
+  }
+}
+
 class Table {
   values = [];
   positions = new Map();
@@ -90,6 +107,7 @@ const statuses = new Table();
 const places = new Table();
 const cnaes = new Table();
 const rows = [];
+const movements = [];
 const seen = new Set();
 let evidences = 0;
 let biggest = 0;
@@ -114,6 +132,13 @@ for (const file of readdirSync(dump)
     // A base não muda ao recarregar: o prazo sugerido para uma nova consulta não vale aqui.
     profile.provenance.retry_after_seconds = null;
     shard[cnpj] = { profile, explanations };
+
+    const movement = companyMovementOf({ profile, explanations }, NOW);
+
+    if (movement) {
+      checkMovement(movement);
+      movements.push(movement);
+    }
 
     for (const group of profile.evidences) evidences += group.evidences.length;
     const scoreOf = (ods) => profile.ods_scores.find((item) => item.ods_number === ods);
@@ -164,6 +189,9 @@ writeFileSync(join(OUT, 'search.json.gz'), search);
 const sectors = JSON.parse(readFileSync(join(dump, 'sectors.json'), 'utf8'));
 writeFileSync(join(OUT, 'sectors.json.gz'), gz(sectors));
 
+const movementList = gz(movements.sort(byMostRecentMovement).slice(0, PUBLISHED_MOVEMENTS_LIMIT));
+writeFileSync(join(OUT, 'movements.json.gz'), movementList);
+
 const size = (dir) =>
   readdirSync(dir).reduce((total, name) => {
     const path = join(dir, name);
@@ -176,9 +204,13 @@ const manifest = {
   evidences,
   ...coverage,
   sectors: sectors.sectors.data.length,
+  movements: Math.min(movements.length, PUBLISHED_MOVEMENTS_LIMIT),
 };
 writeFileSync(join(OUT, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(manifest);
+console.log(
+  `movimentações ${movements.length}; lista ${(movementList.length / 1e6).toFixed(2)} MB`,
+);
 console.log(
   `índice ${(search.length / 1e6).toFixed(1)} MB; maior fatia ${(biggest / 1e6).toFixed(2)} MB; total ${(size(OUT) / 1e6).toFixed(1)} MB`,
 );

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ApiError } from '../api/api-error';
-import type { ListSectorsResponse, SectorEvolution } from '../api/generated';
+import type { CompanyMovementItem, ListSectorsResponse, SectorEvolution } from '../api/generated';
 import {
   CompanyArchive,
   type ArchivedCompany,
@@ -102,13 +102,14 @@ function entriesOf(index: SearchIndex): CompanyEntry[] {
 
 /**
  * Base publicada: respostas da API real em arquivos estáticos (`public/presentation`). A pesquisa
- * baixa o índice uma vez; cada perfil baixa só a fatia do seu CNPJ. Um download que falha não fica
- * guardado, para "Tentar de novo" funcionar.
+ * baixa o índice uma vez; cada perfil baixa só a fatia do seu CNPJ; a tela principal, só a própria
+ * lista. Um download que falha não fica guardado, para "Tentar de novo" funcionar.
  */
 @Injectable()
 export class StaticCompanyArchive extends CompanyArchive {
   private index?: Promise<CompanyEntry[]>;
   private sectorData?: Promise<SectorArchive>;
+  private movementList?: Promise<CompanyMovementItem[]>;
   private readonly shards = new Map<string, Promise<Shard>>();
 
   entries(): Promise<readonly CompanyEntry[]> {
@@ -133,6 +134,17 @@ export class StaticCompanyArchive extends CompanyArchive {
     }
 
     return (await shard)[cnpj] ?? null;
+  }
+
+  movements(): Promise<readonly CompanyMovementItem[]> {
+    this.movementList ??= this.required<CompanyMovementItem[]>('movements').catch(
+      (error: unknown) => {
+        this.movementList = undefined;
+        throw error;
+      },
+    );
+
+    return this.movementList;
   }
 
   async sectors(): Promise<ListSectorsResponse> {
