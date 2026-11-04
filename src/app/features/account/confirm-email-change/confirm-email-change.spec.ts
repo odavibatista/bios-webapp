@@ -87,6 +87,8 @@ describe('ConfirmEmailChange', () => {
     await TestBed.inject(BiosApi).confirmEmailChange({ body: { token } });
 
     fixture.componentRef.setInput('token', token);
+    // O token provisório recusa com a mesma mensagem: espera a resposta do token certo.
+    await fixture.whenStable();
 
     expect(
       await screen.findByText('O link é inválido, expirou ou já foi usado. Solicite um novo.'),
