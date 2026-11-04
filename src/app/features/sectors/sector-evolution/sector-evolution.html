@@ -102,6 +102,14 @@
             />
           }
         } @else {
+          @if (presentation) {
+            <p class="aggregate-note">
+              Nesta versão de apresentação, só o mês mais recente é o agregado registrado pela API.
+              Os anteriores foram reconstruídos com as mesmas regras, a partir das datas das
+              evidências atuais. Registros que a fonte já retirou não entram, e uma mudança na série
+              pode refletir a coleta, e não a conduta do setor.
+            </p>
+          }
           @defer (on viewport) {
             <bios-sector-chart [windows]="result.windows" [subject]="subject()" />
           } @placeholder {
