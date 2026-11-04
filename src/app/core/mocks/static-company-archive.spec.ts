@@ -45,7 +45,7 @@ describe('StaticCompanyArchive', () => {
 
     const [first, second] = await archive.entries();
 
-    expect(fetchMock).toHaveBeenCalledWith('presentation/v1/search.json.gz');
+    expect(fetchMock).toHaveBeenCalledWith('presentation/v2/search.json.gz');
     expect(first).toEqual({
       cnpj: '17469701000177',
       legal_name: 'ARCELORMITTAL BRASIL S.A.',
@@ -79,7 +79,7 @@ describe('StaticCompanyArchive', () => {
     await expect(archive.company('17400000000100')).resolves.toBeNull();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith('presentation/v1/companies/174.json.gz');
+    expect(fetchMock).toHaveBeenCalledWith('presentation/v2/companies/174.json.gz');
   });
 
   it('fatia que não existe é empresa fora da base, e não falha', async () => {
@@ -127,7 +127,7 @@ describe('StaticCompanyArchive', () => {
     await archive.movements();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith('presentation/v1/movements.json.gz');
+    expect(fetchMock).toHaveBeenCalledWith('presentation/v2/movements.json.gz');
   });
 
   it('download da lista que falha não fica guardado', async () => {
