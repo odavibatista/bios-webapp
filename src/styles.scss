@@ -39,6 +39,22 @@ body {
   height: 100%;
 }
 
+a,
+a:visited {
+  color: var(--mat-sys-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+a:hover {
+  text-decoration-thickness: 0.125em;
+}
+
+a:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
+}
+
 // Texto só para leitor de tela: some da tela, mas continua no nome acessível.
 .visually-hidden {
   position: absolute;
