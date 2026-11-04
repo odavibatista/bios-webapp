@@ -47,7 +47,7 @@ describe('EnvironmentalEvidences', () => {
     expect(infraction.textContent).toContain('Sem registro na fonte');
     expect(
       screen.getByRole('region', { name: 'Inventários de emissões de GEE' }).textContent,
-    ).toContain('isso não confirma ausência de registro');
+    ).toContain('Isso não confirma ausência de inventário');
   });
 
   it('sem URL segura conserva o identificador como texto', async () => {
@@ -80,12 +80,36 @@ describe('EnvironmentalEvidences', () => {
     const sources = screen.getByRole('region', { name: 'Fontes consultadas' }).textContent;
     expect(sources).toContain('CGU — CEIS: Consulta em andamento');
     expect(sources).toContain(
-      'GHG Protocol — Registro Público de Emissões: Indisponível no momento',
+      'GHG Protocol — Registro Público de Emissões: Não há inventário localizado',
     );
     expect(sources).toContain('Consultada em');
     expect(sources).not.toContain('Dados armazenados');
     expect(sources).toContain('Recarregue o perfil em cerca de 2 minutos');
     expect(screen.getByRole('link', { name: 'Consultar na fonte: 343440-D' })).toBeTruthy();
+  });
+
+  it('explica a cobertura voluntária do GHG no card e na lista de fontes', async () => {
+    await render(EnvironmentalEvidences, { inputs: { profile: ACO } });
+
+    const ghg = screen.getByRole('region', { name: 'Inventários de emissões de GEE' }).textContent;
+    const sources = screen.getByRole('region', { name: 'Fontes consultadas' }).textContent;
+    expect(ghg).toContain('Inventário não localizado no registro voluntário');
+    expect(ghg).toContain('Isso não confirma ausência de inventário');
+    expect(ghg).not.toContain('Não foi possível verificar');
+    expect(sources).toContain(
+      'Não há inventário localizado para esta empresa no registro voluntário',
+    );
+    expect(sources).not.toContain('GHG Protocol — Registro Público de Emissões: Indisponível');
+  });
+
+  it('explica o GHG mesmo quando a categoria não traz um card', async () => {
+    const profile = structuredClone(ACO);
+    profile.evidences[2].evidences = [];
+    await render(EnvironmentalEvidences, { inputs: { profile } });
+
+    const ghg = screen.getByRole('region', { name: 'Inventários de emissões de GEE' }).textContent;
+    expect(ghg).toContain('Não há inventário localizado para esta empresa no registro voluntário');
+    expect(ghg).toContain('Isso não confirma ausência de inventário');
   });
 
   it('distingue fonte consultada sem registro de fonte pendente ou indisponível', async () => {
