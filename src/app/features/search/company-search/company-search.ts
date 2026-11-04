@@ -48,6 +48,7 @@ import {
   ufRule,
 } from '../search-rules';
 import { SearchResults } from '../search-results/search-results';
+import { downloadFile } from '../download-file';
 
 /** Abaixo desta largura, a lista vira cartões; acima, tabela. */
 export const CARDS_LAYOUT = '(max-width: 719.98px)';
@@ -270,14 +271,7 @@ export class CompanySearch {
     this.exportError.set(null);
     try {
       const file = await this.api.exportCompaniesXlsx({ query: toExportQuery(this.criteria()) });
-      const url = URL.createObjectURL(file.blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = file.filename;
-      document.body.append(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 0);
+      downloadFile(file.blob, file.filename);
     } catch (error) {
       this.exportError.set(error);
     } finally {

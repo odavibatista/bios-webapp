@@ -30,13 +30,12 @@
       </header>
 
       <bios-registration-data class="section" [profile]="profile.value()" />
+      <bios-ods-scores class="indices" [profile]="profile.value()" />
       <bios-environmental-evidences
         class="environmental"
         [profile]="profile.value()"
         (refresh)="profile.reload()"
       />
-      <bios-ods-scores class="indices" [profile]="profile.value()" />
-      <!-- A explicação do índice (FE-19) entra após os cartões. -->
     } @else {
       <h1>Empresa</h1>
       <bios-loading label="Consultando a empresa…" />

@@ -1,5 +1,6 @@
 :host {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.5rem;
 }
 
@@ -70,6 +71,7 @@ form {
 
 // A tabela rola dentro do próprio contêiner no celular, nunca a página (NFIN02).
 .table-scroll {
+  position: relative;
   overflow-x: auto;
 
   &:focus-visible {

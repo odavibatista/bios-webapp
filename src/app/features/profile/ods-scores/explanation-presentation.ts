@@ -29,6 +29,10 @@ export function presentExplanation(
       signalLabel: item.signal === 'POSITIVE' ? 'Positivo' : 'Negativo',
       weightLabel: formatScorePoints(item.weight),
       pointsLabel: formatScorePoints(item.points),
+      zeroPointsReason:
+        item.weight > 0 && item.points === 0
+          ? 'Esta evidência não somou pontos porque o teto da categoria já foi atingido por outras evidências.'
+          : null,
       weightReason: item.weight_reason ? WEIGHT_REASONS[item.weight_reason] : null,
       outdated: item.evidence.current_state === 'OUTDATED',
     };

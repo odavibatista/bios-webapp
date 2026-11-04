@@ -72,6 +72,9 @@
                       <span>Peso: {{ item.weightLabel }}</span>
                       <span>Sinal: {{ item.signalLabel }}</span>
                       <span>Pontos: {{ item.pointsLabel }}</span>
+                      @if (item.zeroPointsReason) {
+                        <span>{{ item.zeroPointsReason }}</span>
+                      }
                       @if (item.weightReason) {
                         <span>{{ item.weightReason }}</span>
                       }

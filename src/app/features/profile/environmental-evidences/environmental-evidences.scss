@@ -2,10 +2,14 @@
   display: block;
 }
 
-.evidences {
+.evidences,
+.source-status {
   padding: 1.25rem;
   border: 1px solid var(--mat-sys-outline-variant);
   border-radius: var(--mat-sys-corner-medium);
+}
+.source-status {
+  margin-top: 1rem;
 }
 .section-header {
   display: flex;
@@ -73,9 +77,6 @@ p {
 .state {
   font-weight: 600;
   color: var(--mat-sys-on-surface-variant);
-}
-.state.confirmed {
-  color: var(--bios-brand-green);
 }
 .summary {
   white-space: pre-line;

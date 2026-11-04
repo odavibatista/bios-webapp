@@ -23,7 +23,7 @@ import { fieldMessage, PASSWORD_POLICY } from './account-rules';
     ReactiveFormsModule,
   ],
   template: `
-    <mat-form-field appearance="outline" floatLabel="always" class="field">
+    <mat-form-field appearance="outline" class="field">
       <mat-label>{{ label() }}</mat-label>
       <input
         matInput
@@ -50,6 +50,12 @@ import { fieldMessage, PASSWORD_POLICY } from './account-rules';
     </mat-form-field>
   `,
   styles: `
+    :host {
+      display: block;
+      /* O alvo de toque do botão de sufixo ultrapassa 4px a borda do campo. */
+      padding-inline-end: 0.25rem;
+    }
+
     .field {
       width: 100%;
     }
