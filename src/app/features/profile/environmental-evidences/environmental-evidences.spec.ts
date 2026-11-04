@@ -9,6 +9,15 @@ const ACO = acoCearense.body as CompanyFullProfileResponse;
 const ATUANTE = atuante.body as CompanyFullProfileResponse;
 
 describe('EnvironmentalEvidences', () => {
+  it('mantém os estados das evidências sem classe visual de valor', async () => {
+    const result = await render(EnvironmentalEvidences, { inputs: { profile: ACO } });
+    const states = [...result.container.querySelectorAll('.evidence .state')];
+
+    expect(states.some((state) => state.textContent?.includes('Registro encontrado'))).toBe(true);
+    expect(states.some((state) => state.textContent?.includes('Sem registro na fonte'))).toBe(true);
+    expect(states.every((state) => state.className === 'state')).toBe(true);
+  });
+
   it('separa as três categorias e mostra fonte, estado, datas e referência auditável', async () => {
     await render(EnvironmentalEvidences, { inputs: { profile: ACO } });
 

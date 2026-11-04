@@ -11,14 +11,14 @@
 
   <form [formGroup]="form" (ngSubmit)="search()" novalidate>
     <div class="fields">
-      <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline">
         <mat-label>Nome da empresa</mat-label>
         <input matInput formControlName="name" autocomplete="off" />
         <mat-hint>Razão social ou nome fantasia, inteiro ou em parte</mat-hint>
         <mat-error>{{ messageOf(form.controls.name) }}</mat-error>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline">
         <mat-label>UF</mat-label>
         <mat-select formControlName="uf">
           <mat-option value="">Todas</mat-option>
@@ -30,21 +30,21 @@
         <mat-error>{{ messageOf(form.controls.uf) }}</mat-error>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline">
         <mat-label>Município</mat-label>
         <input matInput formControlName="city" autocomplete="off" />
         <mat-hint>Nome inteiro; acento e caixa não importam</mat-hint>
         <mat-error>{{ messageOf(form.controls.city) }}</mat-error>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline">
         <mat-label>CNAE</mat-label>
         <input matInput formControlName="cnae" inputmode="numeric" autocomplete="off" />
         <mat-hint>De 2 a 7 dígitos, com ou sem pontuação (ex.: 24.51-2)</mat-hint>
         <mat-error>{{ messageOf(form.controls.cnae) }}</mat-error>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline">
         <mat-label>ODS</mat-label>
         <mat-select formControlName="ods">
           <mat-option [value]="null">Nenhum</mat-option>
@@ -63,7 +63,7 @@
         }
       </mat-form-field>
 
-      <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline">
         <mat-label>Ordenar pelo índice</mat-label>
         <mat-select formControlName="order">
           <mat-option [value]="null">Sem ordenação por índice</mat-option>
@@ -79,7 +79,7 @@
         </mat-hint>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline">
         <mat-label>Índice mínimo</mat-label>
         <input matInput formControlName="min_score" inputmode="decimal" autocomplete="off" />
         <mat-hint>
@@ -88,7 +88,7 @@
         <mat-error>{{ messageOf(form.controls.min_score) }}</mat-error>
       </mat-form-field>
 
-      <mat-form-field appearance="outline" floatLabel="always" subscriptSizing="dynamic">
+      <mat-form-field appearance="outline">
         <mat-label>Confiança mínima</mat-label>
         <input matInput formControlName="min_confidence" inputmode="decimal" autocomplete="off" />
         <mat-hint>
@@ -199,7 +199,7 @@
           >
             Próxima página
           </button>
-          <mat-form-field appearance="outline" class="page-size" subscriptSizing="dynamic">
+          <mat-form-field appearance="outline" class="page-size">
             <mat-label>Itens por página</mat-label>
             <select
               #pageSize

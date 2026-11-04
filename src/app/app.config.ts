@@ -2,6 +2,7 @@ import { registerLocaleData } from '@angular/common';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import localePt from '@angular/common/locales/pt';
 import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
+import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 import { routes } from './app.routes';
 import { COMPANY_ARCHIVE_PROVIDERS } from './core/mocks/company-archive.providers';
@@ -18,6 +19,10 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withComponentInputBinding()),
     provideHttpClient(withFetch()),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
+    {
+      provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
+      useValue: { floatLabel: 'always', subscriptSizing: 'dynamic' },
+    },
     // Versão de apresentação: a camada de dados responde com as capturas da API real (#14).
     provideMockBiosApi(),
     COMPANY_ARCHIVE_PROVIDERS,
