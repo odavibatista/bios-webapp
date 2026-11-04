@@ -1,9 +1,20 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  input,
+  resource,
+} from '@angular/core';
+import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { BiosApi } from '../../core/api/bios-api';
 import { SessionStore } from '../../core/session/session-store';
+import { AsyncState } from '../../shared/states/async-state';
 import { CnpjSearch } from '../profile/cnpj-search/cnpj-search';
+import { MovementCard } from './movement-card/movement-card';
 
 interface Shortcut {
   title: string;
@@ -12,7 +23,15 @@ interface Shortcut {
   path: string;
 }
 
-/** Os caminhos de entrada da análise, na ordem em que a pessoa costuma usar. */
+/** Empresas por página da lista (UC18, regra 3). */
+export const MOVEMENTS_PAGE_SIZE = 20;
+
+export const NO_MOVEMENTS_MESSAGE =
+  'Ainda não há movimentações registradas. Elas aparecem aqui quando o índice de uma empresa mudar.';
+
+export const PAGE_WITHOUT_MOVEMENTS_MESSAGE = 'Esta página não tem movimentações.';
+
+/** Os caminhos de entrada da análise, oferecidos enquanto não há movimentações (UC18, 2.1). */
 export const PANEL_SHORTCUTS: readonly Shortcut[] = [
   {
     title: 'Consultar uma empresa',
@@ -34,102 +53,67 @@ export const PANEL_SHORTCUTS: readonly Shortcut[] = [
   },
 ];
 
-/** Entrada do painel depois do login (#18). */
+function pageFrom(value: string | undefined): number {
+  const page = Number(value);
+
+  return Number.isInteger(page) && page >= 1 ? page : 1;
+}
+
+/**
+ * Tela principal (UC18, RF34; #168): para onde o login leva. Mostra a busca e as empresas cujo
+ * índice mudou por último. A página mora na URL, para o "voltar" do navegador devolver a pessoa
+ * à mesma página depois de abrir um perfil. Falha na lista não atrapalha a busca (UC18, 2.2).
+ */
 @Component({
   selector: 'bios-panel-home',
-  imports: [CnpjSearch, MatCardModule, MatIconModule, RouterLink],
-  template: `
-    <h1>Olá, {{ firstName() }}</h1>
-    <section class="lookup" aria-labelledby="titulo-consulta-empresa">
-      <h2 id="titulo-consulta-empresa">Buscar uma empresa pelo CNPJ ou nome</h2>
-      <bios-cnpj-search />
-    </section>
-    <p class="lead">Ou comece por aqui:</p>
-    <ul class="shortcuts">
-      @for (shortcut of shortcuts; track shortcut.path) {
-        <li>
-          <a class="shortcut" [routerLink]="shortcut.path">
-            <mat-card appearance="outlined">
-              <mat-card-header>
-                <span mat-card-avatar class="card-icon" aria-hidden="true">
-                  <mat-icon fontSet="material-symbols-outlined">{{ shortcut.icon }}</mat-icon>
-                </span>
-                <mat-card-title>{{ shortcut.title }}</mat-card-title>
-              </mat-card-header>
-              <mat-card-content>
-                <p>{{ shortcut.description }}</p>
-              </mat-card-content>
-            </mat-card>
-          </a>
-        </li>
-      }
-    </ul>
-  `,
-  styles: `
-    h1 {
-      margin: 0 0 0.5rem;
-      font: var(--mat-sys-headline-medium);
-      color: var(--bios-brand-green);
-    }
-
-    .lead {
-      margin: 0 0 1.5rem;
-      color: var(--bios-brand-moss);
-    }
-
-    .lookup {
-      max-width: 36rem;
-      margin: 1rem 0 2rem;
-
-      h2 {
-        margin: 0 0 0.75rem;
-        font: var(--mat-sys-title-medium);
-      }
-    }
-
-    .shortcuts {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1rem;
-      margin: 0;
-      padding: 0;
-      list-style: none;
-    }
-
-    .shortcut {
-      display: block;
-      height: 100%;
-      color: inherit;
-      text-decoration: none;
-      border-radius: var(--mat-sys-corner-medium);
-
-      mat-card {
-        height: 100%;
-      }
-
-      .card-icon {
-        display: grid;
-        place-items: center;
-        background: var(--mat-sys-primary-container);
-        color: var(--bios-brand-green);
-      }
-
-      &:hover mat-card {
-        border-color: var(--mat-sys-primary);
-      }
-
-      &:focus-visible {
-        outline: 2px solid var(--mat-sys-primary);
-        outline-offset: 2px;
-      }
-    }
-  `,
+  imports: [
+    AsyncState,
+    CnpjSearch,
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    MovementCard,
+    RouterLink,
+  ],
+  templateUrl: './panel-home.html',
+  styleUrl: './panel-home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PanelHome {
+  private readonly api = inject(BiosApi);
   private readonly store = inject(SessionStore);
+  private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
+
+  /** A página da URL (`?pagina=2`), já que o app liga parâmetros de rota aos inputs. */
+  readonly pagina = input<string>();
 
   protected readonly shortcuts = PANEL_SHORTCUTS;
 
   protected readonly firstName = computed(() => this.store.user()?.name.split(' ')[0] ?? '');
+
+  protected readonly movements = resource({
+    params: () => pageFrom(this.pagina()),
+    loader: ({ params: page }) =>
+      this.api.listCompanyMovements({ query: { page, page_size: MOVEMENTS_PAGE_SIZE } }),
+  });
+
+  protected readonly items = computed(() =>
+    this.movements.hasValue() ? this.movements.value().data : [],
+  );
+
+  protected readonly pagination = computed(() =>
+    this.movements.hasValue() ? this.movements.value().pagination : null,
+  );
+
+  protected readonly emptyMessage = computed(() =>
+    this.pagination()?.total ? PAGE_WITHOUT_MOVEMENTS_MESSAGE : NO_MOVEMENTS_MESSAGE,
+  );
+
+  protected async goToPage(page: number): Promise<void> {
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: page > 1 ? { pagina: page } : {},
+    });
+  }
 }

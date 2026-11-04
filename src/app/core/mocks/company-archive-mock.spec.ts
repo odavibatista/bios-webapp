@@ -1,7 +1,11 @@
 import { TestBed } from '@angular/core/testing';
 import { InMemoryApiCredentials } from '../api/api-credentials';
 import { BiosApi } from '../api/bios-api';
-import type { ScoreExplanationResponse, SectorEvolution } from '../api/generated';
+import type {
+  CompanyMovementItem,
+  ScoreExplanationResponse,
+  SectorEvolution,
+} from '../api/generated';
 import { CompanyArchive, type ArchivedCompany, type CompanyEntry } from './company-archive';
 import { entryOf, PROFILES } from './mock-companies';
 import { provideMockBiosApi } from './provide-mock-bios-api';
@@ -9,6 +13,8 @@ import { provideMockBiosApi } from './provide-mock-bios-api';
 const PROFILE = PROFILES.get('17469701000177')!;
 const EXPLANATION = { cnpj: PROFILE.cnpj, ods_number: 13 } as ScoreExplanationResponse;
 const SERIES = { cnae_division: '10', ods_number: 13 } as SectorEvolution;
+
+const MOVEMENTS = ['1', '2', '3'].map((cnpj) => ({ cnpj }) as CompanyMovementItem);
 
 class MemoryArchive extends CompanyArchive {
   /** Só uma empresa: se o mock usasse as capturas, a pesquisa traria as outras. */
@@ -24,6 +30,8 @@ class MemoryArchive extends CompanyArchive {
   sectors = () => Promise.resolve({ data: [{ cnae_division: '10', description: 'ALIMENTOS' }] });
 
   evolution = (division: string) => Promise.resolve(division === '10' ? SERIES : null);
+
+  movements = () => Promise.resolve(MOVEMENTS);
 }
 
 describe('MockBiosApi com a base publicada', () => {
@@ -75,6 +83,13 @@ describe('MockBiosApi com a base publicada', () => {
     await expect(api.getCompanyProfile({ path: { cnpj: '60894730000105' } })).rejects.toThrow(
       'Este CNPJ não está na base da apresentação',
     );
+  });
+
+  it('a lista de movimentações vem da base, na ordem publicada, paginada', async () => {
+    await expect(api.listCompanyMovements({ query: { page: 2, page_size: 2 } })).resolves.toEqual({
+      data: [MOVEMENTS[2]],
+      pagination: { page: 2, page_size: 2, total: 3, total_pages: 2 },
+    });
   });
 
   it('pesquisa na base, e não nas respostas capturadas dos mesmos critérios', async () => {

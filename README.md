@@ -97,6 +97,11 @@ Na versão de apresentação, o provedor é o `MockBiosApi` (`src/app/core/mocks
 
 ## Painel
 
+`/painel` é a tela para onde o login leva (UC18, RF34): a busca e as empresas cujo índice mudou por
+último, em cartões que abrem o perfil. Cada cartão mostra, por ODS, o índice e a confiança atuais e o
+sentido, a causa e a data da mudança, nunca o índice anterior ou a variação (IND03). A ordem é só
+cronológica, e a página fica na URL (`?pagina=2`), para o "voltar" devolver à mesma página.
+
 As rotas privadas moram na casca do painel (`src/app/layout/`): menu lateral fixo em tela larga e
 gaveta em tela estreita, com o item atual marcado por `aria-current`. O menu vem de `PANEL_NAV`
 (`panel-nav.ts`), filtrado pelo papel; só o `ADMIN` vê a administração. A barra do topo mostra quem
@@ -225,7 +230,10 @@ de dados inventados: a demonstração mostra o comportamento verdadeiro da API, 
 A versão publicada lê `public/presentation/v1`, com respostas da API real para 110.372 empresas,
 580.166 evidências e 86 setores, geradas por `scripts/build-presentation-data.mjs`. O cadastro veio
 do dump oficial da Receita e as sanções, dos arquivos oficiais da CGU, processados pela API real.
-Os testes e2e continuam usando as capturas de fixtures.
+Os testes e2e continuam usando as capturas de fixtures. A lista da tela principal
+(`movements.json.gz`) traz as 5.000 empresas de movimentação mais recente, reconstruídas pela regra
+da API (UC15, regra 8), com a data do fato registrado, e o gerador roda com
+`node --experimental-strip-types`, porque reaproveita essa regra do código do app.
 
 - **Uma captura por arquivo:** `src/app/core/mocks/fixtures/<operationId>/<cenário>.ts`, com
   `satisfies CapturedResponse<...>` sobre o tipo gerado da operação e do status. Se a API mudar a forma

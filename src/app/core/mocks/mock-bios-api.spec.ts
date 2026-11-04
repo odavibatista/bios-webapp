@@ -784,4 +784,32 @@ describe('MockBiosApi', () => {
       expect(performance.now() - started).toBeGreaterThanOrEqual(25);
     });
   });
+
+  describe('movimentações (UC18)', () => {
+    it('sem sessão, responde 401', async () => {
+      await expectError(api.listCompanyMovements(), 401, 'NOT_AUTHENTICATED');
+    });
+
+    it('pagina as empresas capturadas, da mudança mais recente para a mais antiga', async () => {
+      await signIn();
+
+      const first = await api.listCompanyMovements({ query: { page: 1, page_size: 2 } });
+      const second = await api.listCompanyMovements({ query: { page: 2, page_size: 2 } });
+      const dates = [...first.data, ...second.data].map(({ moved_at: at }) => Date.parse(at));
+
+      expect(first.data).toHaveLength(2);
+      expect(first.pagination.total).toBeGreaterThan(4);
+      expect(first.pagination.total_pages).toBe(Math.ceil(first.pagination.total / 2));
+      expect(dates).toEqual([...dates].sort((a, b) => b - a));
+      expect(new Set([...first.data, ...second.data].map(({ cnpj }) => cnpj)).size).toBe(4);
+    });
+
+    it('sem paginação pedida, usa a padrão das listas', async () => {
+      await signIn();
+
+      await expect(api.listCompanyMovements()).resolves.toMatchObject({
+        pagination: { page: 1, page_size: 20 },
+      });
+    });
+  });
 });
