@@ -63,6 +63,17 @@
               "optimization": false,
               "extractLicenses": false,
               "sourceMap": true
+            },
+            "e2e": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/app/core/mocks/company-archive.providers.ts",
+                  "with": "src/app/core/mocks/company-archive.providers.e2e.ts"
+                }
+              ]
             }
           },
           "defaultConfiguration": "production"
@@ -75,6 +86,9 @@
             },
             "development": {
               "buildTarget": "bios-webapp:build:development"
+            },
+            "e2e": {
+              "buildTarget": "bios-webapp:build:e2e"
             }
           },
           "defaultConfiguration": "development"
