@@ -15,7 +15,7 @@ async function signInByKeyboard(page: Page, email: string, password: string) {
   await page.keyboard.press('Enter');
 }
 
-/** Navega dentro do app, sem recarregar a página (recarregar encerra a sessão local). */
+/** Navega dentro do app, sem recarregar a página. */
 async function navigateInApp(page: Page, path: string) {
   await page.evaluate((target) => {
     history.pushState({}, '', target);
@@ -45,6 +45,24 @@ test.describe('login (#20)', () => {
     const menu = page.getByRole('navigation', { name: 'Áreas do painel' });
     await expect(menu.getByRole('link', { name: /Setores/ })).toBeVisible();
     await expect(menu.getByRole('link', { name: /Administração/ })).toHaveCount(0);
+  });
+
+  test('recarregar mantém a sessão, e uma aba nova começa sem ela', async ({ page, context }) => {
+    await page.goto('/entrar');
+    await signInByKeyboard(page, USER, PASSWORD);
+    await expect(page).toHaveURL('/painel');
+
+    await page.reload();
+
+    await expect(page).toHaveURL('/painel');
+    await expect(
+      page.getByRole('banner').getByRole('button', { name: /Conta de Demonstração/ }),
+    ).toBeVisible();
+
+    const otherTab = await context.newPage();
+
+    await otherTab.goto('/painel');
+    await expect(otherTab).toHaveURL('/entrar?voltar=%2Fpainel');
   });
 
   test('USER que abre a administração vai para o acesso negado', async ({ page }) => {

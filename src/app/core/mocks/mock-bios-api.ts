@@ -5,6 +5,7 @@ import { filenameFromDisposition } from '../api/export-file';
 import { BiosApi, type ApiInput, type BiosOperation } from '../api/bios-api';
 import type * as Api from '../api/generated';
 import { EMAIL_DOMAIN_PATTERN, normalizeEmailDomain } from '../../shared/forms/domain-rules';
+import { TabStorage } from '../session/tab-storage';
 import type { CaptureKey } from './fixtures';
 import { MOCK_API_CONFIG } from './mock-config';
 import { CompanyArchive, type ArchivedCompany } from './company-archive';
@@ -16,7 +17,7 @@ interface Account {
   id: string;
   name: string;
   email: string;
-  /** Só o resumo: a senha digitada não fica guardada nem no mock. */
+  /** Só o resumo: este estado vai para o navegador, e a senha digitada não pode ir. */
   passwordDigest: string;
   address: Api.Address | null;
   role: 'USER' | 'ADMIN';
@@ -52,6 +53,18 @@ interface Detail {
   message: string;
 }
 
+/** O que o usuário altera na demonstração, guardado por aba em `TabStorage`. */
+interface DemoState {
+  sequence: number;
+  accounts: Account[];
+  linkTokens: LinkToken[];
+  sessions: Session[];
+  apiKeys: ApiKey[];
+  domains: Api.BlockedEmailDomain[];
+  removedDomains: Api.BlockedEmailDomain[];
+}
+
+const DEMO_STATE_KEY = 'bios.demonstracao.v1';
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const STATES = [
   'AC',
@@ -122,8 +135,8 @@ function apiKeyLimitReached(path: string, now: number): ApiError {
  * Implementação mockada do contrato (#14), usada na versão de apresentação.
  *
  * O que é leitura vem das respostas reais capturadas da API; o que o usuário altera na demo
- * (contas, sessões, links de e-mail, chaves, blacklist) vive em memória e recomeça ao recarregar.
- * Erros usam o texto e o código que a API real devolveu. Sem sorteio: latência e cenários de
+ * (contas, sessões, links de e-mail, chaves, blacklist) fica em memória e, com `TabStorage`, na
+ * aba: sobrevive a recarregar a página e acaba ao fechá-la. Erros usam o texto e o código que a API real devolveu. Sem sorteio: latência e cenários de
  * falha vêm de `MOCK_API_CONFIG`.
  *
  * As capturas são carregadas na primeira chamada (`mock-data`, chunk separado do bundle inicial).
@@ -136,6 +149,7 @@ export class MockBiosApi extends BiosApi {
   private readonly files = inject(MockFiles);
   /** A base publicada; sem ela (nos testes, por exemplo), valem as capturas de `fixtures/`. */
   private readonly archive = inject(CompanyArchive, { optional: true });
+  private readonly storage = inject(TabStorage, { optional: true });
 
   private data?: typeof MockData;
   /** A carga em andamento, para chamadas simultâneas esperarem a mesma, e não semearem de novo. */
@@ -167,6 +181,14 @@ export class MockBiosApi extends BiosApi {
   private async seed(): Promise<void> {
     this.data = await import('./mock-data');
 
+    const saved = this.storage?.read<DemoState>(DEMO_STATE_KEY);
+
+    if (saved) {
+      this.restore(saved);
+
+      return;
+    }
+
     const address = this.d.capturedBody<Api.AccountResponse>('updateOwnAccount/endereco').address;
     const [seedKey] = this.d.capturedBody<Api.ApiKeyListResponse>(
       'listApiKeys/apos-revogacao',
@@ -190,6 +212,28 @@ export class MockBiosApi extends BiosApi {
       ...this.d.capturedBody<Api.BlockedEmailDomainList>('listBlockedEmailDomains/primeira-pagina')
         .data,
     );
+  }
+
+  private restore(saved: DemoState): void {
+    this.sequence = saved.sequence;
+    this.accounts.push(...saved.accounts);
+    this.linkTokens.push(...saved.linkTokens);
+    this.sessions.push(...saved.sessions);
+    this.apiKeys.push(...saved.apiKeys);
+    this.domains.push(...saved.domains);
+    this.removedDomains.push(...saved.removedDomains);
+  }
+
+  private state(): DemoState {
+    return {
+      sequence: this.sequence,
+      accounts: this.accounts,
+      linkTokens: this.linkTokens,
+      sessions: this.sessions,
+      apiKeys: this.apiKeys,
+      domains: this.domains,
+      removedDomains: this.removedDomains,
+    };
   }
 
   // ------------------------------------------------------------------------------------------
@@ -822,7 +866,11 @@ export class MockBiosApi extends BiosApi {
 
     if (forced) throw this.d.capturedError(forced, `/${operation}`, this.now());
 
-    return handler();
+    try {
+      return await handler();
+    } finally {
+      this.storage?.write(DEMO_STATE_KEY, this.state());
+    }
   }
 
   private async hasPassword(account: Account, password: string): Promise<boolean> {

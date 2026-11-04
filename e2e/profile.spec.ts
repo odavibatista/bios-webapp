@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
 import { expect, test } from './support/test';
 
-/** Entra com a conta de demonstração e chega ao painel (recarregar depois disso perde a sessão). */
+/** Entra com a conta de demonstração e chega ao painel. */
 async function signIn(page: Page) {
   await page.goto('/entrar');
   await page.getByLabel('E-mail').fill('apresentacao@example.com');
