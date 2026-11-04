@@ -38,7 +38,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npx ng serve --port ${PORT}`,
+    command: `npx ng serve --configuration e2e --port ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !isCI,
     timeout: 120_000,
