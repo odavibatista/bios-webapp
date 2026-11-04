@@ -56,7 +56,10 @@ async function readArchive<T>(file: string): Promise<T | null> {
   } catch {
     throw unavailable(path);
   }
-  if (response.status === 404) return null;
+  // A Vercel responde 200 com o index.html para um arquivo que não existe, e não 404.
+  const isAppPage = response.headers.get('Content-Type')?.includes('text/html');
+
+  if (response.status === 404 || isAppPage) return null;
   if (!response.ok || !response.body) throw unavailable(path);
 
   try {
