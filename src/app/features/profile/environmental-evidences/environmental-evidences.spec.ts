@@ -80,13 +80,36 @@ describe('EnvironmentalEvidences', () => {
     expect(screen.getByRole('link', { name: 'Consultar na fonte: 343440-D' })).toBeTruthy();
   });
 
-  it('categoria sem evidências explica que isso não prova ausência', async () => {
+  it('distingue fonte consultada sem registro de fonte pendente ou indisponível', async () => {
     const profile = structuredClone(ACO);
-    profile.evidences[2].evidences = [];
+    for (const group of profile.evidences) group.evidences = [];
+    profile.provenance.sources[0].evidence_state = 'NOT_FOUND';
+    profile.provenance.sources[1].origin = 'PENDING';
+    profile.provenance.sources[2].origin = 'UNAVAILABLE';
+    profile.provenance.sources[3].origin = 'PERSISTED';
+    profile.provenance.sources[3].evidence_state = 'UNKNOWN';
+    profile.provenance.retry_after_seconds = 120;
     await render(EnvironmentalEvidences, { inputs: { profile } });
-    expect(
-      screen.getByRole('region', { name: 'Inventários de emissões de GEE' }).textContent,
-    ).toContain('Isso não confirma ausência de registros');
+
+    const ibama = screen.getByRole('region', { name: 'Infrações ambientais' }).textContent;
+    const cgu = screen.getByRole('region', { name: 'Conduta administrativa' }).textContent;
+    const ghg = screen.getByRole('region', { name: 'Inventários de emissões de GEE' }).textContent;
+    expect(ibama).toContain('Consultada, sem registro para esta empresa');
+    expect(cgu).toContain('CGU — CEIS: Consulta em andamento');
+    expect(cgu).toContain('CGU — CNEP: Indisponível no momento');
+    expect(cgu).toContain('Recarregue o perfil em cerca de 2 minutos');
+    expect(ghg).toContain('Não foi possível verificar esta fonte');
+    expect(ghg).not.toContain('sem registro para esta empresa');
+  });
+
+  it('fonte com consulta vencida não vira ausência confirmada', async () => {
+    const profile = structuredClone(ACO);
+    profile.evidences[0].evidences = [];
+    profile.provenance.sources[0].evidence_state = 'OUTDATED';
+    await render(EnvironmentalEvidences, { inputs: { profile } });
+    expect(screen.getByRole('region', { name: 'Infrações ambientais' }).textContent).toContain(
+      'Consulta anterior vencida; a situação atual não foi confirmada',
+    );
   });
 
   it('registro desatualizado recomenda conferir a fonte sem tratá-lo como dado atual', async () => {

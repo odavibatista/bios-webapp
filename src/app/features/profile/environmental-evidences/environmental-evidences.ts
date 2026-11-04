@@ -33,7 +33,45 @@ interface EvidenceSection {
   category: Category;
   label: string;
   evidences: EvidenceView[];
-  sources: { slug: string; label: string; origin: Origin; originLabel: string }[];
+  sources: {
+    slug: string;
+    label: string;
+    origin: Origin;
+    originLabel: string;
+    emptyMessage: string;
+    retryable: boolean;
+  }[];
+}
+
+function emptySourceStatus(source: CompanySourceProvenance): {
+  message: string;
+  retryable: boolean;
+} {
+  if (source.origin === 'PENDING') {
+    return { message: 'Consulta em andamento; ainda não há resposta atual.', retryable: true };
+  }
+  if (source.origin === 'UNAVAILABLE') {
+    return {
+      message: 'Indisponível no momento; a ausência de registro não foi confirmada.',
+      retryable: true,
+    };
+  }
+  if (source.evidence_state === 'NOT_FOUND') {
+    return { message: 'Consultada, sem registro para esta empresa.', retryable: false };
+  }
+  if (source.evidence_state === 'OUTDATED') {
+    return {
+      message: 'Consulta anterior vencida; a situação atual não foi confirmada.',
+      retryable: true,
+    };
+  }
+  if (source.evidence_state === 'CONFIRMED') {
+    return {
+      message: 'Registro confirmado, mas sem detalhes nesta apresentação.',
+      retryable: false,
+    };
+  }
+  return { message: 'Não foi possível verificar esta fonte.', retryable: true };
 }
 
 /** Evidências do mesmo retrato do cadastro, sem nova consulta à API. */
@@ -61,13 +99,16 @@ export class EnvironmentalEvidences {
       ).map(presentEvidence),
       sources: CATEGORY_SOURCES[category].flatMap((slug) => {
         const source = profile.provenance.sources.find((item) => item.source_slug === slug);
-        return source
+        const emptyStatus = source && emptySourceStatus(source);
+        return source && emptyStatus
           ? [
               {
                 slug,
                 label: SOURCE_LABELS[slug],
                 origin: source.origin,
                 originLabel: ORIGIN_LABELS[source.origin],
+                emptyMessage: emptyStatus.message,
+                retryable: emptyStatus.retryable,
               },
             ]
           : [];
