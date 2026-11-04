@@ -7,6 +7,7 @@ import type {
   SectorEvolution,
 } from '../api/generated';
 import type { ApiError } from '../api/api-error';
+import type { CompanyEntry } from './company-archive';
 import { capturedBody, capturedError, capturesOf, notInPresentation } from './mock-captures';
 
 /**
@@ -88,10 +89,8 @@ export function words(text: string | null | undefined): string[] {
     .filter(Boolean);
 }
 
-/** Item da pesquisa a partir do perfil, com o índice e a confiança do ODS escolhido. */
-export function searchItem(profile: CompanyFullProfileResponse, ods?: number): CompanySearchItem {
-  const score = profile.ods_scores.find((item) => item.ods_number === ods);
-
+/** O que a pesquisa precisa saber de um perfil. */
+export function entryOf(profile: CompanyFullProfileResponse): CompanyEntry {
   return {
     cnpj: profile.cnpj,
     legal_name: profile.legal_name,
@@ -100,6 +99,30 @@ export function searchItem(profile: CompanyFullProfileResponse, ods?: number): C
     city: profile.address.city ?? '',
     uf: profile.address.uf ?? '',
     main_cnae: profile.main_cnae,
+    cnaes: [profile.main_cnae?.code, ...profile.secondary_cnaes.map((item) => item.code)].filter(
+      (code): code is string => code != null,
+    ),
+    scores: Object.fromEntries(
+      profile.ods_scores.map((score) => [
+        score.ods_number,
+        { score_value: score.score_value, confidence_value: score.confidence_value },
+      ]),
+    ),
+  };
+}
+
+/** Item da pesquisa, com o índice e a confiança do ODS escolhido. */
+export function searchItem(entry: CompanyEntry, ods?: number): CompanySearchItem {
+  const score = ods === undefined ? undefined : entry.scores[ods];
+
+  return {
+    cnpj: entry.cnpj,
+    legal_name: entry.legal_name,
+    trade_name: entry.trade_name,
+    registration_status: entry.registration_status,
+    city: entry.city,
+    uf: entry.uf,
+    main_cnae: entry.main_cnae,
     ods_score:
       ods === undefined
         ? null
@@ -180,74 +203,97 @@ export function searchCriteriaError(
   return null;
 }
 
-/**
- * Pesquisa sobre os perfis capturados (UC06 1.1, UC08): critérios somados, nome por início de
- * palavra sem acento nem caixa, ordenação pelo índice do ODS com as empresas sem índice ao fim
- * (regra 7), paginação estável.
- */
-export function searchProfiles(query: SearchQuery | undefined): SearchCompaniesResponse {
-  const { name, uf, city, cnae, ods, order, min_score, min_confidence } = query ?? {};
-  const page = query?.page ?? 1;
-  const pageSize = query?.page_size ?? 20;
-  const nameWords = words(name);
-  const cnaeDigits = cnae?.replace(/\D/g, '');
+/** Palavras de cada empresa: calculadas uma vez, porque a base tem centenas de milhares. */
+const WORDS = new WeakMap<CompanyEntry, string[]>();
 
-  const matches = [...PROFILES.values()].filter((profile) => {
-    const companyWords = [...words(profile.legal_name), ...words(profile.trade_name)];
-    const cnaes = [profile.main_cnae?.code, ...profile.secondary_cnaes.map((item) => item.code)];
-    const score = profile.ods_scores.find((item) => item.ods_number === ods);
+function wordsOf(entry: CompanyEntry): string[] {
+  let found = WORDS.get(entry);
+
+  if (!found) {
+    found = [...words(entry.legal_name), ...words(entry.trade_name)];
+    WORDS.set(entry, found);
+  }
+
+  return found;
+}
+
+/**
+ * As empresas que atendem aos critérios, na ordem do resultado (UC06 1.1, UC08): critérios somados,
+ * nome por início de palavra sem acento nem caixa, ordenação pelo índice do ODS com as empresas sem
+ * índice ao fim (regra 7).
+ */
+export function matchEntries(
+  entries: readonly CompanyEntry[],
+  query: SearchQuery | undefined,
+): CompanyEntry[] {
+  const { name, uf, city, cnae, ods, order, min_score, min_confidence } = query ?? {};
+  const nameWords = words(name);
+  const cityName = city === undefined ? undefined : words(city).join(' ');
+  const wantedUf = uf?.toUpperCase();
+  const cnaeDigits = cnae?.replace(/\D/g, '');
+  const scoreOf = (entry: CompanyEntry) => (ods === undefined ? undefined : entry.scores[ods]);
+
+  const matches = entries.filter((entry) => {
+    const score = scoreOf(entry);
 
     return (
-      nameWords.every((word) => companyWords.some((candidate) => candidate.startsWith(word))) &&
-      (uf === undefined || profile.address.uf === uf.toUpperCase()) &&
-      (city === undefined || words(profile.address.city).join(' ') === words(city).join(' ')) &&
-      (cnaeDigits === undefined || cnaes.some((code) => code?.startsWith(cnaeDigits))) &&
+      (wantedUf === undefined || entry.uf === wantedUf) &&
+      (cnaeDigits === undefined || entry.cnaes.some((code) => code.startsWith(cnaeDigits))) &&
       (min_score === undefined || (score?.score_value != null && score.score_value >= min_score)) &&
       (min_confidence === undefined ||
-        (score?.confidence_value != null && score.confidence_value >= min_confidence))
+        (score?.confidence_value != null && score.confidence_value >= min_confidence)) &&
+      (cityName === undefined || words(entry.city).join(' ') === cityName) &&
+      nameWords.every((word) => wordsOf(entry).some((candidate) => candidate.startsWith(word)))
     );
   });
 
-  const byName = (a: CompanySearchItem, b: CompanySearchItem) =>
+  const byName = (a: CompanyEntry, b: CompanyEntry) =>
     a.legal_name === b.legal_name
       ? a.cnpj.localeCompare(b.cnpj)
       : a.legal_name < b.legal_name
         ? -1
         : 1;
   const phrase = nameWords.join(' ');
-  const startsWithPhrase = (item: CompanySearchItem) =>
+  const startsWithPhrase = (entry: CompanyEntry) =>
     phrase !== '' &&
-    [item.legal_name, item.trade_name].some((value) => words(value).join(' ').startsWith(phrase));
+    [entry.legal_name, entry.trade_name].some((value) => words(value).join(' ').startsWith(phrase));
 
-  const items = matches
-    .map((profile) => searchItem(profile, ods))
-    .sort((a, b) => {
-      if (order) {
-        const scoreA = a.ods_score?.score_value ?? null;
-        const scoreB = b.ods_score?.score_value ?? null;
+  return matches.sort((a, b) => {
+    if (order) {
+      const scoreA = scoreOf(a)?.score_value ?? null;
+      const scoreB = scoreOf(b)?.score_value ?? null;
 
-        if (scoreA === null || scoreB === null) {
-          return scoreA === scoreB ? byName(a, b) : scoreA === null ? 1 : -1;
-        }
-        if (scoreA !== scoreB) return order === 'asc' ? scoreA - scoreB : scoreB - scoreA;
-
-        const confidenceA = a.ods_score?.confidence_value ?? 0;
-        const confidenceB = b.ods_score?.confidence_value ?? 0;
-
-        return confidenceA !== confidenceB
-          ? confidenceB - confidenceA
-          : a.cnpj.localeCompare(b.cnpj);
+      if (scoreA === null || scoreB === null) {
+        return scoreA === scoreB ? byName(a, b) : scoreA === null ? 1 : -1;
       }
+      if (scoreA !== scoreB) return order === 'asc' ? scoreA - scoreB : scoreB - scoreA;
 
-      const first = Number(startsWithPhrase(b)) - Number(startsWithPhrase(a));
+      const confidenceA = scoreOf(a)?.confidence_value ?? 0;
+      const confidenceB = scoreOf(b)?.confidence_value ?? 0;
 
-      return first !== 0 ? first : byName(a, b);
-    });
+      return confidenceA !== confidenceB ? confidenceB - confidenceA : a.cnpj.localeCompare(b.cnpj);
+    }
 
-  const total = items.length;
+    const first = Number(startsWithPhrase(b)) - Number(startsWithPhrase(a));
+
+    return first !== 0 ? first : byName(a, b);
+  });
+}
+
+/** Pesquisa paginada sobre a base (paginação estável). */
+export function searchEntries(
+  entries: readonly CompanyEntry[],
+  query: SearchQuery | undefined,
+): SearchCompaniesResponse {
+  const page = query?.page ?? 1;
+  const pageSize = query?.page_size ?? 20;
+  const matches = matchEntries(entries, query);
+  const total = matches.length;
 
   return {
-    data: items.slice((page - 1) * pageSize, page * pageSize),
+    data: matches
+      .slice((page - 1) * pageSize, page * pageSize)
+      .map((entry) => searchItem(entry, query?.ods)),
     pagination: {
       page,
       page_size: pageSize,
@@ -255,6 +301,11 @@ export function searchProfiles(query: SearchQuery | undefined): SearchCompaniesR
       total_pages: total === 0 ? 0 : Math.ceil(total / pageSize),
     },
   };
+}
+
+/** Pesquisa sobre os perfis capturados. */
+export function searchProfiles(query: SearchQuery | undefined): SearchCompaniesResponse {
+  return searchEntries([...PROFILES.values()].map(entryOf), query);
 }
 
 /** Pesquisa capturada com os mesmos critérios e a mesma página, se houver. */
@@ -290,8 +341,8 @@ export function capturedExportFile(
     : null;
 }
 
-/** Evolução setorial (UC10): a série capturada da divisão e do ODS pedidos. */
-export function sectorEvolution(cnae: string, ods: number, now: number): SectorEvolution {
+/** Divisão CNAE do setor pedido (UC10), ou o erro que a API daria. */
+export function sectorDivision(cnae: string, ods: number, now: number): string {
   const digits = cnae.replace(/[.\-/\s]/g, '');
   const path = `/sectors/${cnae}/evolution?ods=${ods}`;
 
@@ -303,20 +354,28 @@ export function sectorEvolution(cnae: string, ods: number, now: number): SectorE
     throw odsNotAvailable('getSectorEvolution/ods-nao-calculado', ods, path, now);
   }
 
-  const division = digits.slice(0, 2);
+  return digits.slice(0, 2);
+}
+
+/** Setor sem série na base: o mock avisa, em vez de inventar. */
+export function sectorNotAvailable(cnae: string, ods: number, now: number): ApiError {
+  return notInPresentation(
+    `/sectors/${cnae}/evolution?ods=${ods}`,
+    now,
+    'A evolução deste setor não faz parte da versão de apresentação. Escolha um setor da lista.',
+  );
+}
+
+/** Evolução setorial (UC10): a série capturada da divisão e do ODS pedidos. */
+export function sectorEvolution(cnae: string, ods: number, now: number): SectorEvolution {
+  const division = sectorDivision(cnae, ods, now);
   const found = capturesOf('getSectorEvolution').find((item) => {
     const body = item.body as SectorEvolution;
 
     return item.status === 200 && body.cnae_division === division && body.ods_number === ods;
   });
 
-  if (!found) {
-    throw notInPresentation(
-      path,
-      now,
-      'A evolução deste setor não faz parte da versão de apresentação. Escolha um setor da lista.',
-    );
-  }
+  if (!found) throw sectorNotAvailable(cnae, ods, now);
 
   return JSON.parse(JSON.stringify(found.body)) as SectorEvolution;
 }
