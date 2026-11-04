@@ -3,7 +3,8 @@
 // Uso: node --experimental-strip-types scripts/build-presentation-data.mjs <pasta do dump>
 //
 // Entrada: <dump>/NNN.jsonl (uma empresa por linha, com perfil e explicações, como a API respondeu)
-// e <dump>/sectors.json (setores e séries). Saída: public/presentation/v1:
+// e <dump>/sectors.json (setores e séries, depois de `reconstruct-sector-history.mjs`). Saída:
+// public/presentation/v1:
 //   manifest.json            data da captura e contagens
 //   search.json.gz           índice leve da pesquisa, com tabelas para não repetir texto
 //   companies/NNN.json.gz    empresas cujo CNPJ começa em NNN, sem alterar as respostas da API

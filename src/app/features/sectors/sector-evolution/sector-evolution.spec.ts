@@ -10,6 +10,7 @@ import { provideMockBiosApi } from '../../../core/mocks/provide-mock-bios-api';
 import { OMITTED_AVERAGE_NOTE } from '../sector-format';
 import { SectorEvolution } from './sector-evolution';
 
+const RECONSTRUCTED = /os anteriores foram reconstruídos/i;
 const INSUFFICIENT = 'Ainda não há janelas suficientes para mostrar a evolução deste setor.';
 
 /** Abre `/setores` com a URL dada, já com sessão no mock, e espia a consulta da evolução. */
@@ -223,5 +224,21 @@ describe('SectorEvolution', () => {
       );
     });
     expect(await screen.findByRole('heading', { level: 2, name: /85 — EDUCAÇÃO/ })).toBeTruthy();
+  });
+
+  it('na apresentação, avisa que os meses anteriores foram reconstruídos', async () => {
+    const { evolution } = await openSectors();
+
+    evolution.mockResolvedValue(AVAILABLE);
+    await TestBed.inject(Router).navigateByUrl('/setores?cnae=24&ods=13');
+
+    expect(await screen.findByText(RECONSTRUCTED)).toBeTruthy();
+  });
+
+  it('com um mês só, não fala em reconstrução', async () => {
+    await openSectors('/setores?cnae=24&ods=13');
+
+    expect(await screen.findByText(INSUFFICIENT)).toBeTruthy();
+    expect(screen.queryByText(RECONSTRUCTED)).toBeNull();
   });
 });

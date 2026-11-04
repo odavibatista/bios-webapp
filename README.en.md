@@ -1,352 +1,216 @@
-# bios-webapp
+<p align="center">
+  <img src="docs/assets/banner-web.en.png" width="100%" alt="BIOS, bios-webapp: corporate sustainability, one piece of evidence at a time">
+</p>
 
-🇧🇷 [Português](README.md) · 🇺🇸 **English**
+<p align="center">
+  🇧🇷 <a href="README.md">Português</a> · 🇺🇸 <strong>English</strong>
+</p>
 
-[![CI](https://github.com/odavibatista/bios-webapp/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/odavibatista/bios-webapp/actions/workflows/ci.yml)
+<p align="center">
+  <a href="https://github.com/odavibatista/bios-webapp/actions/workflows/ci.yml"><img src="https://github.com/odavibatista/bios-webapp/actions/workflows/ci.yml/badge.svg?branch=develop" alt="CI"></a>
+  <img src="https://img.shields.io/badge/Angular-22-2c5f2d?logo=angular&logoColor=white" alt="Angular 22">
+  <img src="https://img.shields.io/badge/TypeScript-6%20strict-2c5f2d?logo=typescript&logoColor=white" alt="TypeScript 6 strict">
+  <img src="https://img.shields.io/badge/coverage-98.43%25-2c5f2d" alt="Line coverage: 98.43%">
+  <img src="https://img.shields.io/badge/accessibility-axe%20A%2FAA-2c5f2d" alt="Accessibility checked with axe, levels A and AA">
+</p>
 
-Front end of **BIOS — Business Intelligence on Sustainability**, in Angular. For each company, it shows
-the adherence index to **SDGs 13 and 15**, the confidence and the evidence behind them, each with its
-reference to the official source.
+<p align="center">
+  <a href="#about-the-project">About</a> ·
+  <a href="#screens">Screens</a> ·
+  <a href="#engineering-decisions">Decisions</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#quality">Quality</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#documentation">Documentation</a>
+</p>
 
-> **Presentation version:** the app runs without the API online. The data comes from real responses of
-> [bios-core-api](https://github.com/odavibatista/bios-core-api), captured and stored in the repository, behind a
-> service with the same interface as the API: a real integration only swaps that service. Legal-entity
-> data only (INL02).
+Front-end of **BIOS — Business Intelligence on Sustainability**. Starting from a CNPJ (the Brazilian
+company tax ID), the app shows a company's public environmental evidence and, for **SDGs 13 and 15**,
+an adherence index with a confidence level and the contribution of each piece of evidence, always
+with the way back to the official source.
 
-The app speaks Portuguese, like the API. Requirements and modeling:
-[bios-docs](https://github.com/odavibatista/bios-docs) (in Portuguese).
+> **Evidence First:** no index exists without evidence traceable to the official source. Missing data
+> is not negative evidence, and the index is never a sustainability verdict.
+
+<p align="center">
+  <a href="https://bios-webapp.vercel.app/"><strong>Open the demo</strong></a><br>
+  <sub>Sign in with <code>apresentacao@example.com</code> and the password <code>Apresentacao2026</code>. The account only exists in the browser. The interface is in Portuguese.</sub>
+</p>
+
+<p align="center">
+  <img src="docs/assets/demo.webp" width="100%" alt="Demo: CNPJ lookup, company evidence, index explanation and search by sector">
+  <br>
+  <sub>Real app flow: CNPJ lookup, evidence, index explanation and search by sector. The interface is in Portuguese.</sub>
+</p>
+
+## About the project
+
+Today, anyone who wants to learn the environmental record of a Brazilian company has to check IBAMA
+(the federal environmental agency), CGU (the federal comptroller), the federal revenue registry and
+the Public Emissions Registry one by one, and cross-reference the results by hand. BIOS uses the CNPJ
+as its axis, consolidates these sources and turns the records into explainable indicators, without
+collecting any data about individuals.
+
+The interface was designed not to judge companies:
+
+- **Index and confidence stay side by side** and are never combined. A high index with low
+  confidence means little evidence, and the screen says so.
+- **There is no overall grade.** Each SDG has its own index, and the two are not comparable.
+- **No data is not a low grade.** "No index", "No conclusive evidence" and "Could not be verified"
+  are different states, with different texts.
+- **An index change is not a change in conduct.** The main screen shows the direction, cause and date
+  of each change, always in chronological order, never the variation or a ranking.
+
+> **Presentation build:** the app runs without a server. The data are real responses from
+> [bios-core-api](https://github.com/odavibatista/bios-core-api), captured and stored in the
+> repository behind a service with the same interface as the API. The published base has 110,372
+> companies, 580,166 pieces of evidence and 86 sectors, processed by the API from official files. Real
+> integration means swapping only that service. It holds company data only.
+
+## Ecosystem
+
+<p align="center">
+  <img src="docs/assets/ecosystem.en.png" width="100%" alt="Public sources feed bios-core-api, which serves bios-webapp and third-party systems; bios-docs defines the requirements of both">
+</p>
+
+| Repository                                                     | Role                                                          |
+| -------------------------------------------------------------- | ------------------------------------------------------------- |
+| **bios-webapp** (you are here)                                 | Angular interface                                             |
+| [bios-core-api](https://github.com/odavibatista/bios-core-api) | NestJS API: collection, consolidation, indexes and public API |
+| [bios-docs](https://github.com/odavibatista/bios-docs)         | Requirements, use cases, modeling and academic documentation  |
+
+## Screens
+
+<table>
+  <tr>
+    <td colspan="2" valign="top"><img src="docs/assets/screen-painel.png" alt="Main screen with the search and the cards of the companies with the most recent movements"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><sub><strong>Main screen:</strong> the companies whose index changed most recently, with direction, cause and date. Names are blurred in this image.</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/assets/screen-perfil.png" alt="Company profile with registration data"></td>
+    <td width="50%" valign="top"><img src="docs/assets/screen-evidencias.png" alt="Evidence split by category, each with source, state and dates"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><strong>Profile:</strong> registration data from the provider chain</sub></td>
+    <td align="center"><sub><strong>Evidence:</strong> source, state, reference and collection validity</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/assets/screen-indices.png" alt="SDG 13 and 15 indexes with the contribution of each piece of evidence"></td>
+    <td width="50%" valign="top"><img src="docs/assets/screen-pesquisa.png" alt="Company search by sector, sorted by index"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><strong>Explanation:</strong> every index point has evidence behind it</sub></td>
+    <td align="center"><sub><strong>Search:</strong> criteria in the URL, sorting by index and XLSX export</sub></td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top"><img src="docs/assets/screen-setores.png" alt="Average index and confidence of a sector, month by month"></td>
+    <td width="50%" valign="top"><img src="docs/assets/screen-chaves.png" alt="Management of the user's API keys"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><strong>Sectors:</strong> 24 months per sector, always aggregated, never per company</sub></td>
+    <td align="center"><sub><strong>API keys:</strong> the secret appears only once</sub></td>
+  </tr>
+  <tr>
+    <td colspan="2" valign="top"><img src="docs/assets/screen-celular.png" alt="Search, indices and panel on a phone screen"></td>
+  </tr>
+  <tr>
+    <td colspan="2" align="center"><sub><strong>Phone:</strong> tables become cards below 720 px</sub></td>
+  </tr>
+</table>
+
+## Engineering decisions
+
+| Decision                        | How it works                                                                                                                                                                                     |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Contract before provider**    | Screens only know `BiosApi`, with one method per OpenAPI operation. The mock and the real client swap in a single provider, without touching any screen.                                         |
+| **Real data, never made up**    | Each response is captured from the real API and checked with `satisfies` against the generated type: if the contract changes, `typecheck` rejects the old capture.                               |
+| **Privacy verified by tests**   | A test walks through the captures and rejects CPFs, e-mails from other domains, JWTs and key secrets. Another checks that the site makes no request outside its own origin.                      |
+| **The sum has to match**        | Across all captures, a test checks that the contributions add up to the displayed index. Another scans the screen for terms that sound like a verdict (IND01).                                   |
+| **Accessibility as a gate**     | Every e2e test ends with an axe analysis (WCAG 2.0 to 2.2, levels A and AA), at 1280 and 390 px. A violation fails the test, and the error lists rule, impact and elements.                      |
+| **Session without races**       | With the real API, the session lives in memory only; in the demo, it ends when the tab closes. A `401` triggers a single renewal, and concurrent calls wait for the same answer before retrying. |
+| **Private route by default**    | Every route requires a session until it declares itself public, and admin routes ask for the right role. Forgetting to protect a screen does not expose it.                                      |
+| **The URL holds the state**     | Search criteria, order and page live in the URL: the link can be shared and the browser's back button redoes the previous search. The main screen page follows the same rule.                    |
+| **Bundle with a budget**        | The build fails above 1 MB of initial code. Captures, charts and the account menu load on demand, and the initial bundle transfers 133 kB.                                                       |
+| **Portuguese as a requirement** | A test reads the templates and rejects text without accents. Fonts and icons are served by the app itself, so the presentation works offline.                                                    |
+
+## Architecture
+
+<p align="center">
+  <img src="docs/assets/architecture-web.en.png" width="100%" alt="Screens use the BiosApi contract, wrapped by session renewal, with MockBiosApi as the current provider and the real API client as the next step">
+</p>
+
+The code follows modern Angular across the whole app: standalone components, no `zone.js`, `OnPush`
+change detection and state in signals. Details in [02. Architecture](docs/en/02-Architecture.md).
+
+## Quality
+
+| Measure         | Result                                                                    |
+| --------------- | ------------------------------------------------------------------------- |
+| Unit tests      | **741** with Vitest and Testing Library                                   |
+| E2e tests       | **140** Playwright runs, on desktop (1280 px) and phone (390 px)          |
+| Coverage        | **98.43%** of lines and **94.38%** of branches (required minimum: 75%)    |
+| Initial bundle  | **133 kB** transferred (build estimate)                                   |
+| Accessibility   | axe in every e2e test, failing on violations                              |
+| Automatic gates | Lint on commit, Conventional Commits, CI with types, tests, build and e2e |
 
 ## Stack
 
-| Layer           | Technology                                                                                          |
-| --------------- | --------------------------------------------------------------------------------------------------- |
-| Runtime         | Node.js 22.23.4 and npm 11, pinned by Volta (`volta` in `package.json`)                             |
-| Framework       | Angular 22 (standalone, zoneless, signals), TypeScript 6 `strict` with `strictTemplates`            |
-| Components      | Angular Material 3 and CDK, with a theme generated from the BIOS palette                            |
-| Charts          | ECharts (`ngx-echarts`)                                                                             |
-| Fonts and icons | Inter and Material Symbols served by the app itself (the presentation works offline)                |
-| API types       | `@hey-api/openapi-ts`, from the bios-core-api OpenAPI document (`api/openapi.json`)                 |
-| Unit tests      | Vitest (Angular builder) and `@testing-library/angular`, 75% minimum coverage                       |
-| E2E tests       | Playwright (Chromium)                                                                               |
-| Quality         | Angular ESLint with type-aware linting, Prettier, Husky, lint-staged, commitlint and GitHub Actions |
+| Layer           | Technology                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------------- |
+| Runtime         | Node.js 22.23.4 and npm 11, pinned by Volta                                                 |
+| Framework       | Angular 22 (standalone, zoneless, signals), TypeScript 6 `strict` with `strictTemplates`    |
+| Components      | Angular Material 3 and CDK, with a theme generated from the BIOS palette                    |
+| Charts          | ECharts (`ngx-echarts`)                                                                     |
+| Fonts and icons | Inter and Material Symbols served by the app itself                                         |
+| API types       | `@hey-api/openapi-ts`, from the bios-core-api OpenAPI document                              |
+| Unit tests      | Vitest (Angular builder) and `@testing-library/angular`                                     |
+| E2e tests       | Playwright (Chromium) and axe                                                               |
+| Quality         | Angular ESLint with typed lint, Prettier, Husky, lint-staged, commitlint and GitHub Actions |
 
 ## Quick start
 
 ```bash
-npm install          # dependencies (with Volta, the right Node and npm come along)
+npm install          # dependencies (with Volta, the right Node and npm come by themselves)
 npm start            # http://localhost:4200
 ```
 
-| Script                                           | Purpose                                                                                        |
-| ------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
-| `start` / `build` / `watch`                      | Development server, production build and continuous build                                      |
-| `test` / `test:watch` / `test:cov`               | Unit tests (once, in watch mode, with coverage)                                                |
-| `test:e2e`                                       | E2E tests with Playwright (starts the app itself; first run `npx playwright install chromium`) |
-| `lint` / `format` / `format:check` / `typecheck` | ESLint, Prettier and type checking                                                             |
-| `api:types`                                      | Regenerates the types in `src/app/core/api/generated` from `api/openapi.json`                  |
-| `verify`                                         | Types, lint, tests with coverage and build: what CI requires                                   |
-
-**API types.** The bios-core-api CI publishes the OpenAPI document as an artifact (`openapi`). To update,
-replace `api/openapi.json` with it and run `npm run api:types`.
-
-**Accessibility and widths in the E2E tests (NFIN01, NFIN02).** The E2E tests run at 1280 px (`desktop`)
-and 390 px (`celular`), and every test ends with the axe analysis (WCAG 2.0, 2.1 and 2.2, levels A and
-AA) and with a check that the page does not scroll horizontally. Tests import `test` and `expect` from
-`e2e/support/test.ts`, which does this on its own; an intermediate screen calls `expectAccessible` in
-the test itself. A failure lists rule, impact and elements; the full result of each analysis is attached
-as "acessibilidade (axe)" in the Playwright report (`npx playwright show-report` locally; in CI, the
-`playwright-report` artifact).
-
-**Accents in the texts (NFIN04).** `src/app/shared/portuguese-accents.spec.ts` reads the visible text of
-the templates (and the attributes announced by screen readers, such as `aria-label`) and the sentences
-in the code, and fails on a word from the `UNACCENTED` list written without its accent (`nao`, `indice`,
-`pagina`...). Found a new misspelling without accent? Add it to the list.
-
-**Path with parentheses on Windows.** Angular's test builder passes Vitest the absolute path of each spec
-without escaping it, and a folder such as `7-SEM (2026-2)` makes Vitest find no tests. `npm test` works
-around it on its own (`scripts/unit-test.mjs`: it mounts the parent folder on a temporary drive with
-`subst` and unmounts it at the end). Outside Windows, or without those characters in the path, it runs
-directly.
-
-## Data layer
-
-Screens talk only to the `BiosApi` contract (`src/app/core/api/bios-api.ts`): one method per OpenAPI
-operation used by the app, with input and output from the generated types. Failures arrive as
-`ApiError` (`status`, `code`, `message`, `details`), with the API's text. The provider is chosen in
-`app.config.ts`; integrating with the real API means swapping only that provider.
-
-**Session** (`src/app/core/session/`): `SessionStore` keeps the session in memory only and provides
-the token to the provider. Only the presentation version provides `TabStorage`, where the mock session
-survives a page reload and ends when the tab closes. The `BiosApi` that screens receive
-renews the access token on its own: a `401 NOT_AUTHENTICATED` with an open session triggers a single
-`refreshSession` (simultaneous calls wait for the same one) and repeats the operation; if renewal
-fails, the session is cleared and the app goes to `/entrar?voltar=<route>&sessao=encerrada`. Every route
-is private by default (`privateByDefault`); public ones declare `data: { public: true }`.
-
-In the presentation version, the provider is `MockBiosApi` (`src/app/core/mocks/`):
-
-- **Reads** come from the captured responses (profiles, explanations, sectors, SDGs); search is redone
-  over the captured profiles, and a test checks that it gives the same result as each real captured
-  search. Captures load on demand (`mock-data` chunk), outside the initial bundle.
-- **What the demo changes** (accounts, sessions, e-mail links, API keys, blacklist) stays in the tab
-  (`sessionStorage`), with password digests only, and ends when it closes. Ready-made accounts: `apresentacao@example.com` (`USER`) and
-  `administracao@example.com` (`ADMIN`), password `Apresentacao2026`. The links the e-mails would carry
-  are kept in `MockMailbox`.
-- **Determinism:** latency and failure scenarios (`forcedErrors`) come from `MOCK_API_CONFIG`, never
-  from randomness. What the presentation does not reproduce (an export that was not captured, a sector
-  outside the list) answers `422 NOT_AVAILABLE_IN_PRESENTATION` instead of making data up.
-
-## Panel
-
-`/painel` is where login leads (UC18, RF34): the search and the companies whose index changed most
-recently, in cards that open the profile. Each card shows, per SDG, the current index and confidence and
-the direction, cause and date of the change, never the previous index or the variation (IND03). The order
-is chronological only, and the page lives in the URL (`?pagina=2`), so "back" returns to the same page.
-
-Private routes live in the panel shell (`src/app/layout/`): a fixed side menu on wide screens and a
-drawer on narrow ones, with the current item marked by `aria-current`. The menu comes from `PANEL_NAV`
-(`panel-nav.ts`), filtered by role; only `ADMIN` sees the administration. The top bar shows who is
-signed in (account name and email, session role). `/admin` routes require the role through
-`requireRole('ADMIN')`: a `USER` goes to `/acesso-negado`. An unknown address with a session shows the
-"not found" page inside the panel; without one, outside it, without asking to sign in. On every screen
-change, focus moves to the content (`main#conteudo`).
-
-## Sign-up and account forms
-
-`/cadastro`, `/confirmar-email/:token` and `/reenviar-confirmacao` are public (`src/app/features/auth/`).
-The confirmation route is the one in the link the API emails. Name, email and password rules
-(`shared/forms/account-rules.ts`) are the API's, with the same messages; email uses Zod 4's `z.email()`
-pattern, the same as bios-core-api. `bios-password-field` has a show-password button and, for a new
-password, the policy visible before the first error.
-
-Password: `/esqueci-senha` requests the link (same message whether or not the account exists) and
-`/redefinir-senha/:token`, the route in the API's email link, sets the new one; a password outside the
-policy does not spend the link. At `/conta/senha`, a signed-in user changes the password by giving the
-current one; API errors without `details` (wrong current password, new equal to current) mark the right
-field (`setApiError`). Changing or resetting ends every session, this browser's included: the app clears
-the local session and the login page says why (`?senha=alterada` or `?senha=redefinida`).
-
-After submitting, sign-up and resend show only the API's message, the same for a new and an already
-registered email (RF01 b). In the presentation build, `bios-mail-preview` stands in for the inbox: it
-shows the link the email would carry as a hyperlink, or says nothing arrived.
-
-`/entrar` opens the session and goes to the destination stored in `?voltar=`, if it is a path of the app
-itself (`safeReturnUrl`), or to `/painel`. Messages are the API's, without pointing at which field was
-wrong. An unconfirmed account gets the option to resend the link; a lockout after failed attempts shows
-the remaining time and disables the button until then. The sign-in password only has to be present
-(`currentPasswordRules`), without the new-password policy.
-
-The account menu has "Sair" (sign out) and "Sair de todos os dispositivos" (sign out everywhere); the
-second asks for confirmation (`confirmAction`, in `shared/dialogs/`, with initial focus on "Cancelar").
-The local session is cleared even if the call fails, and the app goes to the login page.
-
-## Account
-
-`/conta` (`src/app/features/account/`) shows the signed-in person's data (name, email, role and address)
-and edits the name and the address. The account comes from `OwnAccount` (`core/account/`), the same one
-the top bar menu reads: on save, the API's response applies in both places, without another read.
-
-- **Only what changed:** "Salvar" is enabled only when something changed (`accountChanges`), and the
-  edit sends only what changed; the address goes whole, with the postal code as digits.
-- **Optional address:** without a saved address, blank fields are not required; starting to fill them in
-  requires the others, with the API's rules and messages (`shared/forms/address-rules.ts`). The postal
-  code has a mask (`00000-000`) and the state comes from the 27 abbreviations.
-- **Remove address:** asks for confirmation and sends `address: null`.
-- **Delete account:** the dialog lists what will be erased and asks for the password; "Excluir conta" is
-  enabled only once it is filled in, and a wrong password keeps the dialog open, with the error on the
-  field. Once deleted, the local session is cleared (the API already ended it) and the app goes back to
-  the home page with a notice (`/?conta=excluida`).
-- **Change email:** asks for the new address and the current password; the link goes to the new
-  address, and until it is opened the account's email stays the current one. The response is the same
-  for a free address and for one that belongs to another account. The link opens
-  `/confirmar-novo-email/:token` (public: it may be opened on another device), which applies the change
-  and, with a session, reloads the account.
-
-## Screen states and errors
-
-Every screen that loads data uses the same states (`src/app/shared/`, NFIN03):
-
-- `bios-async-state` combines loading (`bios-loading`, announced to screen readers), error
-  (`bios-error-state`) and empty (`bios-empty-state`, with the list's own explanation), and marks the
-  region with `aria-busy` while waiting.
-- `describeError` decides how to show a failure: the message is always the API's (a failure that did not
-  come from the API becomes a generic message in Portuguese); `429` shows when it can be retried and
-  blocks "Tentar de novo" until then; `503` is a temporary unavailability, with the button.
-- Forms: `applyApiErrors` marks each field by the `details[].path` of a 422 (`apiErrorOf` reads the
-  message in `mat-error`), and `bios-form-error-summary` shows at the top what does not belong to a field.
-
-## Company profile
-
-The CNPJ lookup (`bios-cnpj-search`, in `src/app/features/profile/`) sits at the top of the panel, on
-`/empresas` and, on wide screens, in the top bar. The CNPJ is checked before any call, with the
-algorithm of the API's value object (`shared/cnpj/cnpj.ts`: numeric and alphanumeric, check digits,
-rejection of single-character sequences), and the profile opens at `/empresas/<cnpj>` with the
-normalized CNPJ, without the mask in the URL.
-
-The same field accepts a legal or trade name. Text of up to 100 characters with at least one
-three-character word opens `/empresas?nome=...`, using `searchCompanies` over the local database
-with 20 results per page. The name and page stay in the URL when returning from a profile. Invalid
-text is rejected before a call. An empty result explains that only companies previously looked up
-by CNPJ appear and offers the same field for a CNPJ lookup.
-
-The profile shows the legal name, the trade name and the "Dados cadastrais" (registration data)
-section: status in Portuguese (an unrecognized one with the provider's text), company size, address,
-CNAEs with formatted code and description, and when the source last updated the record. "Company not
-found" (`404`) and temporary unavailability (`503`, with "Tentar de novo") are different screens.
-
-The "Evidências" section uses the same `getCompanyProfile` response and separates environmental
-infractions, administrative conduct and GHG inventories. Each entry shows its source, state and
-publication, collection and validity dates. Only absolute HTTPS URLs without credentials become
-external links; otherwise, the identifier appears as text. A finding without either is displayed
-as unverified, without its confirming summary. `UNKNOWN` and `NOT_FOUND` have distinct explanations;
-provenance indicates collection, stored data, pending updates or an unavailable source, with a
-suggested retry time when provided. Sanction dates are source data and do not assert current legal
-effect.
-
-The "Índices por ODS" section shows each active SDG in its own card, with score and
-confidence side by side and no combined index or comparison between SDGs. A neutral scale marks
-zero and appears only for calculated scores. Pending scores and missing conclusive evidence have
-different explanations; source coverage and suggested retry time are shown in text.
-
-Contribution details are available from each SDG card through "Como o índice foi calculado": each contribution
-shows its source, category, reference, weight, signal and points, followed by their sum. Reduced
-weights and outdated evidence have explicit notices. A button focuses the corresponding evidence
-in the same profile; a source link appears only for a valid HTTPS address. The profile preserves
-score hundredths so the displayed sum matches the card.
-
-## API keys
-
-`/conta/chaves` (`src/app/features/api-keys/`) creates, lists and revokes the account's API keys. The
-name follows the API rule (2 to 60 characters, not counting surrounding spaces). The full key only
-exists in the creation response and is shown once, in a dialog with "Copiar a chave" (copy key), which
-announces "Chave copiada" and, if copying fails, leaves the key selected for Ctrl+C; the dialog only
-closes through its button, and nothing in the app keeps the value afterwards. The list shows only name,
-prefix, creation date and last use ("Nunca usada" when never used), with the count against the limit of
-10 active keys. Revoking asks for confirmation (`confirmAction`); a key that no longer exists (`404`)
-refreshes the list. The page also explains how to use the key in the public API: the `x-api-key`
-header on `GET /v1/companies/{cnpj}`, with the OpenAPI documentation at `/docs` on the API's address.
-
-## Presentation data
-
-The responses come from a local API with real companies, captured by `scripts/capture-api.mjs`, not
-from made-up data: the demo shows the API's real behavior, errors included.
-
-The published version reads `public/presentation/v1`, with real API responses for 110,372 companies,
-580,166 pieces of evidence and 86 sectors, generated by `scripts/build-presentation-data.mjs`. Company
-records came from the official Receita dump and sanctions from official CGU files, processed by the
-real API. The end-to-end tests still use the fixture captures. The main screen list
-(`movements.json.gz`) holds the 5,000 companies with the most recent movements, rebuilt with the API
-rule (UC15, rule 8) from the date of the recorded fact, and the generator runs with
-`node --experimental-strip-types`, because it reuses that rule from the app code.
-
-- **One capture per file:** `src/app/core/mocks/fixtures/<operationId>/<scenario>.ts`, with
-  `satisfies CapturedResponse<...>` over the generated type of the operation and status. If the API
-  changes the shape of a response, `typecheck` rejects the old capture. The XLSX spreadsheet sits next
-  to it as a file.
-- **Manifest** (`fixtures/manifest.json`): bios-core-api commit, date of each phase, the demo account
-  and the companies, with the reason for each one.
-- **Nothing secret or personal:** passwords, tokens and the API key secret become placeholders before
-  writing; the demo account uses the reserved `example.com` domain. `fixtures.spec.ts` rejects a CPF,
-  an e-mail from another domain, a JWT and a key secret (INL02).
-
-To capture again: a local API (bios-core-api `develop`) with a clean database, initial load, IBAMA
-ingestion and GHG sync, and the API e-mails going to a Mailpit (`SMTP_HOST=localhost`,
-`SMTP_PORT=1025` in the environment of whoever starts the API), where the script reads the links from.
-Then:
+Sign in with `apresentacao@example.com` and the password `Apresentacao2026`. To see the admin area,
+use `administracao@example.com` with the same password. These are demo accounts that only exist in
+the browser.
 
 ```bash
-BIOS_CAPTURE_PASSWORD=<password> BIOS_CORE_DIR=<bios-core-api folder> \
-  node scripts/capture-api.mjs contas admin empresas setores limites
+npm run verify       # types, lint, tests with coverage and build: what the CI requires
+npm run test:e2e     # e2e in Playwright (first: npx playwright install chromium)
 ```
 
-The phases and scenarios are in the script header. The `limites` phase blocks login from the IP for 15
-minutes (RF20), so it runs last; `setores` is repeated in another month so the sector evolution series
-has two real windows.
+## Documentation
 
-## Company search
+The technical manual lives in [`docs/en/`](docs/en/README.md) (and, in Portuguese, in
+[`docs/`](docs/README.md)):
 
-`/pesquisa` (`src/app/features/search/`) filters by name, UF, city, CNAE and, for an SDG chosen among the
-ones BIOS calculates (`listOds`), by minimum score and confidence. Criteria live in the URL
-(`/pesquisa?cnae=24&ods=13&indice_min=0&pagina=2&por_pagina=50`): the link can be shared and the
-browser's back button redoes the previous search. `search-criteria.ts` converts between URL, form and API
-query; minimums and ordering (`ordem=asc` or `ordem=desc`) only exist with the SDG, and the
-query never carries them without it. Field rules (`search-rules.ts`) are the API's.
+| No. | Chapter                                                      | Content                                           |
+| --- | ------------------------------------------------------------ | ------------------------------------------------- |
+| 01  | [Getting started](docs/en/01-Getting-Started.md)             | Scripts, API types and Windows paths              |
+| 02  | [Architecture](docs/en/02-Architecture.md)                   | Data layer, session, panel and screen states      |
+| 03  | [Accounts and access](docs/en/03-Accounts-and-Access.md)     | Sign-up, login, password, account, keys and admin |
+| 04  | [Companies and indexes](docs/en/04-Companies-and-Indexes.md) | Profile, evidence, indexes, search and sectors    |
+| 05  | [Presentation data](docs/en/05-Presentation-Data.md)         | Capturing and checking the API responses          |
+| 06  | [Quality and tests](docs/en/06-Quality-and-Tests.md)         | Accessibility, accents and contribution flow      |
+| 07  | [Theme and publishing](docs/en/07-Theme-and-Publishing.md)   | Material 3 palette and publishing on Vercel       |
 
-With an SDG, each company shows score and confidence in separate columns; without a calculation it shows
-"Sem índice" (no score), never zero. The list is a table on wide screens and cards below 720 px; the
-table scrolls inside its own container. An SDG outside the calculated ones shows the available ones, with
-a button to search in each.
-When ordered by score, companies without a calculation stay last in both directions and are visually
-separated. Ties use higher confidence, then CNPJ. The table header announces the sort direction.
+## Academic context
 
-When results exist, **Exportar XLSX** downloads the full list using the URL filters and order, without
-pagination. The file and its name come from the captured API response; the browser does not generate
-the spreadsheet. Searches without a captured file explain the presentation version's limit. Empty
-lists, oversized exports, and rate limits are reported beside the results.
+BIOS is the individual project of Assessment 3 of the Software Engineering and Software Management
+and Quality courses, in the Computer Science program at Universidade São Judas Tadeu (USJT), Brazil,
+in 2026. Requirements, use cases and modeling are in
+[bios-docs](https://github.com/odavibatista/bios-docs) (in Portuguese).
 
-## Sectors
+**Author:** Davi Deosmar Batista Oliveira Miranda · [GitHub](https://github.com/odavibatista) · [LinkedIn](https://www.linkedin.com/in/odavibatista/)
 
-`/setores` shows how a sector's (CNAE division) average score for an SDG evolves month by month
-(`src/app/features/sectors/`). Sector and SDG live in the URL (`/setores?cnae=24&ods=13`); the field
-accepts a division, group, class or subclass, with or without mask, and suggests the sectors from
-`listSectors`. Everything is aggregated: no company appears on the screen.
+## License
 
-The line chart (ECharts, only the modules in use, loaded on demand) puts average score and average
-confidence on separate axes, never combined; the table next to it carries the same numbers for screen
-readers. An average withheld for the minimum sample is an explained gap, never zero, and the counts stay
-visible. With fewer than two recorded months, the screen says the history is still insufficient and
-shows what there is. In the presentation build, only the windows captured from the API appear: no month
-is generated in the front end.
-
-## Administration
-
-`/admin/dominios-bloqueados` is the blacklist of email domains (`src/app/features/admin/`), for the
-`ADMIN` role only: a `USER` does not see the menu item and, through the URL, goes to `/acesso-negado`.
-The list is alphabetical and paginated, with the origin ("Carga inicial" or "Administrador") and the
-date it was added. Adding validates the domain with the API's rule (`shared/forms/domain-rules.ts`: the
-domain only, without `@`) and stores it in lowercase; an already blocked domain marks the field with the
-API's notice. Removing asks for confirmation. The effect is immediate: the domain starts (or stops)
-blocking sign-ups and email changes right away.
-
-## Theme
-
-The colors come from the project's presentation (`bios-docs/assets/BIOS - PPTX.pptx`). The Material 3
-palettes (`src/styles/_theme-colors.scss`) were generated with `ng generate @angular/material:theme-color`,
-and the exact colors are CSS variables for the brand and the charts:
-
-| Variable             | Color     | Use                        |
-| -------------------- | --------- | -------------------------- |
-| `--bios-brand-green` | `#2C5F2D` | Primary: top bar, headings |
-| `--bios-brand-leaf`  | `#97BC62` | Tertiary: highlights       |
-| `--bios-brand-moss`  | `#5B6B5B` | Secondary text             |
-| `--bios-brand-ink`   | `#1A1A1A` | Text                       |
-| `--bios-brand-paper` | `#F5F5F5` | Surfaces, footer           |
-
-## Publishing (Vercel)
-
-The presentation version is static and is published on Vercel (Hobby plan) on every merge into
-`main`. `vercel.json` defines the install (the same npm 11 as CI), the build (`npm run build`), the
-published folder (`dist/bios-webapp/browser`) and the rewrite of every route to `index.html`, so a deep
-link (`/empresas/<cnpj>`) opens directly. The footer says the data is captured, and an E2E test checks
-that the site makes no request outside its own origin: there is no real API and no secret in the build.
-
-To create the project (once):
-
-1. On vercel.com, **Add New → Project → Import** the `odavibatista/bios-webapp` repository.
-2. **Framework Preset:** Other (`vercel.json` already sets install, build and output). No environment
-   variables.
-3. Once created: **Settings → Git → Production Branch:** `main`; **Settings → Build and Deployment →
-   Node.js Version:** 22.x, the same as Volta.
-4. Check the public address: the home page opens, and a route that does not exist
-   (`/rota-que-nao-existe`) shows the app's "not found" page, not Vercel's 404.
-
-## Contribution flow
-
-Branch from `develop`, a PR back into it with a Conventional Commits title, and promotion
-`develop` → `pre-prod` → `main` through PRs, with the CI's **Lint** and **Testes** checks. Branch
-protection (NFSE11) is versioned in [`.github/rulesets/`](.github/rulesets/README.md), with the steps
-to apply it on GitHub.
-
----
-
-Academic project for Software Engineering and Software Management and Quality (Computer Science, USJT).
+© 2026 Davi Deosmar Batista Oliveira Miranda. All rights reserved. This repository is public for
+reference and academic assessment; copying, modifying, distributing or using the material requires the
+author's permission. See [LICENSE](LICENSE).
