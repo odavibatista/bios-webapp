@@ -88,6 +88,22 @@ describe('StaticCompanyArchive', () => {
     await expect(archive.company('99999999000191')).resolves.toBeNull();
   });
 
+  it('o index.html que a Vercel entrega no lugar de uma fatia inexistente não é falha', async () => {
+    fetchMock.mockResolvedValue(
+      new Response('<!doctype html>', { headers: { 'Content-Type': 'text/html; charset=utf-8' } }),
+    );
+
+    await expect(archive.company('70645678000107')).resolves.toBeNull();
+  });
+
+  it('sem o índice a pesquisa fica indisponível, mesmo que a resposta seja a página do app', async () => {
+    fetchMock.mockResolvedValue(
+      new Response('<!doctype html>', { headers: { 'Content-Type': 'text/html; charset=utf-8' } }),
+    );
+
+    await expect(archive.entries()).rejects.toMatchObject({ status: 503 });
+  });
+
   it('falha de rede vira indisponibilidade, e a tentativa seguinte baixa de novo', async () => {
     fetchMock.mockRejectedValueOnce(new TypeError('offline'));
     fetchMock.mockImplementation(() => Promise.resolve(gzipped(INDEX)));
