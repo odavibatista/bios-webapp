@@ -42,17 +42,30 @@ export async function expectAccessible(
 }
 
 /**
- * Confere que a página não rola na horizontal na largura atual (NFIN02): conteúdo largo, como
- * tabelas, precisa rolar dentro do próprio contêiner.
+ * Confere que a página e o conteúdo do painel não rolam na horizontal na largura atual (NFIN02):
+ * conteúdo largo, como tabelas, precisa rolar dentro do próprio contêiner.
  */
 export async function expectNoHorizontalScroll(page: Page, step = 'página'): Promise<void> {
-  const { scrollWidth, clientWidth } = await page.evaluate(() => ({
-    scrollWidth: document.documentElement.scrollWidth,
-    clientWidth: document.documentElement.clientWidth,
-  }));
+  const widths = await page.evaluate(() => {
+    const panel = document.querySelector('mat-sidenav-content');
+    return {
+      page: {
+        scrollWidth: document.documentElement.scrollWidth,
+        clientWidth: document.documentElement.clientWidth,
+      },
+      panel: panel ? { scrollWidth: panel.scrollWidth, clientWidth: panel.clientWidth } : null,
+    };
+  });
 
   expect(
-    scrollWidth,
-    `A página rola na horizontal em ${page.url()} (${step}): ${scrollWidth}px de conteúdo em ${clientWidth}px de largura`,
-  ).toBeLessThanOrEqual(clientWidth);
+    widths.page.scrollWidth,
+    `A página rola na horizontal em ${page.url()} (${step}): ${widths.page.scrollWidth}px de conteúdo em ${widths.page.clientWidth}px de largura`,
+  ).toBeLessThanOrEqual(widths.page.clientWidth);
+
+  if (widths.panel) {
+    expect(
+      widths.panel.scrollWidth,
+      `O painel rola na horizontal em ${page.url()} (${step}): ${widths.panel.scrollWidth}px de conteúdo em ${widths.panel.clientWidth}px de largura`,
+    ).toBeLessThanOrEqual(widths.panel.clientWidth);
+  }
 }

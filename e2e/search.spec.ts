@@ -1,6 +1,6 @@
 import type { Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { expectAccessible } from './support/accessibility';
+import { expectAccessible, expectNoHorizontalScroll } from './support/accessibility';
 import { expect, test } from './support/test';
 
 /** Entra pela tela de login e cai na pesquisa. */
@@ -59,6 +59,32 @@ test.describe('pesquisa de empresas (#25)', () => {
       await expect(page.getByRole('table')).toHaveCount(0);
     } else {
       await expect(page.getByRole('columnheader', { name: 'Confiança no ODS 15' })).toBeVisible();
+    }
+  });
+
+  test('resultados e exportação cabem no painel em todas as larguras', async ({
+    page,
+  }, testInfo) => {
+    await signInToSearch(page, '?cnae=24&ods=13&ordem=desc');
+    await expect(page.getByRole('status')).toHaveText('10 empresas encontradas');
+
+    const widths = testInfo.project.name === 'celular' ? [390] : [1024, 1280, 1440];
+    for (const width of widths) {
+      await page.setViewportSize({ width, height: 844 });
+      await expectNoHorizontalScroll(page, `pesquisa a ${width}px`);
+
+      const exportButton = page.getByRole('button', { name: 'Exportar XLSX' });
+      const box = await exportButton.boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.x + box!.width).toBeLessThanOrEqual(width);
+
+      if (width === 1024) {
+        expect(
+          await page
+            .locator('.table-scroll')
+            .evaluate((element) => element.scrollWidth > element.clientWidth),
+        ).toBe(true);
+      }
     }
   });
 
