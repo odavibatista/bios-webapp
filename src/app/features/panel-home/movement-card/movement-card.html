@@ -1,0 +1,36 @@
+<article class="card">
+  <h3>
+    <a [routerLink]="['/empresas', item().cnpj]">{{ item().legal_name }}</a>
+  </h3>
+  @if (item().trade_name) {
+    <p class="trade-name">{{ item().trade_name }}</p>
+  }
+  <p class="place">{{ item().city }}/{{ item().uf }} · CNPJ {{ cnpj() }}</p>
+
+  <ul class="ods-list">
+    @for (ods of item().ods; track ods.ods_number) {
+      <li>
+        <p class="ods-values">
+          <strong>ODS {{ ods.ods_number }}</strong>
+          @if (ods.score_value === null) {
+            <span>{{ score(ods.score_value) }}</span>
+          } @else {
+            <span>Índice {{ score(ods.score_value) }}</span>
+            <span>Confiança {{ confidence(ods.confidence_value) }}</span>
+          }
+        </p>
+        @if (ods.movement; as movement) {
+          <p class="movement">
+            <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">{{
+              view(movement).icon
+            }}</mat-icon>
+            <span>
+              <strong>{{ view(movement).label }}</strong>
+              <span class="cause">{{ cause(movement) }}, em {{ date(movement.moved_at) }}</span>
+            </span>
+          </p>
+        }
+      </li>
+    }
+  </ul>
+</article>

@@ -118,6 +118,26 @@ describe('StaticCompanyArchive', () => {
     await expect(archive.company('17469701000177')).rejects.toMatchObject({ status: 503 });
   });
 
+  it('baixa a lista de movimentações uma vez, sem tocar no índice da pesquisa', async () => {
+    const items = [{ cnpj: '17469701000177' }];
+
+    fetchMock.mockImplementation(() => Promise.resolve(gzipped(items)));
+
+    await expect(archive.movements()).resolves.toEqual(items);
+    await archive.movements();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith('presentation/v1/movements.json.gz');
+  });
+
+  it('download da lista que falha não fica guardado', async () => {
+    fetchMock.mockRejectedValueOnce(new TypeError('offline'));
+    fetchMock.mockImplementation(() => Promise.resolve(gzipped([])));
+
+    await expect(archive.movements()).rejects.toMatchObject({ status: 503 });
+    await expect(archive.movements()).resolves.toEqual([]);
+  });
+
   it('entrega os setores e a série por divisão e ODS', async () => {
     fetchMock.mockImplementation(() =>
       Promise.resolve(

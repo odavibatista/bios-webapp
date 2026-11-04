@@ -85,6 +85,9 @@ export abstract class BiosApi {
   abstract getScoreExplanation(
     input: ApiInput<Api.GetScoreExplanationData>,
   ): Promise<Api.GetScoreExplanationResponse>;
+  abstract listCompanyMovements(
+    input?: ApiInput<Api.ListCompanyMovementsData>,
+  ): Promise<Api.ListCompanyMovementsResponse>;
   abstract searchCompanies(
     input?: ApiInput<Api.SearchCompaniesData>,
   ): Promise<Api.SearchCompaniesResponse>;

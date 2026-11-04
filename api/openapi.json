@@ -2005,6 +2005,91 @@
         ]
       }
     },
+    "/companies/movements": {
+      "get": {
+        "description": "A lista da tela principal (UC18): empresas com perfil e movimentação registrada, da mais recente para a mais antiga, com o CNPJ como desempate. Cada empresa aparece uma vez e traz, para cada ODS ativo, o índice e a confiança atuais e a última movimentação, com sentido, causa e data. Não traz índice anterior, variação nem histórico por empresa (IND03), e a ordem é só cronológica. Lê apenas o que já foi gravado, sem consultar fontes externas nem recalcular. Sem movimentações, responde 200 com a lista vazia.",
+        "operationId": "listCompanyMovements",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Página solicitada (a partir de 1)",
+            "schema": {
+              "default": 1,
+              "description": "Página solicitada (a partir de 1)",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "page_size",
+            "required": false,
+            "in": "query",
+            "description": "Quantidade de itens por página (máximo de 100)",
+            "schema": {
+              "default": 20,
+              "description": "Quantidade de itens por página (máximo de 100)",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Página de empresas com movimentação recente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyMovementsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Lista as empresas com movimentação recente do índice",
+        "tags": [
+          "Empresas"
+        ]
+      }
+    },
     "/companies/{cnpj}/evidences": {
       "get": {
         "description": "Exige perfil cadastral local; sem ele, responde 404 sem iniciar coletas. Limite próprio por IP (padrão: 20 consultas por minuto, `THROTTLE_COMPANY_EVIDENCES_LIMIT`, NFSE04), no lugar do limite global. Reúne IBAMA local, CGU e GHG com degradação independente e agrupa por categoria. Mostra o mesmo retrato do perfil completo (GET /companies/{cnpj}): com as evidências em cache (até 5 minutos, apagadas quando o índice da empresa é recalculado), responde sem coletar nem recalcular. source é o nome público do catálogo. source_reference identifica o registro; source_url é um link HTTPS original, inclusive para o recurso oficial quando não existe link individual. O acesso ao recurso CGU pode exigir credencial do próprio órgão. Sem referência ou link rastreável, uma evidência guardada como CONFIRMED é apresentada como UNKNOWN, sem sinal, resumo ou detalhes confirmatórios. Não inventa links, não altera o histórico e não calcula score. UNKNOWN e NOT_FOUND podem ter referências nulas. Aceita CNPJ numérico ou alfanumérico; omita a barra de formatação na URL.",
@@ -3601,6 +3686,162 @@
         ],
         "additionalProperties": false,
         "description": "Índice e confiança no ODS selecionado"
+      },
+      "CompanyMovementsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyMovementItem"
+            },
+            "description": "Itens da página"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "additionalProperties": false,
+        "description": "Página de empresas com movimentação recente"
+      },
+      "CompanyMovementItem": {
+        "type": "object",
+        "properties": {
+          "cnpj": {
+            "type": "string",
+            "description": "CNPJ, sem pontuação"
+          },
+          "legal_name": {
+            "type": "string",
+            "description": "Razão social"
+          },
+          "trade_name": {
+            "nullable": true,
+            "description": "Nome fantasia",
+            "type": "string"
+          },
+          "city": {
+            "type": "string",
+            "description": "Município"
+          },
+          "uf": {
+            "type": "string",
+            "description": "Unidade da federação (sigla)"
+          },
+          "moved_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "Movimentação mais recente da empresa"
+          },
+          "ods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CompanyMovementOds"
+            },
+            "description": "Um item por ODS ativo"
+          }
+        },
+        "required": [
+          "cnpj",
+          "legal_name",
+          "trade_name",
+          "city",
+          "uf",
+          "moved_at",
+          "ods"
+        ],
+        "additionalProperties": false,
+        "description": "Empresa com movimentação registrada"
+      },
+      "CompanyMovementOds": {
+        "type": "object",
+        "properties": {
+          "ods_number": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991,
+            "description": "Número do ODS"
+          },
+          "score_value": {
+            "nullable": true,
+            "description": "Índice atual; nulo quando o ODS não tem índice (IND02)",
+            "type": "number"
+          },
+          "confidence_value": {
+            "nullable": true,
+            "description": "Confiança atual; nula quando o ODS não foi calculado",
+            "type": "number"
+          },
+          "movement": {
+            "nullable": true,
+            "description": "Última movimentação; nula quando o ODS não tem movimentação registrada",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OdsMovement"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ods_number",
+          "score_value",
+          "confidence_value",
+          "movement"
+        ],
+        "additionalProperties": false,
+        "description": "Situação da empresa em um ODS ativo"
+      },
+      "OdsMovement": {
+        "type": "object",
+        "properties": {
+          "direction": {
+            "type": "string",
+            "enum": [
+              "INCREASED",
+              "DECREASED",
+              "AVAILABLE",
+              "UNAVAILABLE"
+            ],
+            "description": "Sentido da mudança: INCREASED (subiu), DECREASED (desceu), AVAILABLE (passou a ter índice) ou UNAVAILABLE (deixou de ter)"
+          },
+          "cause": {
+            "type": "string",
+            "enum": [
+              "EVIDENCE_ADDED",
+              "EVIDENCE_REMOVED",
+              "WEIGHT_CHANGED"
+            ],
+            "description": "O que mudou: EVIDENCE_ADDED (entrou evidência), EVIDENCE_REMOVED (saiu evidência) ou WEIGHT_CHANGED (mudou o peso efetivo)"
+          },
+          "evidence_category": {
+            "type": "string",
+            "enum": [
+              "INFRACAO_AMBIENTAL",
+              "CONDUTA_ADMINISTRATIVA",
+              "EMISSAO_GEE"
+            ],
+            "description": "Categoria da evidência de maior efeito na mudança"
+          },
+          "moved_at": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "Data da mudança"
+          }
+        },
+        "required": [
+          "direction",
+          "cause",
+          "evidence_category",
+          "moved_at"
+        ],
+        "additionalProperties": false,
+        "description": "Última movimentação do índice no ODS"
       },
       "CompanyEnvironmentalEvidencesResponse": {
         "type": "object",
