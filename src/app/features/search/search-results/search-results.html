@@ -42,7 +42,10 @@
               }
             </th>
             <td>
-              <span class="status-chip" [class.status-chip--other]="item.registration_status !== 'ATIVA'">
+              <span
+                class="status-chip"
+                [class.status-chip--other]="item.registration_status !== 'ATIVA'"
+              >
                 {{ status(item.registration_status) }}
               </span>
             </td>
@@ -86,7 +89,10 @@
             <div>
               <dt>Situação</dt>
               <dd>
-                <span class="status-chip" [class.status-chip--other]="item.registration_status !== 'ATIVA'">
+                <span
+                  class="status-chip"
+                  [class.status-chip--other]="item.registration_status !== 'ATIVA'"
+                >
                   {{ status(item.registration_status) }}
                 </span>
               </dd>
