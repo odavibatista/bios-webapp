@@ -16,6 +16,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { BiosApi } from '../../../core/api/bios-api';
+import { PRESENTATION_MODE } from '../../../core/presentation-mode';
 import type { ApiKeyResponse } from '../../../core/api/generated';
 import { confirmAction } from '../../../shared/dialogs/confirm-dialog';
 import { describeError } from '../../../shared/errors/describe-error';
@@ -49,6 +50,7 @@ import { showCreatedKey } from '../created-key-dialog/created-key-dialog';
 })
 export class ApiKeysPage {
   private readonly api = inject(BiosApi);
+  protected readonly presentation = inject(PRESENTATION_MODE);
   private readonly dialog = inject(MatDialog);
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);

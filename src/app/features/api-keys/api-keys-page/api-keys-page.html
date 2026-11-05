@@ -92,8 +92,17 @@
   </p>
   <pre><code>GET /v1/companies/&#123;cnpj&#125;
 x-api-key: bios_XXXXXXXX_…</code></pre>
-  <p>
-    A documentação OpenAPI, com as rotas, os parâmetros e as respostas, fica no endereço da API, em
-    <code>/docs</code>.
-  </p>
+  @if (presentation) {
+    <p>
+      A documentação OpenAPI, com as rotas, os parâmetros e as respostas, está no
+      <a href="https://github.com/odavibatista/bios-webapp/blob/main/api/openapi.json"
+        >arquivo OpenAPI publicado</a
+      >.
+    </p>
+  } @else {
+    <p>
+      A documentação OpenAPI, com as rotas, os parâmetros e as respostas, fica no endereço da API,
+      em <code>/docs</code>.
+    </p>
+  }
 </section>
