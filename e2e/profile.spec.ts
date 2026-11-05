@@ -26,8 +26,8 @@ test.describe('perfil da empresa (#24)', () => {
   }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await signIn(page);
-    await cnpjField(page).fill('00.990.842/0001-38');
-    await cnpjField(page).press('Enter');
+    await toolbarField(page).fill('00.990.842/0001-38');
+    await toolbarField(page).press('Enter');
 
     const summary = page.getByRole('region', { name: 'Resumo cadastral' });
     const scores = page.getByRole('region', { name: 'Índices por ODS' });
