@@ -15,7 +15,7 @@ export const PUBLISHED_MOVEMENTS_LIMIT = 5_000;
  * (CEIS/CNEP) ou o fim do ano do inventário (GHG). A data de coleta nunca entra: ela diz quando o
  * BIOS leu o dado, e uma sanção antiga apareceria como se fosse de hoje.
  */
-function factDate({ published_at: published, details }: CompanyEvidence): string | null {
+export function factDate({ published_at: published, details }: CompanyEvidence): string | null {
   if (published) return published;
 
   const { startDate, inventoryYear } = (details ?? {}) as Record<string, unknown>;

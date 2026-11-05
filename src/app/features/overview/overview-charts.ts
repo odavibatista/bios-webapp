@@ -32,6 +32,8 @@ const BIOME_LABELS: Readonly<Record<string, string>> = {
   Amazonia: 'Amazônia',
   'Mata Atlantica': 'Mata Atlântica',
 };
+export const biomeLabel = (biome: string) => BIOME_LABELS[biome] ?? biome;
+
 const NO_COMPANIES = 'Nenhuma empresa neste recorte.';
 const NO_EVIDENCE = 'As empresas deste recorte não têm evidências confirmadas com essa informação.';
 const DECIMAL = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1 });
@@ -145,7 +147,7 @@ export function overviewCards(analytics: CompanyAnalytics): OverviewCard[] {
   const nature = toItems(registration.legal_nature);
   const uf = toItems(registration.uf);
   const sector = toItems(registration.sector);
-  const biome = toItems(evidence.biome, ({ label }) => BIOME_LABELS[label] ?? label);
+  const biome = toItems(evidence.biome, ({ label }) => biomeLabel(label));
   const infraction = toItems(evidence.infraction_type);
   const sanction = toItems(evidence.sanction);
   const years = yearCategories(evidence.year);
