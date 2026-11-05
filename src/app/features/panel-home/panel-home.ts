@@ -13,7 +13,6 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { BiosApi } from '../../core/api/bios-api';
 import { SessionStore } from '../../core/session/session-store';
 import { AsyncState } from '../../shared/states/async-state';
-import { CnpjSearch } from '../profile/cnpj-search/cnpj-search';
 import { MovementCard } from './movement-card/movement-card';
 
 interface Shortcut {
@@ -66,15 +65,7 @@ function pageFrom(value: string | undefined): number {
  */
 @Component({
   selector: 'bios-panel-home',
-  imports: [
-    AsyncState,
-    CnpjSearch,
-    MatButtonModule,
-    MatCardModule,
-    MatIconModule,
-    MovementCard,
-    RouterLink,
-  ],
+  imports: [AsyncState, MatButtonModule, MatCardModule, MatIconModule, MovementCard, RouterLink],
   templateUrl: './panel-home.html',
   styleUrl: './panel-home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -72,12 +72,10 @@ describe('PanelHome', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Olá, Conta');
   });
 
-  it('traz o campo de consulta por CNPJ logo no topo', async () => {
+  it('deixa a busca no cabeçalho, sem duplicá-la no conteúdo', async () => {
     await renderHome();
 
-    const lookup = screen.getByRole('region', { name: 'Buscar uma empresa pelo CNPJ ou nome' });
-    expect(lookup.querySelector('bios-cnpj-search')).not.toBeNull();
-    expect(screen.getByRole('search', { name: 'Buscar empresa por CNPJ ou nome' })).toBeTruthy();
+    expect(screen.queryByRole('search', { name: 'Buscar empresa por CNPJ ou nome' })).toBeNull();
   });
 
   it('lista as empresas na ordem da API, cada uma levando ao perfil', async () => {
@@ -196,7 +194,7 @@ describe('PanelHome', () => {
     expect(screen.getByRole('button', { name: 'Página anterior' })).toBeTruthy();
   });
 
-  it('falha na lista oferece nova tentativa, e a busca segue na tela (UC18, 2.2)', async () => {
+  it('falha na lista oferece nova tentativa sem alterar a busca do cabeçalho (UC18, 2.2)', async () => {
     listCompanyMovements.mockRejectedValueOnce(
       new ApiError(503, {
         statusCode: 503,
@@ -211,6 +209,6 @@ describe('PanelHome', () => {
     await userEvent.setup().click(await screen.findByRole('button', { name: 'Tentar de novo' }));
 
     expect(await screen.findByRole('link', { name: 'Empresa Um' })).toBeTruthy();
-    expect(screen.getByRole('search', { name: 'Buscar empresa por CNPJ ou nome' })).toBeTruthy();
+    expect(screen.queryByRole('search', { name: 'Buscar empresa por CNPJ ou nome' })).toBeNull();
   });
 });
