@@ -12,6 +12,8 @@ export type SectorMetric = 'score' | 'confidence';
 export const SCORE_SERIES = 'Índice médio';
 export const CONFIDENCE_SERIES = 'Confiança média';
 
+const AXIS_NUMBER = new Intl.NumberFormat('pt-BR');
+
 /** A escala do índice acompanha os valores observados, sem mudar sua faixa possível. */
 export function scoreBounds(windows: readonly SectorScoreWindow[]): { min: number; max: number } {
   const values = windows
@@ -71,7 +73,7 @@ export function sectorChartOptions(
       name: score ? SCORE_SERIES : CONFIDENCE_SERIES,
       ...bounds,
       nameTextStyle: { color: colors.text },
-      axisLabel: { color: colors.text },
+      axisLabel: { color: colors.text, formatter: (value: number) => AXIS_NUMBER.format(value) },
       splitLine: { lineStyle: { color: colors.grid } },
     },
     series: [
