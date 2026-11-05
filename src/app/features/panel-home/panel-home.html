@@ -7,6 +7,16 @@
     aponta a evidência que a causou e não diz que a conduta da empresa melhorou ou piorou.
   </p>
 
+  <div class="movement-filter">
+    <label for="categoria-movimentacao">Categoria da evidência</label>
+    <select id="categoria-movimentacao" [value]="categorySlug()" (change)="chooseCategory($event)">
+      <option value="">Todas</option>
+      <option value="infracoes">Infrações ambientais</option>
+      <option value="conduta">Conduta administrativa</option>
+      <option value="emissoes">Emissões</option>
+    </select>
+  </div>
+
   <bios-async-state
     [loading]="movements.isLoading()"
     [error]="movements.error()"
