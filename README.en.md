@@ -65,7 +65,9 @@ The interface was designed not to judge companies:
 > [bios-core-api](https://github.com/odavibatista/bios-core-api), captured and stored in the
 > repository behind a service with the same interface as the API. The published base has 110,372
 > companies, 580,166 pieces of evidence and 86 sectors, processed by the API from official files. Real
-> integration means swapping only that service. It holds company data only.
+> integration means swapping only that service. A sole proprietor's public registered name may
+> contain the owner's name; CPF sequences are masked. BIOS does not look up individuals' contacts
+> or profiles (INL02).
 
 ## Ecosystem
 

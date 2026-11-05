@@ -39,6 +39,13 @@ import {
 } from '../sector-criteria';
 import { SectorWindowsTable } from '../sector-windows-table/sector-windows-table';
 
+/** Divisões com mais empresas na base publicada, em ordem de quantidade. */
+export const POPULAR_SECTORS = [
+  { cnae: '47', label: 'Comércio varejista', companies: 30124 },
+  { cnae: '16', label: 'Fabricação de produtos de madeira', companies: 12603 },
+  { cnae: '46', label: 'Comércio por atacado, exceto veículos', companies: 9218 },
+] as const;
+
 /** Texto sem acento e em maiúsculas, para achar "metal" em "METALURGIA" e "educacao" em "EDUCAÇÃO". */
 function searchable(text: string): string {
   return text.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase();
@@ -83,6 +90,7 @@ export class SectorEvolution {
   private readonly sectorInput = viewChild.required<ElementRef<HTMLInputElement>>('sectorInput');
 
   protected readonly messageOf = fieldMessage;
+  protected readonly popularSectors = POPULAR_SECTORS;
 
   /** Setor e ODS da URL: a única fonte da consulta. */
   protected readonly criteria = toSignal(
@@ -161,6 +169,17 @@ export class SectorEvolution {
   });
 
   constructor() {
+    // A abertura sem critérios mostra o setor com mais empresas, sem adicionar entrada ao histórico.
+    if (Object.keys(this.route.snapshot.queryParams).length === 0) {
+      queueMicrotask(() => {
+        void this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { cnae: '47', ods: '15' },
+          replaceUrl: true,
+        });
+      });
+    }
+
     // A URL manda: ao abrir um link, ao consultar e ao voltar pelo navegador, o formulário mostra
     // o setor e o ODS da consulta exibida.
     effect(() => {
@@ -214,9 +233,20 @@ export class SectorEvolution {
     });
   }
 
-  protected clearSector(): void {
+  protected async clearSector(): Promise<void> {
     this.form.controls.cnae.setValue('');
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { ods: this.form.controls.ods.value?.toString() ?? null },
+    });
     this.sectorInput().nativeElement.focus();
+  }
+
+  protected async chooseShortcut(cnae: string): Promise<void> {
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { cnae, ods: this.form.controls.ods.value?.toString() ?? '15' },
+    });
   }
 
   private focusFirstInvalid(): void {

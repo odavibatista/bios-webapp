@@ -44,7 +44,7 @@
             <td>{{ status(item.registration_status) }}</td>
             <td>{{ item.city }}/{{ item.uf }}</td>
             <td>
-              <span class="nowrap">{{ item.main_cnae.code }}</span>
+              <span class="nowrap">{{ cnae(item.main_cnae.code) }}</span>
               <span class="cnae-description">{{ item.main_cnae.description }}</span>
             </td>
             @if (odsLabel()) {
@@ -89,7 +89,7 @@
             </div>
             <div>
               <dt>CNAE principal</dt>
-              <dd>{{ item.main_cnae.code }} — {{ item.main_cnae.description }}</dd>
+              <dd>{{ cnae(item.main_cnae.code) }} — {{ item.main_cnae.description }}</dd>
             </div>
             @if (odsLabel(); as ods) {
               <div>
