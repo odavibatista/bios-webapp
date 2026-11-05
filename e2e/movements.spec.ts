@@ -79,7 +79,12 @@ test.describe('tela principal com as movimentações (#168)', () => {
 
     const header = page.getByRole('banner');
     await expect(header).toBeInViewport();
-    await expect(header.getByRole('button', { name: 'Áreas do painel' })).toBeVisible();
+    const navButton = header.getByRole('button', { name: 'Áreas do painel' });
+    if (page.viewportSize()!.width < 960) {
+      await expect(navButton).toBeVisible();
+    } else {
+      await expect(navButton).toBeHidden();
+    }
     const lookup = header.getByRole('search');
     await expect(lookup).toBeInViewport();
     await lookup.getByLabel('Buscar empresa por CNPJ ou nome').fill('00990842000138');
@@ -87,18 +92,44 @@ test.describe('tela principal com as movimentações (#168)', () => {
       '00990842000138',
     );
     await expect(page.getByRole('main').getByRole('search')).toHaveCount(0);
-    await header.getByRole('button', { name: 'Áreas do painel' }).click();
-    await expect(page.getByRole('menuitem', { name: 'Empresas' })).toBeVisible();
+    if (page.viewportSize()!.width < 960) {
+      await navButton.click();
+      await expect(page.getByRole('menuitem', { name: 'Empresas' })).toBeVisible();
+    }
   });
 
   test('a busca única no cabeçalho cabe nas larguras móvel e desktop', async ({ page }) => {
     for (const width of [390, 1024, 1100, 1280, 1440]) {
       await page.setViewportSize({ width, height: 800 });
       await expect(page.getByRole('banner').getByRole('search')).toBeInViewport();
+      const navButton = page.getByRole('banner').getByRole('button', { name: 'Áreas do painel' });
+      if (width < 960) {
+        await expect(navButton).toBeVisible();
+      } else {
+        await expect(navButton).toBeHidden();
+      }
       await expect(page.getByRole('main').getByRole('search')).toHaveCount(0);
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
         width,
       );
+    }
+  });
+
+  test('a busca permanece no cabeçalho ao alternar entre Empresas e Pesquisa', async ({ page }) => {
+    for (const width of [390, 1024, 1280, 1440]) {
+      await page.setViewportSize({ width, height: 800 });
+      for (const route of ['/empresas', '/pesquisa']) {
+        await page.evaluate((target) => {
+          history.pushState({}, '', target);
+          dispatchEvent(new PopStateEvent('popstate', { state: {} }));
+        }, route);
+        const search = page.getByRole('banner').getByRole('search');
+        await expect(search).toBeVisible();
+        await expect(search.getByLabel('Buscar empresa por CNPJ ou nome')).toBeVisible();
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+          width,
+        );
+      }
     }
   });
 

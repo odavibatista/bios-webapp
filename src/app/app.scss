@@ -46,7 +46,7 @@
   min-width: 0;
   margin-inline: auto;
 
-  @media (max-width: 767px) {
+  @media (max-width: 959.98px) {
     flex-wrap: wrap;
     padding-block: 0.35rem;
   }
@@ -82,6 +82,11 @@
 .nav-trigger {
   color: inherit;
   margin-left: auto;
+
+  // A navegacao lateral ja fica aberta em desktop.
+  @media (min-width: 960px) {
+    display: none;
+  }
 }
 
 // Consulta por CNPJ na barra (#24): cede largura ao menu da conta, e em tela estreita desce para
@@ -91,7 +96,7 @@
   flex: 0 1 auto;
   min-width: 0;
 
-  @media (max-width: 767px) {
+  @media (max-width: 959.98px) {
     order: 4;
     flex: 1 0 100%;
   }

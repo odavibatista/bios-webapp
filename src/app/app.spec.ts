@@ -67,25 +67,6 @@ describe('App', () => {
     expect(screen.getByRole('contentinfo').textContent).not.toContain('Versão de apresentação');
   });
 
-  it('em "Empresas", a barra não repete a busca, que volta nas demais telas', async () => {
-    const { fixture } = await render(App, {
-      providers: [
-        provideRouter([
-          { path: '', component: Screen },
-          { path: 'empresas', component: Screen },
-        ]),
-      ],
-    });
-    const app = fixture.componentInstance as unknown as { headerSearch: () => boolean };
-    const router = TestBed.inject(Router);
-
-    await router.navigateByUrl('/empresas?origem=menu');
-    expect(app.headerSearch()).toBe(false);
-
-    await router.navigateByUrl('/');
-    expect(app.headerSearch()).toBe(true);
-  });
-
   it('a cada troca de tela, depois da primeira, o foco vai para o conteúdo', async () => {
     await render(App, {
       providers: [
