@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { ApiError } from '../../core/api/api-error';
 import { BiosApi } from '../../core/api/bios-api';
+import { PRESENTATION_MODE } from '../../core/presentation-mode';
 import type { CompanyMovementItem, ListCompanyMovementsResponse } from '../../core/api/generated';
 import { SessionStore } from '../../core/session/session-store';
 import {
@@ -45,10 +46,14 @@ function page(
 describe('PanelHome', () => {
   const listCompanyMovements = vi.fn<BiosApi['listCompanyMovements']>();
 
-  async function renderHome(inputs: { pagina?: string } = {}) {
+  async function renderHome(inputs: { pagina?: string } = {}, presentation = false) {
     return render(PanelHome, {
       inputs,
-      providers: [provideRouter([]), { provide: BiosApi, useValue: { listCompanyMovements } }],
+      providers: [
+        provideRouter([]),
+        { provide: BiosApi, useValue: { listCompanyMovements } },
+        { provide: PRESENTATION_MODE, useValue: presentation },
+      ],
       configureTestBed: () => {
         TestBed.inject(SessionStore).store({
           access_token: 'a',
@@ -70,6 +75,12 @@ describe('PanelHome', () => {
     await renderHome();
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Olá, Conta');
+  });
+
+  it('na apresentação usa saudação neutra', async () => {
+    await renderHome({}, true);
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Olá!');
   });
 
   it('deixa a busca no cabeçalho, sem duplicá-la no conteúdo', async () => {

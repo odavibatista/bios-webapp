@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
 import { LineChart } from 'echarts/charts';
-import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
+import { GridComponent, TooltipComponent } from 'echarts/components';
 import * as echarts from 'echarts/core';
 import { SVGRenderer } from 'echarts/renderers';
 import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
@@ -9,7 +9,7 @@ import type { SectorScoreWindow } from '../../../core/api/generated';
 import { type SectorChartColors, sectorChartOptions } from './sector-chart-options';
 
 // Só o que o gráfico de linha usa: o ECharts inteiro pesaria várias vezes mais.
-echarts.use([LineChart, GridComponent, LegendComponent, TooltipComponent, SVGRenderer]);
+echarts.use([LineChart, GridComponent, TooltipComponent, SVGRenderer]);
 
 /** Cores de reserva, as da apresentação, caso o tema ainda não tenha carregado. */
 const FALLBACK_COLORS: SectorChartColors = {
@@ -20,22 +20,31 @@ const FALLBACK_COLORS: SectorChartColors = {
 };
 
 /**
- * Gráfico de linha da evolução do setor (UC10; #26), com o ECharts: índice médio e confiança
- * média em eixos separados, um ponto por mês. Para o leitor de tela é uma imagem com resumo; os
- * números estão na tabela ao lado (`bios-sector-windows-table`).
+ * Dois gráficos da evolução do setor, um por medida. A tabela preserva os números em texto.
  */
 @Component({
   selector: 'bios-sector-chart',
   imports: [NgxEchartsDirective],
   providers: [provideEchartsCore({ echarts })],
   template: `
+    <h3>Índice médio</h3>
+    <p>Escala completa do índice: −100 a 100. O eixo acompanha os valores desta série.</p>
     <div
       class="chart"
       echarts
-      [options]="options()"
+      [options]="scoreOptions()"
       [initOpts]="{ renderer: 'svg' }"
       role="img"
-      [attr.aria-label]="label()"
+      [attr.aria-label]="scoreLabel()"
+    ></div>
+    <h3>Confiança média</h3>
+    <div
+      class="chart"
+      echarts
+      [options]="confidenceOptions()"
+      [initOpts]="{ renderer: 'svg' }"
+      role="img"
+      [attr.aria-label]="confidenceLabel()"
     ></div>
   `,
   styles: `
@@ -48,6 +57,16 @@ const FALLBACK_COLORS: SectorChartColors = {
       width: 100%;
       height: 20rem;
     }
+
+    h3 {
+      margin: 1.5rem 0 0.5rem;
+      font: var(--mat-sys-title-medium);
+    }
+
+    p {
+      margin: 0;
+      color: var(--mat-sys-on-surface-variant);
+    }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -58,12 +77,18 @@ export class SectorChart {
   /** O setor e o ODS, para o resumo lido pelo leitor de tela. */
   readonly subject = input.required<string>();
 
-  protected readonly options = computed(() => sectorChartOptions(this.windows(), this.colors()));
+  protected readonly scoreOptions = computed(() =>
+    sectorChartOptions(this.windows(), this.colors(), 'score'),
+  );
+  protected readonly confidenceOptions = computed(() =>
+    sectorChartOptions(this.windows(), this.colors(), 'confidence'),
+  );
 
-  protected readonly label = computed(
-    () =>
-      `Gráfico da evolução de ${this.subject()}: índice médio e confiança média por mês, em ` +
-      'eixos separados. Os mesmos números estão na tabela.',
+  protected readonly scoreLabel = computed(
+    () => `Gráfico do índice médio de ${this.subject()}. Os mesmos números estão na tabela.`,
+  );
+  protected readonly confidenceLabel = computed(
+    () => `Gráfico da confiança média de ${this.subject()}. Os mesmos números estão na tabela.`,
   );
 
   /** As cores do tema (`--bios-brand-*`, `--mat-sys-*`), lidas do documento. */

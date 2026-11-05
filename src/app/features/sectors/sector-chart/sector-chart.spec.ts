@@ -45,13 +45,18 @@ describe('SectorChart', () => {
     vi.unstubAllGlobals();
   });
 
-  it('é uma imagem com resumo, que aponta para a tabela com os mesmos números', async () => {
+  it('dá nome acessível próprio aos dois gráficos e aponta para a tabela', async () => {
     await render(SectorChart, {
       inputs: { windows: WINDOWS, subject: 'METALURGIA no ODS 13' },
     });
 
-    const chart = screen.getByRole('img', { name: /Gráfico da evolução de METALURGIA no ODS 13/ });
+    const score = screen.getByRole('img', { name: /Gráfico do índice médio de METALURGIA/ });
+    const confidence = screen.getByRole('img', {
+      name: /Gráfico da confiança média de METALURGIA/,
+    });
 
-    expect(chart.getAttribute('aria-label')).toContain('Os mesmos números estão na tabela.');
+    expect(score.getAttribute('aria-label')).toContain('Os mesmos números estão na tabela.');
+    expect(confidence.getAttribute('aria-label')).toContain('Os mesmos números estão na tabela.');
+    expect(screen.getByText(/Escala completa do índice: −100 a 100/)).toBeTruthy();
   });
 });

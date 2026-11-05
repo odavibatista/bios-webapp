@@ -2,6 +2,7 @@ import { render, screen, within } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { ApiError } from '../../../core/api/api-error';
 import { BiosApi } from '../../../core/api/bios-api';
+import { PRESENTATION_MODE } from '../../../core/presentation-mode';
 import type {
   ApiKeyResponse,
   CreateApiKeyData,
@@ -72,9 +73,14 @@ function fakeApi(initial: ApiKeyResponse[]) {
   };
 }
 
-async function renderPage(initial: ApiKeyResponse[] = [SEED, USED]) {
+async function renderPage(initial: ApiKeyResponse[] = [SEED, USED], presentation = false) {
   const api = fakeApi(initial);
-  const result = await render(ApiKeysPage, { providers: [{ provide: BiosApi, useValue: api }] });
+  const result = await render(ApiKeysPage, {
+    providers: [
+      { provide: BiosApi, useValue: api },
+      { provide: PRESENTATION_MODE, useValue: presentation },
+    ],
+  });
 
   await screen.findByText(/chaves ativas\./);
 
@@ -248,6 +254,16 @@ describe('ApiKeysPage', () => {
     expect(usage.textContent).toContain('x-api-key');
     expect(usage.textContent).toContain('GET /v1/companies/{cnpj}');
     expect(usage.textContent).toContain('/docs');
+  });
+
+  it('na apresentação aponta para o OpenAPI publicado', async () => {
+    await renderPage([SEED, USED], true);
+
+    const link = screen.getByRole('link', { name: 'arquivo OpenAPI publicado' });
+    expect(link.getAttribute('href')).toBe(
+      'https://github.com/odavibatista/bios-webapp/blob/main/api/openapi.json',
+    );
+    expect(screen.queryByText('/docs')).toBeNull();
   });
 
   it('a tabela rola dentro do próprio contêiner, que recebe o foco pelo teclado', async () => {

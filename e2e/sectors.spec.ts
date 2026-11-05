@@ -19,6 +19,25 @@ async function navigateInApp(page: Page, path: string) {
 }
 
 test.describe('evolução por setor (#26)', () => {
+  test('abre a divisão 47 no ODS 15 sem adicionar histórico e oferece três atalhos', async ({
+    page,
+  }) => {
+    await signIn(page);
+    await navigateInApp(page, '/setores');
+
+    await expect(page).toHaveURL('/setores?cnae=47&ods=15');
+    await expect(page.getByRole('combobox', { name: 'Setor (CNAE)' })).toHaveValue('47');
+    await expect(page.getByRole('combobox', { name: 'ODS' })).toContainText('ODS 15');
+    const popular = page.getByRole('region', { name: 'Setores com mais empresas na base' });
+    await expect(popular.getByRole('button')).toHaveCount(3);
+    await popular.getByRole('button', { name: /16 — Fabricação de produtos de madeira/ }).click();
+    await expect(page).toHaveURL('/setores?cnae=16&ods=15');
+    await page.goBack();
+    await expect(page).toHaveURL('/setores?cnae=47&ods=15');
+    await page.goBack();
+    await expect(page).toHaveURL('/painel');
+  });
+
   test('limpa o CNAE e permite escolher outro setor', async ({ page }) => {
     await signIn(page);
     await navigateInApp(page, '/setores?cnae=24&ods=13');
@@ -27,6 +46,8 @@ test.describe('evolução por setor (#26)', () => {
 
     await page.getByRole('button', { name: 'Limpar setor' }).click();
     await expect(sector).toHaveValue('');
+    await expect(page).toHaveURL('/setores?ods=13');
+    await expect(page.getByText('Escolha um setor e um ODS para ver a evolução.')).toBeVisible();
     await expect(sector).toBeFocused();
     await expect(page.getByRole('combobox', { name: 'ODS' })).toContainText('ODS 13');
 
@@ -43,13 +64,15 @@ test.describe('evolução por setor (#26)', () => {
     await navigateInApp(page, '/setores');
 
     await expect(page).toHaveTitle('Evolução por setor — BIOS');
-    await expect(page.getByText('Escolha um setor e um ODS para ver a evolução.')).toBeVisible();
-    await expect(page.getByRole('combobox', { name: 'ODS' })).toContainText('ODS 13');
+    await expect(page).toHaveURL('/setores?cnae=47&ods=15');
+    await expect(page.getByRole('combobox', { name: 'ODS' })).toContainText('ODS 15');
     await expectAccessible(page, testInfo, 'escolha do setor');
 
     const sector = page.getByRole('combobox', { name: 'Setor (CNAE)' });
     await sector.fill('metal');
     await page.getByRole('option', { name: '24 — METALURGIA' }).click();
+    await page.getByRole('combobox', { name: 'ODS' }).click();
+    await page.getByRole('option', { name: /ODS 13/ }).click();
     await page.getByRole('button', { name: 'Ver evolução' }).click();
 
     await expect(page).toHaveURL('/setores?cnae=24&ods=13');
@@ -89,7 +112,7 @@ test.describe('evolução por setor (#26)', () => {
     await signIn(page);
     await navigateInApp(page, '/setores');
     // A página está pronta quando os ODS chegam; antes, o envio pode cair no meio da carga.
-    await expect(page.getByRole('combobox', { name: 'ODS' })).toContainText('ODS 13');
+    await expect(page.getByRole('combobox', { name: 'ODS' })).toContainText('ODS 15');
 
     await page.getByRole('combobox', { name: 'Setor (CNAE)' }).fill('2431');
     await page.keyboard.press('Escape');
@@ -100,6 +123,6 @@ test.describe('evolução por setor (#26)', () => {
         'CNAE inválido: informe a divisão (2 dígitos), o grupo, a classe ou a subclasse.',
       ),
     ).toBeVisible();
-    await expect(page).toHaveURL('/setores');
+    await expect(page).toHaveURL('/setores?cnae=47&ods=15');
   });
 });
