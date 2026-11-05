@@ -165,6 +165,51 @@ describe('CompanySearch', () => {
     });
   });
 
+  it('no celular, pesquisar leva o foco e a rolagem até os resultados', async () => {
+    const scroll = vi.fn();
+    Element.prototype.scrollIntoView = scroll;
+    const { user } = await openSearch('/pesquisa', { narrow: true });
+
+    await user.type(screen.getByRole('textbox', { name: 'CNAE' }), '24');
+    await user.click(screen.getByRole('button', { name: 'Pesquisar' }));
+
+    await vi.waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Resultados' }));
+    });
+    expect(scroll).toHaveBeenCalledWith({ block: 'start' });
+  });
+
+  it('no desktop, pesquisar não move a tela', async () => {
+    const scroll = vi.fn();
+    Element.prototype.scrollIntoView = scroll;
+    const { user } = await openSearch('/pesquisa');
+
+    await user.type(screen.getByRole('textbox', { name: 'CNAE' }), '24');
+    await user.click(screen.getByRole('button', { name: 'Pesquisar' }));
+    await expectRows(10);
+
+    expect(scroll).not.toHaveBeenCalled();
+  });
+
+  it('no celular, a paginação aparece também acima dos cartões', async () => {
+    await openSearch('/pesquisa?cnae=24&por_pagina=5', { narrow: true });
+
+    const top = await screen.findByRole('navigation', { name: 'Navegação rápida entre páginas' });
+    const bottom = screen.getByRole('navigation', { name: 'Páginas dos resultados' });
+
+    expect(within(top).getByRole('button', { name: 'Próxima página' })).toBeTruthy();
+    expect(within(bottom).getByRole('button', { name: 'Próxima página' })).toBeTruthy();
+    expect(within(top).queryByLabelText('Itens por página')).toBeNull();
+  });
+
+  it('no desktop, a paginação fica só depois da tabela', async () => {
+    await openSearch('/pesquisa?cnae=24&por_pagina=5');
+
+    await screen.findByRole('navigation', { name: 'Páginas dos resultados' });
+
+    expect(screen.queryByRole('navigation', { name: 'Navegação rápida entre páginas' })).toBeNull();
+  });
+
   it('com ODS, a lista mostra índice e confiança dele; a página traz o total', async () => {
     await openSearch('/pesquisa?cnae=24&ods=13');
 

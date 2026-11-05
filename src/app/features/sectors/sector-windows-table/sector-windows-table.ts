@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
 import type { SectorScoreWindow } from '../../../core/api/generated';
+import { TableScroll } from '../../../shared/table-scroll/table-scroll';
 import {
   formatAverageConfidence,
   formatAverageScore,
@@ -20,17 +21,21 @@ interface WindowRow {
   scored: number;
 }
 
-/** Junta apenas meses consecutivos totalmente omitidos e com as mesmas contagens. */
+/**
+ * Junta meses consecutivos com índice omitido e com a mesma leitura: confiança exibida e contagens
+ * iguais. A confiança pode vir preenchida mesmo com o índice omitido, então a comparação é pelo
+ * que a linha mostra.
+ */
 export function sectorWindowRows(windows: readonly SectorScoreWindow[]): WindowRow[] {
   const rows: WindowRow[] = [];
 
   for (const window of windows) {
     const previous = rows.at(-1);
-    const omitted = window.average_score === null && window.average_confidence === null;
+    const confidence = formatAverageConfidence(window.average_confidence);
     if (
-      omitted &&
+      window.average_score === null &&
       previous?.scoreOmitted &&
-      previous.confidenceOmitted &&
+      previous.confidence === confidence &&
       previous.companies === window.company_count &&
       previous.scored === window.scored_company_count &&
       previous.key.split('|')[1] === window.window_start
@@ -45,7 +50,7 @@ export function sectorWindowRows(windows: readonly SectorScoreWindow[]): WindowR
       month: monthLabel(window.window_start),
       score: formatAverageScore(window.average_score),
       scoreOmitted: window.average_score === null,
-      confidence: formatAverageConfidence(window.average_confidence),
+      confidence,
       confidenceOmitted: window.average_confidence === null,
       companies: window.company_count,
       scored: window.scored_company_count,
@@ -62,6 +67,7 @@ export function sectorWindowRows(windows: readonly SectorScoreWindow[]): WindowR
  */
 @Component({
   selector: 'bios-sector-windows-table',
+  imports: [TableScroll],
   templateUrl: './sector-windows-table.html',
   styleUrl: './sector-windows-table.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

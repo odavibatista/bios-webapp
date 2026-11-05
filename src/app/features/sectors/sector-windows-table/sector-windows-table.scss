@@ -2,18 +2,6 @@
   display: block;
 }
 
-// A tabela larga rola aqui dentro, nunca a página (NFIN02); com foco, o teclado também a rola.
-.table-scroll {
-  overflow-x: auto;
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--mat-sys-corner-small);
-
-  &:focus-visible {
-    outline: 2px solid var(--mat-sys-primary);
-    outline-offset: 2px;
-  }
-}
-
 table {
   width: 100%;
   border-collapse: collapse;

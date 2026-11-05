@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input } from '@angular/co
 import { RouterLink } from '@angular/router';
 import type { CompanySearchItem } from '../../../core/api/generated';
 import { formatCnae } from '../../../shared/format/cnae';
+import { TableScroll } from '../../../shared/table-scroll/table-scroll';
 import type { SearchOrder } from '../search-criteria';
 import { formatCnpj, formatConfidence, formatScore, statusLabel } from '../search-format';
 
@@ -12,7 +13,7 @@ import { formatCnpj, formatConfidence, formatScore, statusLabel } from '../searc
  */
 @Component({
   selector: 'bios-search-results',
-  imports: [RouterLink],
+  imports: [RouterLink, TableScroll],
   templateUrl: './search-results.html',
   styleUrl: './search-results.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

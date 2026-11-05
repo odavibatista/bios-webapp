@@ -48,8 +48,9 @@ with the way back to the official source.
 Today, anyone who wants to learn the environmental record of a Brazilian company has to check IBAMA
 (the federal environmental agency), CGU (the federal comptroller), the federal revenue registry and
 the Public Emissions Registry one by one, and cross-reference the results by hand. BIOS uses the CNPJ
-as its axis, consolidates these sources and turns the records into explainable indicators, without
-collecting any data about individuals.
+as its axis, consolidates these sources and turns the records into explainable indicators. A sole
+proprietor's public registered name may contain the owner's name; the CPF is masked, and the system
+does not look up individuals' contacts or profiles.
 
 The interface was designed not to judge companies:
 

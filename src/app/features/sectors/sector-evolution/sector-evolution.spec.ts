@@ -98,6 +98,14 @@ describe('SectorEvolution', () => {
     expect(screen.getByText('Escolha um setor e um ODS para ver a evolução.')).toBeTruthy();
   });
 
+  it('voltar a `/setores` pelo menu, com a tela aberta, retoma o setor padrão', async () => {
+    const { router } = await openSectors('/setores?cnae=16&ods=15');
+
+    await router.navigateByUrl('/setores');
+
+    await vi.waitFor(() => expect(router.url).toBe('/setores?cnae=47&ods=15'));
+  });
+
   it('o campo de setor sugere os setores de `listSectors`, com código e descrição oficial', async () => {
     const { user } = await openSectors();
 

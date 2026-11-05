@@ -69,17 +69,6 @@ form {
   color: var(--mat-sys-on-surface-variant);
 }
 
-// A tabela rola dentro do próprio contêiner no celular, nunca a página (NFIN02).
-.table-scroll {
-  position: relative;
-  overflow-x: auto;
-
-  &:focus-visible {
-    outline: 2px solid var(--mat-sys-primary);
-    outline-offset: 2px;
-  }
-}
-
 table {
   width: 100%;
   border-collapse: collapse;

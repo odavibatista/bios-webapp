@@ -33,7 +33,12 @@ const NOVEMBER: SectorScoreWindow = {
 function options(metric: SectorMetric) {
   return sectorChartOptions([OCTOBER, NOVEMBER], COLORS, metric) as {
     xAxis: { data: string[] };
-    yAxis: { name: string; min: number; max: number };
+    yAxis: {
+      name: string;
+      min: number;
+      max: number;
+      axisLabel: { formatter: (value: number) => string };
+    };
     series: { name: string; connectNulls: boolean; data: (number | null)[] }[];
     tooltip: { formatter: (params: { dataIndex: number }[]) => string };
     aria: { enabled: boolean };
@@ -52,6 +57,11 @@ describe('sectorChartOptions', () => {
     expect(confidence.series[0]?.data).toEqual([0.05, 0.1]);
     expect(score.series[0]?.connectNulls).toBe(false);
     expect(confidence.series[0]?.connectNulls).toBe(false);
+  });
+
+  it('os eixos escrevem os números em português', () => {
+    expect(options('confidence').yAxis.axisLabel.formatter(0.2)).toBe('0,2');
+    expect(options('score').yAxis.axisLabel.formatter(-50)).toBe('-50');
   });
 
   it('o eixo do índice respeita os limites da escala e a margem da série', () => {
