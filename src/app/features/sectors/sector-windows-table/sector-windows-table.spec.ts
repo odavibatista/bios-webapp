@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/angular';
 import type { SectorScoreWindow } from '../../../core/api/generated';
 import { OMITTED_AVERAGE_NOTE } from '../sector-format';
-import { SectorWindowsTable } from './sector-windows-table';
+import { SectorWindowsTable, sectorWindowRows } from './sector-windows-table';
 
 const OCTOBER: SectorScoreWindow = {
   window_start: '2026-10-01T00:00:00.000Z',
@@ -67,5 +67,23 @@ describe('SectorWindowsTable', () => {
 
     expect(region.getAttribute('tabindex')).toBe('0');
     expect(within(region).getByRole('table')).toBeTruthy();
+  });
+
+  it('agrupa meses omitidos consecutivos com contagens iguais, sem esconder mudanças', () => {
+    const december = {
+      ...NOVEMBER_OMITTED,
+      window_start: '2026-12-01T00:00:00.000Z',
+      window_end: '2027-01-01T00:00:00.000Z',
+    };
+    const january = {
+      ...december,
+      window_start: '2027-01-01T00:00:00.000Z',
+      window_end: '2027-02-01T00:00:00.000Z',
+      company_count: 4,
+    };
+
+    expect(sectorWindowRows([NOVEMBER_OMITTED, december, january]).map((row) => row.month)).toEqual(
+      ['novembro de 2026 a dezembro de 2026', 'janeiro de 2027'],
+    );
   });
 });
