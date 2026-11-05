@@ -11,8 +11,10 @@
       @defer {
         <bios-header-nav class="nav-trigger" />
       }
-      @defer {
-        <bios-cnpj-search class="toolbar-search" variant="toolbar" />
+      @if (headerSearch()) {
+        @defer {
+          <bios-cnpj-search class="toolbar-search" variant="toolbar" />
+        }
       }
       @defer {
         <bios-user-menu class="user-menu" />

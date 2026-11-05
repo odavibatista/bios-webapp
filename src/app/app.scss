@@ -46,7 +46,7 @@
   min-width: 0;
   margin-inline: auto;
 
-  @media (max-width: 699px) {
+  @media (max-width: 767px) {
     flex-wrap: wrap;
     padding-block: 0.35rem;
   }
@@ -84,12 +84,14 @@
   margin-left: auto;
 }
 
-// Consulta por CNPJ na barra (#24): só em tela larga, onde cabe ao lado da marca e do menu da
-// conta. Em tela estreita, a consulta fica no painel e em "Empresas".
+// Consulta por CNPJ na barra (#24): cede largura ao menu da conta, e em tela estreita desce para
+// uma linha própria.
 .toolbar-search {
   display: block;
+  flex: 0 1 auto;
+  min-width: 0;
 
-  @media (max-width: 699px) {
+  @media (max-width: 767px) {
     order: 4;
     flex: 1 0 100%;
   }
