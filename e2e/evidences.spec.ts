@@ -7,7 +7,7 @@ async function profile(page: Page, cnpj: string) {
   await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await expect(page).toHaveURL('/painel');
-  const field = page.getByRole('main').getByLabel('CNPJ ou nome da empresa');
+  const field = page.getByRole('banner').getByLabel('Buscar empresa por CNPJ ou nome');
   await field.fill(cnpj);
   await field.press('Enter');
   await expect(page).toHaveURL(new RegExp(`/empresas/${cnpj}$`));
