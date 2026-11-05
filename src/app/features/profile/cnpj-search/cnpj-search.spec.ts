@@ -105,14 +105,20 @@ describe('CnpjSearch', () => {
       expect(field).toHaveProperty('value', '');
     });
 
-    it('CNPJ inválido leva à consulta, que mostra o erro no campo completo', async () => {
+    it('entrada inválida mostra aviso e permanece na tela', async () => {
       const { user, router } = await renderSearch({ variant: 'toolbar' });
+      const field = screen.getByLabelText('Buscar empresa por CNPJ ou nome');
+      const submit = screen.getByRole('button', { name: 'Buscar empresa' });
 
-      await user.type(screen.getByLabelText('Buscar empresa por CNPJ ou nome'), '123{Enter}');
-
-      await vi.waitFor(() => {
-        expect(router.url).toBe('/empresas?cnpj=123');
-      });
+      for (const value of ['', 'AB', '123', 'ACME; DROP TABLE empresas']) {
+        await user.clear(field);
+        if (value) await user.type(field, value);
+        await user.click(submit);
+        expect(router.url).toBe('/');
+        expect(
+          screen.getAllByText('Informe um CNPJ ou nome válido para pesquisar').length,
+        ).toBeGreaterThan(0);
+      }
     });
 
     it('nome vai para a lista de empresas', async () => {
