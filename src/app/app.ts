@@ -5,16 +5,15 @@ import {
   inject,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
-import { filter, map, skip } from 'rxjs';
+import { filter, skip } from 'rxjs';
 import { PRESENTATION_MODE } from './core/presentation-mode';
 import { SessionStore } from './core/session/session-store';
 import { CnpjSearch } from './features/profile/cnpj-search/cnpj-search';
 import { PRIVACY_CONTACT } from './features/privacy/privacy-contact';
-import { COMPANIES_PATH } from './features/profile/companies-path';
 import { HeaderNav } from './layout/header-nav/header-nav';
 import { UserMenu } from './layout/user-menu/user-menu';
 
@@ -47,15 +46,6 @@ export class App {
 
   private readonly main = viewChild.required<ElementRef<HTMLElement>>('main');
   private readonly router = inject(Router);
-
-  /** Em "Empresas", a busca é o conteúdo da tela, e a barra não repete o campo. */
-  protected readonly headerSearch = toSignal(
-    this.router.events.pipe(
-      filter((event) => event instanceof NavigationEnd),
-      map((event) => event.urlAfterRedirects.split(/[?#]/)[0] !== COMPANIES_PATH),
-    ),
-    { initialValue: true },
-  );
 
   constructor() {
     // A cada troca de tela, o foco vai para o conteúdo, como numa página nova: o leitor de tela
