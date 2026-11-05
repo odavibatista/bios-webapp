@@ -85,17 +85,16 @@ test.describe('perfil da empresa (#24)', () => {
     await expectAccessible(page, testInfo, 'perfil da empresa');
   });
 
-  test('CNPJ inválido no cabeçalho leva ao formulário com o erro', async ({ page }) => {
+  test('CNPJ inválido no cabeçalho mostra aviso sem sair da tela', async ({ page }, testInfo) => {
     await signIn(page);
 
     await toolbarField(page).fill('00.990.842/0001-39');
     await toolbarField(page).press('Enter');
 
-    await expect(
-      page.getByText('CNPJ inválido. Confira os dígitos e tente de novo.'),
-    ).toBeVisible();
-    await expect(cnpjField(page)).toHaveValue('00.990.842/0001-39');
-    await expect(page).toHaveURL(/\/empresas\?cnpj=/);
+    await expect(page.getByText('Informe um CNPJ ou nome válido para pesquisar')).toBeVisible();
+    await expectAccessible(page, testInfo, 'aviso de busca inválida');
+    await expect(toolbarField(page)).toHaveValue('00.990.842/0001-39');
+    await expect(page).toHaveURL('/painel');
   });
 
   test('CNPJ que nenhuma fonte tem: empresa não encontrada', async ({ page }) => {
@@ -138,5 +137,22 @@ test.describe('perfil da empresa (#24)', () => {
 
     await expect(page).toHaveURL('/empresas/47960950000121');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('MAGAZINE LUIZA S/A');
+  });
+
+  test('busca inválida no cabeçalho mostra aviso e não navega', async ({ page }) => {
+    await signIn(page);
+    const field = toolbarField(page);
+    const button = page.getByRole('banner').getByRole('button', { name: 'Buscar empresa' });
+
+    for (const value of ['', 'AB', '123', 'ACME; DROP TABLE empresas']) {
+      await field.fill(value);
+      await button.click();
+      await expect(page).toHaveURL('/painel');
+      await expect(page.getByText('Informe um CNPJ ou nome válido para pesquisar')).toBeVisible();
+    }
+
+    await field.fill('Cearense');
+    await button.click();
+    await expect(page).toHaveURL('/empresas?nome=Cearense');
   });
 });
