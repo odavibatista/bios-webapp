@@ -4,6 +4,17 @@
   setor: nenhuma empresa aparece nesta tela.
 </p>
 
+<section class="popular" aria-labelledby="popular-title">
+  <h2 id="popular-title">Setores com mais empresas na base</h2>
+  <div class="popular-actions">
+    @for (sector of popularSectors; track sector.cnae) {
+      <button mat-stroked-button type="button" (click)="chooseShortcut(sector.cnae)">
+        {{ sector.cnae }} — {{ sector.label }}
+      </button>
+    }
+  </div>
+</section>
+
 <form [formGroup]="form" (ngSubmit)="show()" novalidate aria-label="Setor e ODS">
   <div class="fields">
     <mat-form-field appearance="outline">
