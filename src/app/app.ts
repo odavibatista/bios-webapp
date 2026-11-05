@@ -13,12 +13,21 @@ import { filter, skip } from 'rxjs';
 import { PRESENTATION_MODE } from './core/presentation-mode';
 import { SessionStore } from './core/session/session-store';
 import { CnpjSearch } from './features/profile/cnpj-search/cnpj-search';
+import { HeaderNav } from './layout/header-nav/header-nav';
 import { UserMenu } from './layout/user-menu/user-menu';
 
 /** Casca do app: barra superior, área das rotas e rodapé. */
 @Component({
   selector: 'bios-root',
-  imports: [CnpjSearch, MatIconModule, MatToolbarModule, RouterLink, RouterOutlet, UserMenu],
+  imports: [
+    CnpjSearch,
+    HeaderNav,
+    MatIconModule,
+    MatToolbarModule,
+    RouterLink,
+    RouterOutlet,
+    UserMenu,
+  ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,7 +37,8 @@ export class App {
   protected readonly presentation = inject(PRESENTATION_MODE);
 
   /** Com sessão, a barra mostra quem entrou (#18). */
-  protected readonly signedIn = inject(SessionStore).isAuthenticated;
+  private readonly store = inject(SessionStore);
+  protected readonly signedIn = this.store.isAuthenticated;
 
   private readonly main = viewChild.required<ElementRef<HTMLElement>>('main');
 

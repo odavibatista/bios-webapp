@@ -14,7 +14,7 @@ test.describe('busca por nome (#31)', () => {
     page,
   }) => {
     await signIn(page);
-    const field = page.getByRole('main').getByLabel('CNPJ ou nome da empresa');
+    const field = page.getByRole('banner').getByLabel('Buscar empresa por CNPJ ou nome');
     await field.fill('Aço Cearense');
     await field.press('Enter');
 
@@ -30,13 +30,14 @@ test.describe('busca por nome (#31)', () => {
     page,
   }) => {
     await signIn(page);
-    const field = page.getByRole('main').getByLabel('CNPJ ou nome da empresa');
+    const field = page.getByRole('banner').getByLabel('Buscar empresa por CNPJ ou nome');
     await field.fill('Empresa Inventada');
     await field.press('Enter');
     await expect(page.getByText(/apenas empresas já consultadas pelo CNPJ/)).toBeVisible();
 
-    await field.fill('SA');
-    await field.press('Enter');
+    const detailField = page.getByRole('main').getByLabel('CNPJ ou nome da empresa');
+    await detailField.fill('SA');
+    await detailField.press('Enter');
     await expect(
       page.getByText('Informe ao menos uma palavra com 3 letras ou mais.'),
     ).toBeVisible();

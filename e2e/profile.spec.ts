@@ -11,9 +11,13 @@ async function signIn(page: Page) {
   await expect(page).toHaveURL('/painel');
 }
 
-/** O campo de CNPJ do conteúdo (o da barra tem outro rótulo). */
+/** Campo completo da página de consulta. */
 function cnpjField(page: Page) {
   return page.getByRole('main').getByLabel('CNPJ ou nome da empresa', { exact: true });
+}
+
+function toolbarField(page: Page) {
+  return page.getByRole('banner').getByLabel('Buscar empresa por CNPJ ou nome');
 }
 
 test.describe('perfil da empresa (#24)', () => {
@@ -44,8 +48,8 @@ test.describe('perfil da empresa (#24)', () => {
   }, testInfo) => {
     await signIn(page);
 
-    await cnpjField(page).fill('00.990.842/0001-38');
-    await cnpjField(page).press('Enter');
+    await toolbarField(page).fill('00.990.842/0001-38');
+    await toolbarField(page).press('Enter');
 
     await expect(page).toHaveURL('/empresas/00990842000138');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
@@ -81,24 +85,24 @@ test.describe('perfil da empresa (#24)', () => {
     await expectAccessible(page, testInfo, 'perfil da empresa');
   });
 
-  test('CNPJ inválido mostra o erro no campo e não sai do painel', async ({ page }) => {
+  test('CNPJ inválido no cabeçalho leva ao formulário com o erro', async ({ page }) => {
     await signIn(page);
 
-    await cnpjField(page).fill('00.990.842/0001-39');
-    await page.getByRole('button', { name: 'Buscar', exact: true }).click();
+    await toolbarField(page).fill('00.990.842/0001-39');
+    await toolbarField(page).press('Enter');
 
     await expect(
       page.getByText('CNPJ inválido. Confira os dígitos e tente de novo.'),
     ).toBeVisible();
-    await expect(cnpjField(page)).toBeFocused();
-    await expect(page).toHaveURL('/painel');
+    await expect(cnpjField(page)).toHaveValue('00.990.842/0001-39');
+    await expect(page).toHaveURL(/\/empresas\?cnpj=/);
   });
 
   test('CNPJ que nenhuma fonte tem: empresa não encontrada', async ({ page }) => {
     await signIn(page);
 
-    await cnpjField(page).fill('99.999.998/0001-47');
-    await cnpjField(page).press('Enter');
+    await toolbarField(page).fill('99.999.998/0001-47');
+    await toolbarField(page).press('Enter');
 
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('Empresa não encontrada');
     await expect(page.getByText('Empresa não encontrada para o CNPJ informado.')).toBeVisible();
@@ -126,13 +130,11 @@ test.describe('perfil da empresa (#24)', () => {
     );
   });
 
-  test('na barra do topo (tela larga), o CNPJ abre o perfil', async ({ page }, testInfo) => {
-    test.skip(testInfo.project.name === 'celular', 'a barra só tem o campo em tela larga');
+  test('na barra do topo, o CNPJ abre o perfil', async ({ page }) => {
     await signIn(page);
 
-    const toolbarField = page.getByRole('banner').getByLabel('Buscar empresa por CNPJ ou nome');
-    await toolbarField.fill('47960950000121');
-    await toolbarField.press('Enter');
+    await toolbarField(page).fill('47960950000121');
+    await toolbarField(page).press('Enter');
 
     await expect(page).toHaveURL('/empresas/47960950000121');
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('MAGAZINE LUIZA S/A');
