@@ -105,7 +105,7 @@
 </section>
 
 <section class="results" aria-labelledby="titulo-resultados">
-  <h2 id="titulo-resultados">Resultados</h2>
+  <h2 id="titulo-resultados" tabindex="-1">Resultados</h2>
 
   @if (!searched()) {
     <p class="idle">Escolha ao menos um critério e pesquise.</p>
@@ -174,14 +174,7 @@
           <p class="score-note">Escolha um ODS para ver o índice e a confiança.</p>
         }
 
-        <bios-search-results
-          [items]="results.value().data"
-          [odsLabel]="odsLabel()"
-          [order]="criteria().order"
-          [layout]="cards() ? 'cards' : 'table'"
-        />
-
-        <nav class="pager" aria-label="Páginas dos resultados">
+        <ng-template #pageSteps>
           <button
             mat-stroked-button
             type="button"
@@ -199,6 +192,23 @@
           >
             Próxima página
           </button>
+        </ng-template>
+
+        @if (cards() && page.total_pages > 1) {
+          <nav class="pager pager-top" aria-label="Navegação rápida entre páginas">
+            <ng-container [ngTemplateOutlet]="pageSteps" />
+          </nav>
+        }
+
+        <bios-search-results
+          [items]="results.value().data"
+          [odsLabel]="odsLabel()"
+          [order]="criteria().order"
+          [layout]="cards() ? 'cards' : 'table'"
+        />
+
+        <nav class="pager" aria-label="Páginas dos resultados">
+          <ng-container [ngTemplateOutlet]="pageSteps" />
           <mat-form-field appearance="outline" class="page-size">
             <mat-label>Itens por página</mat-label>
             <select
