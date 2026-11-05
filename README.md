@@ -200,6 +200,16 @@ O manual técnico fica em [`docs/`](docs/README.md) (e, em inglês, em [`docs/en
 | 06  | [Qualidade e testes](docs/06-Qualidade-e-Testes.md)                 | Acessibilidade, acentuação e fluxo de contribuição    |
 | 07  | [Tema e publicação](docs/07-Tema-e-Publicação.md)                   | Paleta do Material 3 e publicação na Vercel           |
 
+## Privacidade e remoção de dados
+
+O BIOS trabalha com dados públicos ligados ao CNPJ. A razão social e o endereço de um empresário
+individual podem conter dados pessoais do titular, mesmo sendo públicos na Receita Federal. O CPF na
+razão social é mascarado, e sócios e contatos não são coletados.
+
+Para pedir a remoção de um cadastro, escreva para **odavibatista@hotmail.com** com o CNPJ e uma
+comprovação de que você é o titular. Os detalhes estão na
+[página de privacidade](https://bios-webapp.vercel.app/privacidade).
+
 ## Contexto acadêmico
 
 O BIOS é o projeto individual da Avaliação 3 das disciplinas de Engenharia de Software e de Gestão e
