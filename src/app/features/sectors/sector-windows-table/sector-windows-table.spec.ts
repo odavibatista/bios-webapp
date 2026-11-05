@@ -86,4 +86,43 @@ describe('SectorWindowsTable', () => {
       ['novembro de 2026 a dezembro de 2026', 'janeiro de 2027'],
     );
   });
+
+  it('agrupa pelo que a linha mostra: índice omitido com confiança preenchida, como na API', () => {
+    const november = { ...NOVEMBER_OMITTED, average_confidence: 0.00003669455452810803 };
+    const december = {
+      ...november,
+      window_start: '2026-12-01T00:00:00.000Z',
+      window_end: '2027-01-01T00:00:00.000Z',
+    };
+    const january = {
+      ...december,
+      window_start: '2027-01-01T00:00:00.000Z',
+      window_end: '2027-02-01T00:00:00.000Z',
+      average_confidence: 0.2,
+    };
+
+    expect(
+      sectorWindowRows([november, december, january]).map(({ month, score, confidence }) => [
+        month,
+        score,
+        confidence,
+      ]),
+    ).toEqual([
+      ['novembro de 2026 a dezembro de 2026', 'Omitida', '0,00'],
+      ['janeiro de 2027', 'Omitida', '0,20'],
+    ]);
+  });
+
+  it('mês com índice publicado nunca entra no grupo', () => {
+    const december = {
+      ...OCTOBER,
+      window_start: '2026-12-01T00:00:00.000Z',
+      window_end: '2027-01-01T00:00:00.000Z',
+      average_confidence: NOVEMBER_OMITTED.average_confidence,
+      company_count: NOVEMBER_OMITTED.company_count,
+      scored_company_count: NOVEMBER_OMITTED.scored_company_count,
+    };
+
+    expect(sectorWindowRows([NOVEMBER_OMITTED, december])).toHaveLength(2);
+  });
 });
