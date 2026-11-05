@@ -1,4 +1,4 @@
-import { barChart, columnChart, donutChart, treemapChart } from './chart-builders';
+import { barChart, columnChart, donutChart, pointsChart, treemapChart } from './chart-builders';
 import { CATEGORY_COLORS, type ChartItem, OTHER_COLOR, SERIES_COLOR } from './chart-spec';
 
 const THEME = { text: '#111111', grid: '#cccccc', surface: '#ffffff', narrow: false };
@@ -90,6 +90,27 @@ describe('barChart', () => {
   });
 });
 
+describe('pointsChart', () => {
+  it('a barra sai do zero para o lado do sinal, com a mesma cor e o valor do lado de fora', () => {
+    const spec = pointsChart({
+      ...base,
+      items: [
+        { key: 'A', label: 'Sanção', value: -40 },
+        { key: 'B', label: 'Inventário', value: 60 },
+      ],
+    });
+    const { color, series } = optionsOf(spec);
+    const [negative, positive] = series[0]['data'] as {
+      value: number;
+      label: { position: string };
+    }[];
+
+    expect(color).toEqual([SERIES_COLOR]);
+    expect(negative).toMatchObject({ value: -40, label: { position: 'left' } });
+    expect(positive).toMatchObject({ value: 60, label: { position: 'right' } });
+  });
+});
+
 describe('columnChart', () => {
   const single = {
     label: 'Evidências por ano',
@@ -130,6 +151,14 @@ describe('columnChart', () => {
     expect(options.series[0]['stack']).toBe('total');
     expect(spec.table.headers).toEqual(['Ano', 'Tipo', 'Evidências']);
     expect(spec.table.rows[1]).toEqual(['2019', 'Sanção', '3']);
+  });
+
+  it('a cor acompanha a série pela ordem fixa, e não pela quantidade de séries', () => {
+    const { series } = optionsOf(
+      columnChart({ ...single, series: [{ name: 'Sanção', order: 1, values: [1, 2, 3] }] }),
+    );
+
+    expect(series[0]['color']).toBe(CATEGORY_COLORS[1]);
   });
 
   it('com uma medida só, não há legenda', () => {

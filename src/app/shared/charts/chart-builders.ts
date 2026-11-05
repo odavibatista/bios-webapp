@@ -154,6 +154,60 @@ export function barChart(chart: BarsChart): ChartSpec {
   };
 }
 
+/**
+ * Pontos com sinal: cada barra sai do zero para o seu lado. A direção mostra o sinal, com a mesma
+ * cor nos dois lados, porque nenhum lado é "bom" pela cor (IND01).
+ */
+export function pointsChart(chart: ItemsChart): ChartSpec {
+  const { items } = chart;
+  const format = chart.format ?? formatCount;
+
+  return {
+    label: chart.label,
+    height: items.length * BAR_ROW + 1,
+    table: itemTable(items, chart.headers, format),
+    options: ({ text, narrow }) => ({
+      ...COMMON,
+      color: [SERIES_COLOR],
+      grid: { left: 4, right: 56, top: 4, bottom: 4, containLabel: true },
+      tooltip: itemTooltip(items, chart.sentence),
+      xAxis: { type: 'value', show: false, boundaryGap: ['18%', '18%'] },
+      yAxis: {
+        type: 'category',
+        inverse: true,
+        data: items.map(({ label }) => label),
+        axisTick: { show: false },
+        // Os nomes ficam à esquerda, e a linha de zero, no valor zero.
+        axisLine: { onZero: false, show: false },
+        axisLabel: {
+          color: text,
+          fontSize: AXIS_FONT,
+          width: narrow ? NARROW_LABEL : WIDE_LABEL,
+          overflow: 'truncate',
+        },
+        splitLine: { show: false },
+      },
+      series: [
+        {
+          type: 'bar',
+          barMaxWidth: BAR_THICKNESS,
+          label: {
+            show: true,
+            color: text,
+            fontSize: AXIS_FONT,
+            formatter: ({ value }: { value: number }) => format(value),
+          },
+          data: items.map(({ value }) => ({
+            value,
+            label: { position: value < 0 ? 'left' : 'right' },
+            itemStyle: { borderRadius: value < 0 ? [4, 0, 0, 4] : [0, 4, 4, 0] },
+          })),
+        },
+      ],
+    }),
+  };
+}
+
 /** Eixo ordenado, com uma medida ou com medidas empilhadas. */
 export function columnChart(chart: ColumnsChart): ChartSpec {
   const { categories, series } = chart;
@@ -207,9 +261,10 @@ export function columnChart(chart: ColumnsChart): ChartSpec {
         splitLine: { lineStyle: { color: grid } },
         axisLabel: { color: text, fontSize: AXIS_FONT, formatter: formatCompact },
       },
-      series: series.map((item) => ({
+      series: series.map((item, index) => ({
         name: item.name,
         type: 'bar',
+        color: CATEGORY_COLORS[(item.order ?? index) % CATEGORY_COLORS.length],
         barMaxWidth: BAR_THICKNESS,
         ...(stacked ? { stack: 'total' } : {}),
         itemStyle: {

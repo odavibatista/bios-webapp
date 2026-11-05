@@ -31,6 +31,8 @@ export interface ChartItem {
 
 export interface ChartSeries {
   name: string;
+  /** Posição fixa na paleta: a cor acompanha a série, e não quantas existem. */
+  order?: number;
   values: readonly (number | null)[];
 }
 
