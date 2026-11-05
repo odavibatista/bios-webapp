@@ -115,7 +115,7 @@ export class CnpjSearch {
     }
 
     if (this.variant() === 'toolbar') {
-      this.snackBar.open('Informe um CNPJ ou nome válido para pesquisar', 'Fechar', {
+      this.snackBar.open('Informe um CNPJ ou nome válido para pesquisar', undefined, {
         duration: 4000,
         verticalPosition: 'top',
         horizontalPosition: 'center',
