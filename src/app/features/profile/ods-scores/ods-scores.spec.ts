@@ -30,6 +30,9 @@ describe('OdsScores', () => {
         name: /Índice do ODS 15: -80 numa escala de −100 a 100/,
       }),
     ).toBeTruthy();
+    const fill = cards[1].querySelector<HTMLElement>('.fill');
+    expect(fill?.style.left).toBe('10%');
+    expect(fill?.style.width).toBe('40%');
     expect(region.textContent).not.toMatch(/índice geral|é sustentável|não é sustentável/i);
   });
 

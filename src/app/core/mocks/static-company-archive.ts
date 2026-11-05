@@ -9,7 +9,7 @@ import {
 } from './company-archive';
 
 /** Versão no caminho: os arquivos são imutáveis, e uma base nova vem numa pasta nova. */
-const BASE = 'presentation/v2';
+const BASE = 'presentation/v3';
 
 /** `cnpj`, nomes, tabelas e índices: ver `scripts/build-presentation-data.mjs`. */
 interface SearchIndex {

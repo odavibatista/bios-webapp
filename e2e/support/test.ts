@@ -16,6 +16,11 @@ export const test = base.extend<{ finalPageChecks: void }>({
       // Teste que já falhou, ou que não abriu página, não tem tela para conferir.
       if (testInfo.status !== testInfo.expectedStatus || page.url() === 'about:blank') return;
 
+      // A barra do topo é fixa: um campo que passa embaixo dela durante a rolagem fica parcialmente
+      // coberto, e o axe mediria esse instante como alvo pequeno, e não a tela.
+      await page.evaluate(() => {
+        window.scrollTo(0, 0);
+      });
       await expectAccessible(page, testInfo, 'fim do teste');
       await expectNoHorizontalScroll(page, 'fim do teste');
     },

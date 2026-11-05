@@ -1,7 +1,6 @@
 import type { SectorScoreWindow } from '../../../core/api/generated';
 import { formatAverageConfidence, formatAverageScore, monthLabel } from '../sector-format';
 
-/** As cores das duas séries, tiradas do tema na hora de desenhar. */
 export interface SectorChartColors {
   score: string;
   confidence: string;
@@ -9,95 +8,83 @@ export interface SectorChartColors {
   grid: string;
 }
 
-/** Os nomes das séries, que aparecem na legenda e na dica. */
+export type SectorMetric = 'score' | 'confidence';
 export const SCORE_SERIES = 'Índice médio';
 export const CONFIDENCE_SERIES = 'Confiança média';
 
-/** O que a dica mostra de um mês: as duas médias, separadas, e as contagens. */
-export function windowTooltip(window: SectorScoreWindow): string {
+const AXIS_NUMBER = new Intl.NumberFormat('pt-BR');
+
+/** A escala do índice acompanha os valores observados, sem mudar sua faixa possível. */
+export function scoreBounds(windows: readonly SectorScoreWindow[]): { min: number; max: number } {
+  const values = windows
+    .map((window) => window.average_score)
+    .filter((value): value is number => value !== null);
+  if (values.length === 0) return { min: -100, max: 100 };
+
+  return {
+    min: Math.max(-100, Math.floor((Math.min(...values) - 10) / 10) * 10),
+    max: Math.min(100, Math.ceil((Math.max(...values) + 10) / 10) * 10),
+  };
+}
+
+/** O detalhe de um mês na série escolhida, com as contagens do agregado. */
+export function windowTooltip(window: SectorScoreWindow, metric: SectorMetric): string {
+  const average =
+    metric === 'score'
+      ? `${SCORE_SERIES}: ${formatAverageScore(window.average_score)}`
+      : `${CONFIDENCE_SERIES}: ${formatAverageConfidence(window.average_confidence)}`;
+
   return [
     `<strong>${monthLabel(window.window_start)}</strong>`,
-    `${SCORE_SERIES}: ${formatAverageScore(window.average_score)}`,
-    `${CONFIDENCE_SERIES}: ${formatAverageConfidence(window.average_confidence)}`,
+    average,
     `Empresas avaliadas: ${window.company_count}`,
     `Com índice: ${window.scored_company_count}`,
   ].join('<br>');
 }
 
-/**
- * As opções do gráfico de linha da evolução (UC10): um ponto por mês, o índice médio e a confiança
- * média em eixos separados (−100 a 100 e 0 a 1), nunca combinados. Média omitida (regra 4) é
- * lacuna na linha, nunca zero: o ponto vai como `null`, e a linha não liga os vizinhos. As duas
- * séries se distinguem também pelo traço e pelo marcador, não só pela cor.
- */
+/** Cada medida tem seu próprio gráfico e eixo; lacunas da API continuam nulas. */
 export function sectorChartOptions(
   windows: readonly SectorScoreWindow[],
   colors: SectorChartColors,
+  metric: SectorMetric,
 ): Record<string, unknown> {
-  const axisLabel = { color: colors.text };
-  const splitLine = { lineStyle: { color: colors.grid } };
+  const score = metric === 'score';
+  const bounds = score ? scoreBounds(windows) : { min: 0, max: 1 };
 
   return {
-    // O gráfico é decorativo para o leitor de tela: a tabela traz os mesmos números.
     aria: { enabled: false },
     animation: false,
-    color: [colors.score, colors.confidence],
-    grid: { left: 56, right: 56, top: 40, bottom: 64, containLabel: false },
-    legend: { bottom: 0, textStyle: { color: colors.text } },
+    color: [score ? colors.score : colors.confidence],
+    grid: { left: 64, right: 24, top: 40, bottom: 48, containLabel: false },
     tooltip: {
       trigger: 'axis',
       formatter: (params: { dataIndex: number }[]) => {
         const window = windows[params[0]?.dataIndex ?? -1];
-
-        return window ? windowTooltip(window) : '';
+        return window ? windowTooltip(window, metric) : '';
       },
     },
     xAxis: {
       type: 'category',
       data: windows.map((window) => monthLabel(window.window_start)),
-      axisLabel,
+      axisLabel: { color: colors.text },
     },
-    yAxis: [
-      {
-        type: 'value',
-        name: SCORE_SERIES,
-        min: -100,
-        max: 100,
-        nameTextStyle: { color: colors.text },
-        axisLabel,
-        splitLine,
-      },
-      {
-        type: 'value',
-        name: CONFIDENCE_SERIES,
-        min: 0,
-        max: 1,
-        position: 'right',
-        nameTextStyle: { color: colors.text },
-        axisLabel,
-        splitLine: { show: false },
-      },
-    ],
+    yAxis: {
+      type: 'value',
+      name: score ? SCORE_SERIES : CONFIDENCE_SERIES,
+      ...bounds,
+      nameTextStyle: { color: colors.text },
+      axisLabel: { color: colors.text, formatter: (value: number) => AXIS_NUMBER.format(value) },
+      splitLine: { lineStyle: { color: colors.grid } },
+    },
     series: [
       {
-        name: SCORE_SERIES,
+        name: score ? SCORE_SERIES : CONFIDENCE_SERIES,
         type: 'line',
-        yAxisIndex: 0,
         connectNulls: false,
-        symbol: 'circle',
-        symbolSize: 8,
-        lineStyle: { width: 3, type: 'solid' },
-        data: windows.map((window) => window.average_score),
-      },
-      {
-        name: CONFIDENCE_SERIES,
-        type: 'line',
-        yAxisIndex: 1,
-        connectNulls: false,
-        symbol: 'diamond',
+        symbol: score ? 'circle' : 'diamond',
         symbolSize: 9,
-        lineStyle: { width: 2, type: 'dashed' },
-        data: windows.map((window) => window.average_confidence),
+        lineStyle: { width: 3 },
+        data: windows.map((window) => (score ? window.average_score : window.average_confidence)),
       },
     ],
   };

@@ -2031,6 +2031,10 @@ export type ListCompanyMovementsData = {
          * Quantidade de itens por página (máximo de 100)
          */
         page_size?: number;
+        /**
+         * Categoria da evidência da movimentação
+         */
+        category?: 'INFRACAO_AMBIENTAL' | 'CONDUTA_ADMINISTRATIVA' | 'EMISSAO_GEE';
     };
     url: '/companies/movements';
 };

@@ -48,8 +48,9 @@ with the way back to the official source.
 Today, anyone who wants to learn the environmental record of a Brazilian company has to check IBAMA
 (the federal environmental agency), CGU (the federal comptroller), the federal revenue registry and
 the Public Emissions Registry one by one, and cross-reference the results by hand. BIOS uses the CNPJ
-as its axis, consolidates these sources and turns the records into explainable indicators, without
-collecting any data about individuals.
+as its axis, consolidates these sources and turns the records into explainable indicators. A sole
+proprietor's public registered name may contain the owner's name; the CPF is masked, and the system
+does not look up individuals' contacts or profiles.
 
 The interface was designed not to judge companies:
 
@@ -65,7 +66,9 @@ The interface was designed not to judge companies:
 > [bios-core-api](https://github.com/odavibatista/bios-core-api), captured and stored in the
 > repository behind a service with the same interface as the API. The published base has 110,372
 > companies, 580,166 pieces of evidence and 86 sectors, processed by the API from official files. Real
-> integration means swapping only that service. It holds company data only.
+> integration means swapping only that service. A sole proprietor's public registered name may
+> contain the owner's name; CPF sequences are masked. BIOS does not look up individuals' contacts
+> or profiles (INL02).
 
 ## Ecosystem
 

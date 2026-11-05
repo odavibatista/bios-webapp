@@ -1,5 +1,5 @@
 @if (layout() === 'table') {
-  <div class="table-scroll" role="region" aria-label="Empresas encontradas" tabindex="0">
+  <bios-table-scroll label="Empresas encontradas" bordered>
     <table [class.with-ods]="odsLabel()">
       <caption class="visually-hidden">
         Empresas encontradas
@@ -41,10 +41,17 @@
                 <span class="trade-name">{{ item.trade_name }}</span>
               }
             </th>
-            <td>{{ status(item.registration_status) }}</td>
+            <td>
+              <span
+                class="status-chip"
+                [class.status-chip--other]="item.registration_status !== 'ATIVA'"
+              >
+                {{ status(item.registration_status) }}
+              </span>
+            </td>
             <td>{{ item.city }}/{{ item.uf }}</td>
             <td>
-              <span class="nowrap">{{ item.main_cnae.code }}</span>
+              <span class="nowrap">{{ cnae(item.main_cnae.code) }}</span>
               <span class="cnae-description">{{ item.main_cnae.description }}</span>
             </td>
             @if (odsLabel()) {
@@ -59,7 +66,7 @@
         }
       </tbody>
     </table>
-  </div>
+  </bios-table-scroll>
 } @else {
   <ul class="cards" aria-label="Empresas encontradas">
     @for (item of items(); track item.cnpj; let index = $index) {
@@ -81,7 +88,14 @@
             </div>
             <div>
               <dt>Situação</dt>
-              <dd>{{ status(item.registration_status) }}</dd>
+              <dd>
+                <span
+                  class="status-chip"
+                  [class.status-chip--other]="item.registration_status !== 'ATIVA'"
+                >
+                  {{ status(item.registration_status) }}
+                </span>
+              </dd>
             </div>
             <div>
               <dt>Município</dt>
@@ -89,7 +103,7 @@
             </div>
             <div>
               <dt>CNAE principal</dt>
-              <dd>{{ item.main_cnae.code }} — {{ item.main_cnae.description }}</dd>
+              <dd>{{ cnae(item.main_cnae.code) }} — {{ item.main_cnae.description }}</dd>
             </div>
             @if (odsLabel(); as ods) {
               <div>

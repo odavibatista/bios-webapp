@@ -4,10 +4,12 @@ import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { ApiError } from '../../core/api/api-error';
 import { BiosApi } from '../../core/api/bios-api';
+import { PRESENTATION_MODE } from '../../core/presentation-mode';
 import type { CompanyMovementItem, ListCompanyMovementsResponse } from '../../core/api/generated';
 import { SessionStore } from '../../core/session/session-store';
 import {
   MOVEMENTS_PAGE_SIZE,
+  NO_CATEGORY_MOVEMENTS_MESSAGE,
   NO_MOVEMENTS_MESSAGE,
   PAGE_WITHOUT_MOVEMENTS_MESSAGE,
   PANEL_SHORTCUTS,
@@ -45,10 +47,17 @@ function page(
 describe('PanelHome', () => {
   const listCompanyMovements = vi.fn<BiosApi['listCompanyMovements']>();
 
-  async function renderHome(inputs: { pagina?: string } = {}) {
+  async function renderHome(
+    inputs: { pagina?: string; categoria?: string } = {},
+    presentation = false,
+  ) {
     return render(PanelHome, {
       inputs,
-      providers: [provideRouter([]), { provide: BiosApi, useValue: { listCompanyMovements } }],
+      providers: [
+        provideRouter([]),
+        { provide: BiosApi, useValue: { listCompanyMovements } },
+        { provide: PRESENTATION_MODE, useValue: presentation },
+      ],
       configureTestBed: () => {
         TestBed.inject(SessionStore).store({
           access_token: 'a',
@@ -72,12 +81,16 @@ describe('PanelHome', () => {
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Olá, Conta');
   });
 
-  it('traz o campo de consulta por CNPJ logo no topo', async () => {
+  it('na apresentação usa saudação neutra', async () => {
+    await renderHome({}, true);
+
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Olá!');
+  });
+
+  it('deixa a busca no cabeçalho, sem duplicá-la no conteúdo', async () => {
     await renderHome();
 
-    const lookup = screen.getByRole('region', { name: 'Buscar uma empresa pelo CNPJ ou nome' });
-    expect(lookup.querySelector('bios-cnpj-search')).not.toBeNull();
-    expect(screen.getByRole('search', { name: 'Buscar empresa por CNPJ ou nome' })).toBeTruthy();
+    expect(screen.queryByRole('search', { name: 'Buscar empresa por CNPJ ou nome' })).toBeNull();
   });
 
   it('lista as empresas na ordem da API, cada uma levando ao perfil', async () => {
@@ -101,6 +114,7 @@ describe('PanelHome', () => {
     await renderHome();
 
     expect(screen.getByText(/não diz que a conduta da empresa melhorou ou piorou/)).toBeTruthy();
+    expect(screen.getByText(/a maioria das empresas não tem inventário localizado/)).toBeTruthy();
   });
 
   it('lê a página da URL', async () => {
@@ -110,6 +124,32 @@ describe('PanelHome', () => {
     expect(listCompanyMovements).toHaveBeenLastCalledWith({
       query: { page: 3, page_size: MOVEMENTS_PAGE_SIZE },
     });
+  });
+
+  it('lê o recorte da URL e repassa a categoria para a API', async () => {
+    await renderHome({ pagina: '2', categoria: 'emissoes' });
+
+    await screen.findByRole('link', { name: 'Empresa Um' });
+    expect(
+      screen.getByRole<HTMLSelectElement>('combobox', { name: 'Categoria da evidência' }).value,
+    ).toBe('emissoes');
+    expect(listCompanyMovements).toHaveBeenLastCalledWith({
+      query: { page: 2, page_size: MOVEMENTS_PAGE_SIZE, category: 'EMISSAO_GEE' },
+    });
+  });
+
+  it('mudar o recorte limpa a página e mantém a URL compartilhável', async () => {
+    await renderHome({ pagina: '2', categoria: 'infracoes' });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    await userEvent
+      .setup()
+      .selectOptions(screen.getByRole('combobox', { name: 'Categoria da evidência' }), 'conduta');
+
+    expect(navigate).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({ queryParams: { categoria: 'conduta' } }),
+    );
   });
 
   it('página inválida na URL vale como a primeira', async () => {
@@ -187,6 +227,13 @@ describe('PanelHome', () => {
     }
   });
 
+  it('categoria sem movimentações mostra estado vazio específico', async () => {
+    listCompanyMovements.mockResolvedValue(page([]));
+    await renderHome({ categoria: 'emissoes' });
+
+    expect(await screen.findByText(NO_CATEGORY_MOVEMENTS_MESSAGE)).toBeTruthy();
+  });
+
   it('página além do fim não finge que a base está vazia', async () => {
     listCompanyMovements.mockResolvedValue(page([], { page: 9, total: 60, total_pages: 3 }));
     await renderHome({ pagina: '9' });
@@ -196,7 +243,7 @@ describe('PanelHome', () => {
     expect(screen.getByRole('button', { name: 'Página anterior' })).toBeTruthy();
   });
 
-  it('falha na lista oferece nova tentativa, e a busca segue na tela (UC18, 2.2)', async () => {
+  it('falha na lista oferece nova tentativa sem alterar a busca do cabeçalho (UC18, 2.2)', async () => {
     listCompanyMovements.mockRejectedValueOnce(
       new ApiError(503, {
         statusCode: 503,
@@ -211,6 +258,6 @@ describe('PanelHome', () => {
     await userEvent.setup().click(await screen.findByRole('button', { name: 'Tentar de novo' }));
 
     expect(await screen.findByRole('link', { name: 'Empresa Um' })).toBeTruthy();
-    expect(screen.getByRole('search', { name: 'Buscar empresa por CNPJ ou nome' })).toBeTruthy();
+    expect(screen.queryByRole('search', { name: 'Buscar empresa por CNPJ ou nome' })).toBeNull();
   });
 });

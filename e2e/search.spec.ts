@@ -62,6 +62,14 @@ test.describe('pesquisa de empresas (#25)', () => {
     await expect(page.getByLabel('CNAE')).toHaveValue('');
   });
 
+  test('sem ODS, orienta a seleção e mostra a situação cadastral', async ({ page }) => {
+    await signInToSearch(page, '?cnae=24');
+
+    await expect(page.getByRole('status')).toHaveText('10 empresas encontradas');
+    await expect(page.getByText('Escolha um ODS para ver o índice e a confiança.')).toBeVisible();
+    await expect(page.locator('.status-chip').first()).toBeVisible();
+  });
+
   test('em tela larga é tabela; no celular, cartões, sem rolar a página', async ({
     page,
   }, testInfo) => {
@@ -190,7 +198,9 @@ test.describe('pesquisa de empresas (#25)', () => {
   }, testInfo) => {
     await signInToSearch(page, '?cnae=24&ods=13&ordem=desc&pagina=2&por_pagina=5');
     await expect(page.getByRole('status')).toHaveText('10 empresas encontradas');
-    await expect(page.getByText('Página 2 de 2')).toBeVisible();
+    await expect(
+      page.getByRole('navigation', { name: 'Páginas dos resultados' }).getByText('Página 2 de 2'),
+    ).toBeVisible();
     await expectAccessible(page, testInfo, 'exportação da pesquisa');
 
     const downloadPromise = page.waitForEvent('download');
@@ -230,11 +240,31 @@ test.describe('pesquisa de empresas (#25)', () => {
   test('pagina com o tamanho da URL', async ({ page }) => {
     await signInToSearch(page, '?cnae=24&por_pagina=5');
 
-    await expect(page.getByText('Página 1 de 2')).toBeVisible();
-    await page.getByRole('button', { name: 'Próxima página' }).click();
+    const pages = page.getByRole('navigation', { name: 'Páginas dos resultados' });
+
+    await expect(pages.getByText('Página 1 de 2')).toBeVisible();
+    await pages.getByRole('button', { name: 'Próxima página' }).click();
 
     await expect(page).toHaveURL('/pesquisa?cnae=24&pagina=2&por_pagina=5');
-    await expect(page.getByText('Página 2 de 2')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Próxima página' })).toBeDisabled();
+    await expect(pages.getByText('Página 2 de 2')).toBeVisible();
+    await expect(pages.getByRole('button', { name: 'Próxima página' })).toBeDisabled();
+  });
+
+  test('no celular, pesquisar mostra o resultado e oferece a paginação acima dos cartões', async ({
+    page,
+    isMobile,
+  }) => {
+    test.skip(!isMobile, 'O comportamento é do layout em cartões.');
+    await signInToSearch(page, '?por_pagina=5');
+
+    await page.getByRole('textbox', { name: 'CNAE' }).fill('24');
+    await page.getByRole('button', { name: 'Pesquisar' }).click();
+
+    await expect(page.getByRole('heading', { name: 'Resultados' })).toBeFocused();
+    await expect(page.getByRole('heading', { name: 'Resultados' })).toBeInViewport();
+    await expect(page.getByRole('status')).toBeInViewport();
+    await expect(
+      page.getByRole('navigation', { name: 'Navegação rápida entre páginas' }),
+    ).toBeVisible();
   });
 });

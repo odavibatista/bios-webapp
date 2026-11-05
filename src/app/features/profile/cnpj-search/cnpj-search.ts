@@ -17,6 +17,7 @@ import { Router } from '@angular/router';
 import { CNPJ_ERROR_KEY, cnpjRule, parseCnpj } from '../../../shared/cnpj/cnpj';
 import { nameRule } from '../../search/search-rules';
 import { RULES_ERROR_KEY } from '../../../shared/forms/account-rules';
+import { COMPANIES_PATH } from '../companies-path';
 
 /** Um número que parece CNPJ continua no fluxo de validação do CNPJ. */
 function looksLikeCnpj(value: string): boolean {
@@ -32,8 +33,7 @@ export const companyLookupRule = (control: AbstractControl) => {
   return errors ? { [CNPJ_ERROR_KEY]: (errors[RULES_ERROR_KEY] as string[])[0] } : null;
 };
 
-/** Caminho da busca (`/empresas`) e do perfil (`/empresas/:cnpj`). */
-export const COMPANIES_PATH = '/empresas';
+export { COMPANIES_PATH };
 
 /**
  * Campo único de busca (UC06; #24 e #31). CNPJ válido abre o perfil; texto válido abre a lista

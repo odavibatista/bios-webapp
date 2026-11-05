@@ -25,6 +25,7 @@ import { fieldMessage } from '../../../shared/forms/account-rules';
 import { emailDomainRules, normalizeEmailDomain } from '../../../shared/forms/domain-rules';
 import { AsyncState } from '../../../shared/states/async-state';
 import { FormErrorSummary } from '../../../shared/states/form-error-summary';
+import { TableScroll } from '../../../shared/table-scroll/table-scroll';
 
 /** Domínios por página da lista (o padrão da API). */
 export const DOMAINS_PAGE_SIZE = 20;
@@ -49,6 +50,7 @@ export function originLabel(origin: BlockedEmailDomain['origin']): string {
     MatFormFieldModule,
     MatInputModule,
     ReactiveFormsModule,
+    TableScroll,
   ],
   templateUrl: './blocked-domains-page.html',
   styleUrl: './blocked-domains-page.scss',
