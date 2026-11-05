@@ -104,126 +104,166 @@
   </form>
 </section>
 
-<section class="results" aria-labelledby="titulo-resultados">
-  <h2 id="titulo-resultados" tabindex="-1">Resultados</h2>
+<bios-overview-totals class="totals" [analytics]="overview()" [loading]="analytics.isLoading()" />
 
-  @if (!searched()) {
-    <p class="idle">Escolha ao menos um critério e pesquise.</p>
-  } @else if (failure(); as failure) {
-    @if (failure.validOds.length) {
-      <div class="unavailable" role="alert">
-        <p>{{ failure.view.message }}</p>
-        <p>Pesquise num dos ODS disponíveis:</p>
-        <ul>
-          @for (ods of failure.validOds; track ods) {
-            <li>
-              <button mat-stroked-button type="button" (click)="searchOds(ods)">
-                {{ odsTitle(ods) }}
-              </button>
-            </li>
-          }
-        </ul>
-      </div>
-    } @else if (failure.fieldMessages.length) {
-      <bios-form-error-summary [messages]="failure.fieldMessages" />
-    } @else {
-      <bios-error-state [error]="failure.error" (retry)="results.reload()" />
-    }
-  } @else {
-    <bios-async-state
-      [loading]="results.isLoading()"
-      [empty]="results.hasValue() && results.value().data.length === 0"
-      emptyMessage="Nenhuma empresa atende aos filtros. Tente afrouxá-los: retire um critério ou diminua os mínimos."
-      loadingLabel="Pesquisando…"
-    >
-      @if (results.hasValue() && page(); as page) {
-        <div class="summary">
-          <p role="status">
-            {{ page.total === 1 ? '1 empresa encontrada' : page.total + ' empresas encontradas' }}
-          </p>
-          <button
-            mat-stroked-button
-            type="button"
-            [disabled]="exporting()"
-            [attr.aria-busy]="exporting()"
-            (click)="exportResults()"
-          >
-            {{ exporting() ? 'Exportando XLSX…' : 'Exportar XLSX' }}
-          </button>
-        </div>
+<nav mat-tab-nav-bar [tabPanel]="painel" aria-label="O que ver da pesquisa">
+  <a
+    mat-tab-link
+    routerLink="."
+    [queryParams]="{ visao: 'panorama' }"
+    queryParamsHandling="merge"
+    [active]="view() === 'panorama'"
+  >
+    Panorama
+  </a>
+  <a
+    mat-tab-link
+    routerLink="."
+    [queryParams]="{ visao: 'resultados' }"
+    queryParamsHandling="merge"
+    [active]="view() === 'resultados'"
+  >
+    Resultados
+  </a>
+</nav>
 
-        @if (exportLimit(); as limit) {
-          <p class="export-limit" role="alert">
-            A pesquisa tem {{ limit.total }} empresas e a exportação aceita até {{ limit.max }}.
-            Refine os critérios para exportar.
-          </p>
-        } @else if (exportError(); as error) {
-          <bios-error-state [error]="error" (retry)="exportResults()" />
-        }
-
-        @if (odsLabel(); as ods) {
-          <p class="score-note">
-            Índice de aderência ao {{ ods }} (de −100 a 100) e confiança (de 0 a 1) ficam lado a
-            lado e não se combinam. "Sem índice" quer dizer que o BIOS ainda não calculou o
-            {{ ods }} para a empresa; não é nota baixa.
-            @if (criteria().order !== null) {
-              Empresas sem índice aparecem ao fim em ambas as direções.
-            }
-          </p>
-        } @else {
-          <p class="score-note">Escolha um ODS para ver o índice e a confiança.</p>
-        }
-
-        <ng-template #pageSteps>
-          <button
-            mat-stroked-button
-            type="button"
-            [disabled]="page.page <= 1"
-            (click)="goToPage(page.page - 1)"
-          >
-            Página anterior
-          </button>
-          <span>Página {{ page.page }} de {{ page.total_pages }}</span>
-          <button
-            mat-stroked-button
-            type="button"
-            [disabled]="page.page >= page.total_pages"
-            (click)="goToPage(page.page + 1)"
-          >
-            Próxima página
-          </button>
-        </ng-template>
-
-        @if (cards() && page.total_pages > 1) {
-          <nav class="pager pager-top" aria-label="Navegação rápida entre páginas">
-            <ng-container [ngTemplateOutlet]="pageSteps" />
-          </nav>
-        }
-
-        <bios-search-results
-          [items]="results.value().data"
-          [odsLabel]="odsLabel()"
-          [order]="criteria().order"
-          [layout]="cards() ? 'cards' : 'table'"
-        />
-
-        <nav class="pager" aria-label="Páginas dos resultados">
-          <ng-container [ngTemplateOutlet]="pageSteps" />
-          <mat-form-field appearance="outline" class="page-size">
-            <mat-label>Itens por página</mat-label>
-            <select
-              #pageSize
-              matNativeControl
-              [value]="criteria().pageSize"
-              (change)="changePageSize(pageSize.value)"
-            >
-              @for (size of pageSizes(); track size) {
-                <option [value]="size" [selected]="size === criteria().pageSize">{{ size }}</option>
-              }
-            </select>
-          </mat-form-field>
-        </nav>
+<mat-tab-nav-panel #painel>
+  @if (view() === 'panorama') {
+    <section class="overview" aria-labelledby="titulo-panorama">
+      <h2 id="titulo-panorama">Panorama</h2>
+      @if (analytics.error(); as error) {
+        <bios-error-state [error]="error" (retry)="analytics.reload()" />
+      } @else {
+        <bios-data-overview [analytics]="overview()" [loading]="analytics.isLoading()" />
       }
-    </bios-async-state>
+    </section>
+  } @else {
+    <section class="results" aria-labelledby="titulo-resultados">
+      <h2 id="titulo-resultados" tabindex="-1">Resultados</h2>
+
+      @if (!searched()) {
+        <p class="idle">Escolha ao menos um critério e pesquise.</p>
+      } @else if (failure(); as failure) {
+        @if (failure.validOds.length) {
+          <div class="unavailable" role="alert">
+            <p>{{ failure.view.message }}</p>
+            <p>Pesquise num dos ODS disponíveis:</p>
+            <ul>
+              @for (ods of failure.validOds; track ods) {
+                <li>
+                  <button mat-stroked-button type="button" (click)="searchOds(ods)">
+                    {{ odsTitle(ods) }}
+                  </button>
+                </li>
+              }
+            </ul>
+          </div>
+        } @else if (failure.fieldMessages.length) {
+          <bios-form-error-summary [messages]="failure.fieldMessages" />
+        } @else {
+          <bios-error-state [error]="failure.error" (retry)="results.reload()" />
+        }
+      } @else {
+        <bios-async-state
+          [loading]="results.isLoading()"
+          [empty]="results.hasValue() && results.value().data.length === 0"
+          emptyMessage="Nenhuma empresa atende aos filtros. Tente afrouxá-los: retire um critério ou diminua os mínimos."
+          loadingLabel="Pesquisando…"
+        >
+          @if (results.hasValue() && page(); as page) {
+            <div class="summary">
+              <p role="status">
+                {{
+                  page.total === 1 ? '1 empresa encontrada' : page.total + ' empresas encontradas'
+                }}
+              </p>
+              <button
+                mat-stroked-button
+                type="button"
+                [disabled]="exporting()"
+                [attr.aria-busy]="exporting()"
+                (click)="exportResults()"
+              >
+                {{ exporting() ? 'Exportando XLSX…' : 'Exportar XLSX' }}
+              </button>
+            </div>
+
+            @if (exportLimit(); as limit) {
+              <p class="export-limit" role="alert">
+                A pesquisa tem {{ limit.total }} empresas e a exportação aceita até {{ limit.max }}.
+                Refine os critérios para exportar.
+              </p>
+            } @else if (exportError(); as error) {
+              <bios-error-state [error]="error" (retry)="exportResults()" />
+            }
+
+            @if (odsLabel(); as ods) {
+              <p class="score-note">
+                Índice de aderência ao {{ ods }} (de −100 a 100) e confiança (de 0 a 1) ficam lado a
+                lado e não se combinam. "Sem índice" quer dizer que o BIOS ainda não calculou o
+                {{ ods }} para a empresa; não é nota baixa.
+                @if (criteria().order !== null) {
+                  Empresas sem índice aparecem ao fim em ambas as direções.
+                }
+              </p>
+            } @else {
+              <p class="score-note">Escolha um ODS para ver o índice e a confiança.</p>
+            }
+
+            <ng-template #pageSteps>
+              <button
+                mat-stroked-button
+                type="button"
+                [disabled]="page.page <= 1"
+                (click)="goToPage(page.page - 1)"
+              >
+                Página anterior
+              </button>
+              <span>Página {{ page.page }} de {{ page.total_pages }}</span>
+              <button
+                mat-stroked-button
+                type="button"
+                [disabled]="page.page >= page.total_pages"
+                (click)="goToPage(page.page + 1)"
+              >
+                Próxima página
+              </button>
+            </ng-template>
+
+            @if (cards() && page.total_pages > 1) {
+              <nav class="pager pager-top" aria-label="Navegação rápida entre páginas">
+                <ng-container [ngTemplateOutlet]="pageSteps" />
+              </nav>
+            }
+
+            <bios-search-results
+              [items]="results.value().data"
+              [odsLabel]="odsLabel()"
+              [order]="criteria().order"
+              [layout]="cards() ? 'cards' : 'table'"
+            />
+
+            <nav class="pager" aria-label="Páginas dos resultados">
+              <ng-container [ngTemplateOutlet]="pageSteps" />
+              <mat-form-field appearance="outline" class="page-size">
+                <mat-label>Itens por página</mat-label>
+                <select
+                  #pageSize
+                  matNativeControl
+                  [value]="criteria().pageSize"
+                  (change)="changePageSize(pageSize.value)"
+                >
+                  @for (size of pageSizes(); track size) {
+                    <option [value]="size" [selected]="size === criteria().pageSize">
+                      {{ size }}
+                    </option>
+                  }
+                </select>
+              </mat-form-field>
+            </nav>
+          }
+        </bios-async-state>
+      }
+    </section>
   }
-</section>
+</mat-tab-nav-panel>

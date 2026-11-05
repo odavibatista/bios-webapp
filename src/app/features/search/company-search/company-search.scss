@@ -115,3 +115,22 @@ h2 {
 .page-size {
   width: 10rem;
 }
+
+// A faixa acompanha a rolagem até o panorama, abaixo do cabeçalho fixo. No celular ela tomaria a
+// tela inteira, então fica no fluxo.
+.totals {
+  z-index: 1;
+  padding-block: 0.5rem;
+  background: var(--mat-sys-surface);
+}
+
+@media (min-width: 1100px) {
+  .totals {
+    position: sticky;
+    top: 64px;
+  }
+}
+
+.overview h2 {
+  margin-top: 1rem;
+}
