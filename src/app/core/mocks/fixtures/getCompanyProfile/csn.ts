@@ -21,6 +21,8 @@ export default {
     "registration_status": "ATIVA",
     "registration_status_unrecognized": null,
     "company_size": "DEMAIS",
+    "legal_nature_code": "2046",
+    "legal_nature": "Sociedade Anônima Aberta",
     "address": {
       "street": "AVENIDA BRIGADEIRO FARIA LIMA",
       "number": "3400",
