@@ -1,0 +1,45 @@
+:host {
+  display: block;
+  max-width: 70ch;
+  margin: 0 auto;
+}
+
+h1 {
+  margin: 0 0 0.5rem;
+  font: var(--mat-sys-headline-medium);
+  color: var(--bios-brand-green);
+}
+
+h2 {
+  margin: 0 0 0.75rem;
+  font: var(--mat-sys-title-large);
+}
+
+.lead {
+  margin: 0 0 1.5rem;
+  color: var(--bios-brand-moss);
+}
+
+section {
+  margin-bottom: 2rem;
+}
+
+.highlight {
+  padding: 1.25rem;
+  border-left: 4px solid var(--mat-sys-primary);
+  border-radius: var(--mat-sys-corner-small);
+  background: var(--mat-sys-surface-container);
+}
+
+p,
+li {
+  overflow-wrap: anywhere;
+}
+
+ul {
+  padding-left: 1.25rem;
+}
+
+li + li {
+  margin-top: 0.5rem;
+}

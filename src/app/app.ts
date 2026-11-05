@@ -13,6 +13,7 @@ import { filter, map, skip } from 'rxjs';
 import { PRESENTATION_MODE } from './core/presentation-mode';
 import { SessionStore } from './core/session/session-store';
 import { CnpjSearch } from './features/profile/cnpj-search/cnpj-search';
+import { PRIVACY_CONTACT } from './features/privacy/privacy-contact';
 import { COMPANIES_PATH } from './features/profile/companies-path';
 import { HeaderNav } from './layout/header-nav/header-nav';
 import { UserMenu } from './layout/user-menu/user-menu';
@@ -36,6 +37,9 @@ import { UserMenu } from './layout/user-menu/user-menu';
 export class App {
   /** Na versão de apresentação, o rodapé avisa de onde vêm os dados (FE-29). */
   protected readonly presentation = inject(PRESENTATION_MODE);
+
+  /** Para quem escrever sobre dados pessoais, no rodapé de todas as telas (NFSE02). */
+  protected readonly privacyContact = PRIVACY_CONTACT;
 
   /** Com sessão, a barra mostra quem entrou (#18). */
   private readonly store = inject(SessionStore);

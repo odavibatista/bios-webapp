@@ -458,6 +458,38 @@ export type ApiKeyResponse = {
 };
 
 /**
+ * Cadastros retirados, da retirada mais recente para a mais antiga
+ */
+export type CompanyRemovalList = {
+    /**
+     * Itens da página
+     */
+    data: Array<CompanyRemoval>;
+    pagination: PaginationMeta;
+};
+
+/**
+ * Cadastro retirado a pedido do titular
+ */
+export type CompanyRemoval = {
+    /**
+     * CNPJ retirado, sem pontuação
+     */
+    cnpj: string;
+    /**
+     * Quando o cadastro foi retirado
+     */
+    removed_at: string;
+};
+
+export type AddCompanyRemovalRequest = {
+    /**
+     * CNPJ do cadastro a retirar
+     */
+    cnpj: string;
+};
+
+/**
  * Índice de um ODS com a explicação do cálculo
  */
 export type ScoreExplanationResponse = {
@@ -856,6 +888,14 @@ export type CompanyFullProfileResponse = {
      * Porte
      */
     company_size: string | null;
+    /**
+     * Código da natureza jurídica na Receita; 2135 é empresário individual
+     */
+    legal_nature_code: string | null;
+    /**
+     * Descrição da natureza jurídica
+     */
+    legal_nature: string | null;
     address: CompanyAddress;
     /**
      * CNAE principal
@@ -968,6 +1008,70 @@ export type CompanySourceProvenance = {
     source_slug: 'IBAMA' | 'CGU_CEIS' | 'CGU_CNEP' | 'GHG_PROTOCOL';
     origin: 'COLLECTION' | 'PERSISTED' | 'PENDING' | 'UNAVAILABLE';
     evidence_state: 'CONFIRMED' | 'NOT_FOUND' | 'UNKNOWN' | 'OUTDATED' | null;
+};
+
+export type CrmImportRequest = {
+    /**
+     * CNPJs das contas do CRM; repetidos contam uma vez
+     */
+    cnpjs: Array<string>;
+};
+
+/**
+ * Contas do lote, na ordem enviada
+ */
+export type CrmImportResponse = {
+    data: Array<CrmImportResult>;
+};
+
+export type CrmImportResult = {
+    /**
+     * CNPJ como foi enviado
+     */
+    cnpj: string;
+    status: 'IMPORTED' | 'NOT_FOUND' | 'INVALID' | 'UNAVAILABLE';
+    account: CrmAccount | null;
+};
+
+export type CrmAccount = {
+    /**
+     * CNPJ, sem pontuação
+     */
+    external_id: string;
+    /**
+     * Razão social; no empresário individual pode conter o nome do titular, com CPF mascarado
+     */
+    legal_name: string;
+    trade_name: string | null;
+    registration_status: RegistrationStatus;
+    company_size: string | null;
+    city: string;
+    uf: string;
+    main_cnae_code: string;
+    main_cnae_description: string;
+    /**
+     * Índice e confiança por ODS, separados e nunca combinados
+     */
+    ods: Array<CrmAccountOds>;
+    /**
+     * Evidências confirmadas por categoria
+     */
+    evidences: Array<CrmAccountEvidences>;
+    refreshed_at: string;
+    scores_pending: boolean;
+    retry_after_seconds: number | null;
+};
+
+export type CrmAccountOds = {
+    ods_number: number;
+    calculation_status: 'CALCULATED' | 'PENDING';
+    score_value: number | null;
+    confidence_value: number | null;
+};
+
+export type CrmAccountEvidences = {
+    category: 'INFRACAO_AMBIENTAL' | 'CONDUTA_ADMINISTRATIVA' | 'EMISSAO_GEE';
+    confirmed_count: number;
 };
 
 export type CheckHealthData = {
@@ -1716,6 +1820,135 @@ export type RevokeApiKeyResponses = {
 
 export type RevokeApiKeyResponse = RevokeApiKeyResponses[keyof RevokeApiKeyResponses];
 
+export type ListCompanyRemovalsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Página solicitada (a partir de 1)
+         */
+        page?: number;
+        /**
+         * Quantidade de itens por página (máximo de 100)
+         */
+        page_size?: number;
+    };
+    url: '/admin/company-removals';
+};
+
+export type ListCompanyRemovalsErrors = {
+    /**
+     * UNAUTHORIZED
+     */
+    401: ErrorResponse;
+    /**
+     * FORBIDDEN
+     */
+    403: ErrorResponse;
+    /**
+     * UNPROCESSABLE_ENTITY
+     */
+    422: ErrorResponse;
+    /**
+     * TOO_MANY_REQUESTS
+     */
+    429: ErrorResponse;
+};
+
+export type ListCompanyRemovalsError = ListCompanyRemovalsErrors[keyof ListCompanyRemovalsErrors];
+
+export type ListCompanyRemovalsResponses = {
+    /**
+     * Página de cadastros retirados
+     */
+    200: CompanyRemovalList;
+};
+
+export type ListCompanyRemovalsResponse = ListCompanyRemovalsResponses[keyof ListCompanyRemovalsResponses];
+
+export type AddCompanyRemovalData = {
+    body: AddCompanyRemovalRequest;
+    path?: never;
+    query?: never;
+    url: '/admin/company-removals';
+};
+
+export type AddCompanyRemovalErrors = {
+    /**
+     * UNAUTHORIZED
+     */
+    401: ErrorResponse;
+    /**
+     * FORBIDDEN
+     */
+    403: ErrorResponse;
+    /**
+     * UNPROCESSABLE_ENTITY
+     */
+    422: ErrorResponse;
+    /**
+     * TOO_MANY_REQUESTS
+     */
+    429: ErrorResponse;
+};
+
+export type AddCompanyRemovalError = AddCompanyRemovalErrors[keyof AddCompanyRemovalErrors];
+
+export type AddCompanyRemovalResponses = {
+    /**
+     * Cadastro retirado
+     */
+    201: CompanyRemoval;
+};
+
+export type AddCompanyRemovalResponse = AddCompanyRemovalResponses[keyof AddCompanyRemovalResponses];
+
+export type RestoreCompanyData = {
+    body?: never;
+    path: {
+        /**
+         * CNPJ, com 14 caracteres
+         */
+        cnpj: string;
+    };
+    query?: never;
+    url: '/admin/company-removals/{cnpj}';
+};
+
+export type RestoreCompanyErrors = {
+    /**
+     * UNAUTHORIZED
+     */
+    401: ErrorResponse;
+    /**
+     * FORBIDDEN
+     */
+    403: ErrorResponse;
+    /**
+     * NOT_FOUND
+     */
+    404: ErrorResponse;
+    /**
+     * UNPROCESSABLE_ENTITY
+     */
+    422: ErrorResponse;
+    /**
+     * TOO_MANY_REQUESTS
+     */
+    429: ErrorResponse;
+};
+
+export type RestoreCompanyError = RestoreCompanyErrors[keyof RestoreCompanyErrors];
+
+export type RestoreCompanyResponses = {
+    /**
+     * CNPJ fora da lista
+     */
+    204: void;
+};
+
+export type RestoreCompanyResponse = RestoreCompanyResponses[keyof RestoreCompanyResponses];
+
 export type GetScoreExplanationData = {
     body?: never;
     path: {
@@ -2206,3 +2439,36 @@ export type GetPublicCompanyProfileResponses = {
 };
 
 export type GetPublicCompanyProfileResponse = GetPublicCompanyProfileResponses[keyof GetPublicCompanyProfileResponses];
+
+export type ImportCrmCompaniesData = {
+    body: CrmImportRequest;
+    path?: never;
+    query?: never;
+    url: '/v1/crm/companies';
+};
+
+export type ImportCrmCompaniesErrors = {
+    /**
+     * UNAUTHORIZED
+     */
+    401: ErrorResponse;
+    /**
+     * UNPROCESSABLE_ENTITY
+     */
+    422: ErrorResponse;
+    /**
+     * TOO_MANY_REQUESTS
+     */
+    429: ErrorResponse;
+};
+
+export type ImportCrmCompaniesError = ImportCrmCompaniesErrors[keyof ImportCrmCompaniesErrors];
+
+export type ImportCrmCompaniesResponses = {
+    /**
+     * Contas do lote, com o estado de cada CNPJ
+     */
+    200: CrmImportResponse;
+};
+
+export type ImportCrmCompaniesResponse = ImportCrmCompaniesResponses[keyof ImportCrmCompaniesResponses];

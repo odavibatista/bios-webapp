@@ -21,6 +21,8 @@ export default {
     "registration_status": "ATIVA",
     "registration_status_unrecognized": null,
     "company_size": "DEMAIS",
+    "legal_nature_code": "2054",
+    "legal_nature": "Sociedade Anônima Fechada",
     "address": {
       "street": "RODOVIA POCOS DE CALDAS - ANDRADAS KM 10",
       "number": "S/N",
