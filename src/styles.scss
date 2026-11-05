@@ -6,6 +6,13 @@
 
 html {
   height: 100%;
+  // O elemento que recebe foco ou rolagem não para embaixo da barra fixa do topo.
+  scroll-padding-top: 5.5rem;
+
+  @media (max-width: 767px) {
+    scroll-padding-top: 8rem;
+  }
+
   @include mat.theme(
     (
       color: (
@@ -53,6 +60,13 @@ a:hover {
 a:focus-visible {
   outline: 2px solid var(--mat-sys-primary);
   outline-offset: 2px;
+}
+
+// O ODS escolhido quebra a linha em vez de cortar o nome no celular (#198).
+.mat-mdc-select .mat-mdc-select-value,
+.mat-mdc-select .mat-mdc-select-value-text,
+.mat-mdc-select .mat-mdc-select-min-line {
+  white-space: normal;
 }
 
 // Texto só para leitor de tela: some da tela, mas continua no nome acessível.
