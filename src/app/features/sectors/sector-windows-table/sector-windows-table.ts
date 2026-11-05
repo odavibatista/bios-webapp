@@ -29,7 +29,8 @@ interface WindowRow {
 export function sectorWindowRows(windows: readonly SectorScoreWindow[]): WindowRow[] {
   const rows: WindowRow[] = [];
 
-  for (const window of windows) {
+  // Agrupa em ordem cronologica para preservar os intervalos, depois exibe o mais recente antes.
+  for (const window of [...windows].sort((a, b) => a.window_start.localeCompare(b.window_start))) {
     const previous = rows.at(-1);
     const confidence = formatAverageConfidence(window.average_confidence);
     if (
@@ -57,7 +58,7 @@ export function sectorWindowRows(windows: readonly SectorScoreWindow[]): WindowR
     });
   }
 
-  return rows;
+  return rows.reverse();
 }
 
 /**

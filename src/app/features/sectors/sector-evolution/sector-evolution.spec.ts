@@ -227,8 +227,8 @@ describe('SectorEvolution', () => {
     const rows = within(table).getAllByRole('row').slice(1);
 
     expect(rows.map((row) => row.querySelector('th')?.textContent.trim())).toEqual([
-      'outubro de 2026',
       'novembro de 2026',
+      'outubro de 2026',
     ]);
     expect(screen.queryByText(INSUFFICIENT)).toBeNull();
   });
