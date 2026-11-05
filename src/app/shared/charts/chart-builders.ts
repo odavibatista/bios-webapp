@@ -2,6 +2,7 @@ import {
   type ChartItem,
   type ChartSeries,
   type ChartSpec,
+  type ChartTable,
   CATEGORY_COLORS,
   OTHER_COLOR,
   OTHERS_KEY,
@@ -42,6 +43,15 @@ interface ColumnsChart {
   series: readonly ChartSeries[];
   headers: readonly [string, string];
   sentence: (category: string, series: ChartSeries, value: number) => string;
+}
+
+interface StepsChart {
+  label: string;
+  points: readonly { date: string; value: number }[];
+  format: (value: number) => string;
+  /** As linhas da dica de cada ponto. */
+  tooltip: (index: number) => readonly string[];
+  table: ChartTable;
 }
 
 const AXIS_FONT = 12;
@@ -202,6 +212,66 @@ export function pointsChart(chart: ItemsChart): ChartSpec {
             label: { position: value < 0 ? 'left' : 'right' },
             itemStyle: { borderRadius: value < 0 ? [4, 0, 0, 4] : [0, 4, 4, 0] },
           })),
+        },
+      ],
+    }),
+  };
+}
+
+/**
+ * Degraus no tempo: o valor fica parado até o evento seguinte. A escala é sempre a do índice
+ * inteira, para o tamanho do degrau não parecer maior do que é, e a cor não muda com o valor.
+ */
+export function stepChart(chart: StepsChart): ChartSpec {
+  const { points } = chart;
+
+  return {
+    label: chart.label,
+    height: 18,
+    table: chart.table,
+    options: ({ text, grid, surface }) => ({
+      ...COMMON,
+      color: [SERIES_COLOR],
+      grid: { left: 4, right: 40, top: 16, bottom: 4, containLabel: true },
+      tooltip: {
+        trigger: 'axis',
+        confine: true,
+        formatter: (params: { dataIndex: number }[]) =>
+          chart
+            .tooltip(params[0]?.dataIndex ?? 0)
+            .map(escapeHtml)
+            .join('<br>'),
+      },
+      xAxis: {
+        type: 'time',
+        axisLine: { lineStyle: { color: grid } },
+        axisTick: { show: false },
+        splitLine: { show: false },
+        axisLabel: { color: text, fontSize: AXIS_FONT, hideOverlap: true },
+      },
+      yAxis: {
+        type: 'value',
+        min: -100,
+        max: 100,
+        interval: 50,
+        splitLine: { lineStyle: { color: grid } },
+        axisLabel: { color: text, fontSize: AXIS_FONT },
+      },
+      series: [
+        {
+          type: 'line',
+          step: 'end',
+          symbol: 'circle',
+          symbolSize: 10,
+          lineStyle: { width: 2 },
+          itemStyle: { borderColor: surface, borderWidth: 2 },
+          endLabel: {
+            show: true,
+            color: text,
+            fontSize: AXIS_FONT,
+            formatter: () => chart.format(points[points.length - 1].value),
+          },
+          data: points.map(({ date, value }) => [date, value]),
         },
       ],
     }),

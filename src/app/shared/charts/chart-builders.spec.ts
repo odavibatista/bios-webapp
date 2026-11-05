@@ -1,4 +1,11 @@
-import { barChart, columnChart, donutChart, pointsChart, treemapChart } from './chart-builders';
+import {
+  barChart,
+  columnChart,
+  donutChart,
+  pointsChart,
+  stepChart,
+  treemapChart,
+} from './chart-builders';
 import { CATEGORY_COLORS, type ChartItem, OTHER_COLOR, SERIES_COLOR } from './chart-spec';
 
 const THEME = { text: '#111111', grid: '#cccccc', surface: '#ffffff', narrow: false };
@@ -163,6 +170,40 @@ describe('columnChart', () => {
 
   it('com uma medida só, não há legenda', () => {
     expect(optionsOf(columnChart(single)).legend).toBeUndefined();
+  });
+});
+
+describe('stepChart', () => {
+  const spec = stepChart({
+    label: 'Degraus',
+    points: [
+      { date: '2019-01-01T00:00:00.000Z', value: -40 },
+      { date: '2022-01-01T00:00:00.000Z', value: -20 },
+    ],
+    format: String,
+    tooltip: (index) => [`Ponto <${String(index)}>`, 'Fonte'],
+    table: { headers: ['Data', 'Índice'], rows: [] },
+  });
+
+  it('usa degraus e a escala inteira do índice, em uma cor só', () => {
+    const options = spec.options(THEME) as unknown as {
+      color: string[];
+      yAxis: { min: number; max: number };
+      series: { step: string; endLabel: { formatter: () => string } }[];
+    };
+
+    expect(options.color).toEqual([SERIES_COLOR]);
+    expect(options.yAxis).toMatchObject({ min: -100, max: 100 });
+    expect(options.series[0].step).toBe('end');
+    expect(options.series[0].endLabel.formatter()).toBe('-20');
+  });
+
+  it('a dica escapa o texto da API e lista uma linha por informação', () => {
+    const options = spec.options(THEME) as unknown as {
+      tooltip: { formatter: (params: { dataIndex: number }[]) => string };
+    };
+
+    expect(options.tooltip.formatter([{ dataIndex: 1 }])).toBe('Ponto &lt;1&gt;<br>Fonte');
   });
 });
 
