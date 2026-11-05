@@ -62,6 +62,14 @@ test.describe('pesquisa de empresas (#25)', () => {
     await expect(page.getByLabel('CNAE')).toHaveValue('');
   });
 
+  test('sem ODS, orienta a seleção e mostra a situação cadastral', async ({ page }) => {
+    await signInToSearch(page, '?cnae=24');
+
+    await expect(page.getByRole('status')).toHaveText('10 empresas encontradas');
+    await expect(page.getByText('Escolha um ODS para ver o índice e a confiança.')).toBeVisible();
+    await expect(page.locator('.status-chip').first()).toBeVisible();
+  });
+
   test('em tela larga é tabela; no celular, cartões, sem rolar a página', async ({
     page,
   }, testInfo) => {
