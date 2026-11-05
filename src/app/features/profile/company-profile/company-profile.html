@@ -50,6 +50,7 @@
         [profile]="profile.value()"
         [sectorAverages]="sectorAverages.hasValue() ? sectorAverages.value() : {}"
       />
+      <bios-index-evolution class="section" [cnpj]="profile.value().cnpj" />
       <bios-company-charts class="section" [profile]="profile.value()" />
       <bios-registration-data class="section" [profile]="profile.value()" />
       <bios-environmental-evidences

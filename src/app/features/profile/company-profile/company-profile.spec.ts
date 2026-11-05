@@ -95,6 +95,7 @@ describe('CompanyProfile', () => {
       [...container.querySelectorAll('h2')].map((heading) => heading.textContent?.trim()),
     ).toEqual([
       'Índices por ODS',
+      'Evolução do índice',
       'Evidências em gráficos',
       'Dados cadastrais',
       'Evidências',

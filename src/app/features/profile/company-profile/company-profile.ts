@@ -17,6 +17,7 @@ import { LoadingState } from '../../../shared/states/loading-state';
 import { COMPANIES_PATH, CnpjSearch } from '../cnpj-search/cnpj-search';
 import { CompanyCharts } from '../company-charts/company-charts';
 import { EnvironmentalEvidences } from '../environmental-evidences/environmental-evidences';
+import { IndexEvolution } from '../index-evolution/index-evolution';
 import { OdsScores } from '../ods-scores/ods-scores';
 import { RegistrationData } from '../registration-data/registration-data';
 import {
@@ -43,6 +44,7 @@ type Problem = 'invalid' | 'not-found' | 'failure';
     CompanyCharts,
     CnpjSearch,
     EnvironmentalEvidences,
+    IndexEvolution,
     OdsScores,
     ErrorState,
     LoadingState,
