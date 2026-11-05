@@ -56,8 +56,26 @@ describe('SectorWindowsTable', () => {
 
     const rows = within(screen.getByRole('table')).getAllByRole('row');
 
-    expect(cells(rows[2])).toEqual(['novembro de 2026', 'Omitida', 'Omitida', '3', '2']);
+    expect(cells(rows[1])).toEqual(['novembro de 2026', 'Omitida', 'Omitida', '3', '2']);
     expect(screen.getByText(OMITTED_AVERAGE_NOTE)).toBeTruthy();
+  });
+
+  it('mostra o mês recente primeiro mesmo quando a API entrega janelas fora de ordem', async () => {
+    const december = {
+      ...OCTOBER,
+      window_start: '2026-12-01T00:00:00.000Z',
+      window_end: '2027-01-01T00:00:00.000Z',
+      average_score: -20,
+    };
+    await renderTable([OCTOBER, december, NOVEMBER_OMITTED]);
+
+    const rows = within(screen.getByRole('table')).getAllByRole('row').slice(1);
+    expect(rows.map((row) => cells(row)[0])).toEqual([
+      'dezembro de 2026',
+      'novembro de 2026',
+      'outubro de 2026',
+    ]);
+    expect(cells(rows[0])[1]).toBe('-20');
   });
 
   it('a tabela larga rola dentro de uma região focável, nomeada pela legenda', async () => {
@@ -83,7 +101,7 @@ describe('SectorWindowsTable', () => {
     };
 
     expect(sectorWindowRows([NOVEMBER_OMITTED, december, january]).map((row) => row.month)).toEqual(
-      ['novembro de 2026 a dezembro de 2026', 'janeiro de 2027'],
+      ['janeiro de 2027', 'novembro de 2026 a dezembro de 2026'],
     );
   });
 
@@ -108,8 +126,8 @@ describe('SectorWindowsTable', () => {
         confidence,
       ]),
     ).toEqual([
-      ['novembro de 2026 a dezembro de 2026', 'Omitida', '0,00'],
       ['janeiro de 2027', 'Omitida', '0,20'],
+      ['novembro de 2026 a dezembro de 2026', 'Omitida', '0,00'],
     ]);
   });
 
