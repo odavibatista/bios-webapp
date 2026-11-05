@@ -3,8 +3,11 @@
 // Uso: node --experimental-strip-types scripts/build-presentation-data.mjs <pasta do dump>
 //
 // Entrada: <dump>/NNN.jsonl (uma empresa por linha, com perfil e explicações, como a API respondeu)
-// e <dump>/sectors.json (setores e séries, depois de `reconstruct-sector-history.mjs`). Saída:
-// public/presentation/v3:
+// e <dump>/sectors.json (setores e séries, depois de `reconstruct-sector-history.mjs`). Opcionais:
+// <dump>/legal-nature.json (natureza jurídica por CNPJ-base, lida do arquivo Empresas da Receita) e
+// <dump>/removed-cnpjs.json (lista dos cadastros retirados a pedido do titular, que não entram em
+// nenhum arquivo). A lista fica no dump, fora do repositório: publicá-la identificaria quem pediu.
+// Saída: public/presentation/v4:
 //   manifest.json            data da captura e contagens
 //   search.json.gz           índice leve da pesquisa, com tabelas para não repetir texto
 //   companies/NNN.json.gz    empresas cujo CNPJ começa em NNN, sem alterar as respostas da API
@@ -15,6 +18,7 @@
 // contribuições de um índice não reproduzir o valor exibido (RF12): dado errado não vai ao ar.
 import {
   createReadStream,
+  existsSync,
   mkdirSync,
   readFileSync,
   readdirSync,
@@ -35,7 +39,7 @@ import {
 const [dump] = process.argv.slice(2);
 if (!dump) throw new Error('Informe a pasta do dump.');
 
-const OUT = fileURLToPath(new URL('../public/presentation/v3/', import.meta.url));
+const OUT = fileURLToPath(new URL('../public/presentation/v4/', import.meta.url));
 const ODS = [13, 15];
 const CPF_FORMATTED = /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/;
 const CPF_DIGITS = /(?<![\w.\-/])\d{11}(?![\w.\-/])/;
@@ -43,6 +47,11 @@ const EMAIL = /[\w.+-]+@[\w-]+\.[\w.-]+/;
 const PERSONAL_KEYS = /^(qsa|socios?|email|telefone|phone|ddd|cpf)/i;
 const DIRECTIONS = ['INCREASED', 'DECREASED', 'AVAILABLE', 'UNAVAILABLE'];
 const NOW = Date.now();
+
+const optionalJson = (name, fallback) =>
+  existsSync(join(dump, name)) ? JSON.parse(readFileSync(join(dump, name), 'utf8')) : fallback;
+const legalNatures = optionalJson('legal-nature.json', {});
+const removed = new Set(optionalJson('removed-cnpjs.json', []));
 
 const problems = [];
 const problem = (cnpj, text) => {
@@ -125,8 +134,11 @@ for (const file of readdirSync(dump)
   })) {
     if (!line) continue;
     const { cnpj, profile, explanations } = JSON.parse(line);
-    if (seen.has(cnpj)) continue;
+    if (seen.has(cnpj) || removed.has(cnpj)) continue;
     seen.add(cnpj);
+    const [legalNatureCode = null, legalNature = null] = legalNatures[cnpj.slice(0, 8)] ?? [];
+    profile.legal_nature_code = legalNatureCode;
+    profile.legal_nature = legalNature;
     audit(cnpj, profile);
     audit(cnpj, explanations);
     checkScores(cnpj, explanations);
