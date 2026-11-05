@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/angular';
+import { userEvent } from '@testing-library/user-event';
 import type { CompanyFullProfileResponse } from '../../../core/api/generated';
 import acoCearense from '../../../core/mocks/fixtures/getCompanyProfile/aco-cearense';
 import { RegistrationData } from './registration-data';
@@ -42,7 +43,7 @@ describe('RegistrationData', () => {
       '2431-8/00 PRODUÇÃO DE TUBOS DE AÇO COM COSTURA',
     );
     const secondary = within(valueOf('Atividades secundárias')).getAllByRole('listitem');
-    expect(secondary).toHaveLength(PROFILE.secondary_cnaes.length);
+    expect(secondary).toHaveLength(Math.min(PROFILE.secondary_cnaes.length, 5));
     expect(secondary[0]?.textContent.replace(/\s+/g, ' ').trim()).toBe(
       '2439-3/00 PRODUÇÃO DE OUTROS TUBOS DE FERRO E AÇO',
     );
@@ -63,6 +64,24 @@ describe('RegistrationData', () => {
     await renderData({ secondary_cnaes: [] });
 
     expect(valueOf('Atividades secundárias').textContent.trim()).toBe('Nenhuma informada.');
+  });
+
+  it('acima de cinco CNAEs secundários, mostra os demais ao expandir por teclado', async () => {
+    const secondary_cnaes = Array.from({ length: 8 }, (_, index) => ({
+      code: `2439${index}00`,
+      description: `ATIVIDADE ${index + 1}`,
+    }));
+    await renderData({ secondary_cnaes });
+
+    const secondary = valueOf('Atividades secundárias');
+    const toggle = within(secondary).getByRole('button', { name: 'Mostrar todas as 8 atividades' });
+    expect(within(secondary).getAllByRole('listitem')).toHaveLength(5);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    toggle.focus();
+    await userEvent.setup().keyboard('{Enter}');
+    expect(within(secondary).getAllByRole('listitem')).toHaveLength(8);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
   });
 
   it('não tem campo de sócio, administrador ou contato (INL02)', async () => {

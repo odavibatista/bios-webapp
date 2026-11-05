@@ -113,10 +113,8 @@
   <ul class="sources">
     @for (source of sources(); track source.slug) {
       <li>
-        <strong>{{ source.label }}:</strong> {{ source.originLabel }}
-        @if (!source.originLabel.endsWith('.')) {
-          .
-        }
+        <strong>{{ source.label }}:</strong> {{ source.originLabel
+        }}{{ source.originLabel.endsWith('.') ? '' : '.' }}
         @if (source.origin === 'PENDING' && profile().provenance.retry_after_seconds !== null) {
           {{ retry() }}
         }

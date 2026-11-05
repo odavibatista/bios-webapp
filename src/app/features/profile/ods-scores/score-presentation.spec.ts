@@ -22,8 +22,14 @@ describe('presentScore', () => {
       confidenceLabel: '0,35',
       coverageLabel: 'Há registros nas fontes consultadas para este ODS.',
       position: 30,
+      fillStart: 30,
+      fillWidth: 20,
     });
     expect(presentScore({ ...SCORE, score_value: 0 }).position).toBe(50);
+    expect(presentScore({ ...SCORE, score_value: 40 })).toMatchObject({
+      fillStart: 50,
+      fillWidth: 20,
+    });
   });
 
   it('sem evidência conclusiva mostra confiança mínima sem converter ausência em zero', () => {
@@ -38,6 +44,8 @@ describe('presentScore', () => {
       scoreLabel: 'Sem evidência conclusiva',
       confidenceLabel: '0,00',
       position: null,
+      fillStart: null,
+      fillWidth: null,
     });
   });
 
