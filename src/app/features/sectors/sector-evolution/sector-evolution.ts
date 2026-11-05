@@ -11,7 +11,7 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
@@ -38,6 +38,16 @@ import {
   sectorCriteriaToParams,
 } from '../sector-criteria';
 import { SectorWindowsTable } from '../sector-windows-table/sector-windows-table';
+
+/** Divisões com mais empresas na base publicada, em ordem de quantidade. */
+export const POPULAR_SECTORS = [
+  { cnae: '47', label: 'Comércio varejista', companies: 30124 },
+  { cnae: '16', label: 'Fabricação de produtos de madeira', companies: 12603 },
+  { cnae: '46', label: 'Comércio por atacado, exceto veículos', companies: 9218 },
+] as const;
+
+/** O ODS da abertura: é o que tem média na maior parte dos setores. */
+const DEFAULT_ODS = '15';
 
 /** Texto sem acento e em maiúsculas, para achar "metal" em "METALURGIA" e "educacao" em "EDUCAÇÃO". */
 function searchable(text: string): string {
@@ -83,6 +93,7 @@ export class SectorEvolution {
   private readonly sectorInput = viewChild.required<ElementRef<HTMLInputElement>>('sectorInput');
 
   protected readonly messageOf = fieldMessage;
+  protected readonly popularSectors = POPULAR_SECTORS;
 
   /** Setor e ODS da URL: a única fonte da consulta. */
   protected readonly criteria = toSignal(
@@ -161,6 +172,20 @@ export class SectorEvolution {
   });
 
   constructor() {
+    // Sem critérios, a tela mostra o setor com mais empresas, sem adicionar entrada ao histórico.
+    // Vale também para quem volta a `/setores` pelo menu, com a tela já aberta.
+    this.route.queryParams.pipe(takeUntilDestroyed()).subscribe((params) => {
+      if (Object.keys(params).length > 0) return;
+
+      queueMicrotask(() => {
+        void this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { cnae: POPULAR_SECTORS[0].cnae, ods: DEFAULT_ODS },
+          replaceUrl: true,
+        });
+      });
+    });
+
     // A URL manda: ao abrir um link, ao consultar e ao voltar pelo navegador, o formulário mostra
     // o setor e o ODS da consulta exibida.
     effect(() => {
@@ -214,9 +239,20 @@ export class SectorEvolution {
     });
   }
 
-  protected clearSector(): void {
+  protected async clearSector(): Promise<void> {
     this.form.controls.cnae.setValue('');
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { ods: this.form.controls.ods.value?.toString() ?? DEFAULT_ODS },
+    });
     this.sectorInput().nativeElement.focus();
+  }
+
+  protected async chooseShortcut(cnae: string): Promise<void> {
+    await this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { cnae, ods: this.form.controls.ods.value?.toString() ?? DEFAULT_ODS },
+    });
   }
 
   private focusFirstInvalid(): void {

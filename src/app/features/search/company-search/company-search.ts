@@ -1,4 +1,5 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
+import { NgTemplateOutlet } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -97,6 +98,7 @@ function blank(value: string): string | null {
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    NgTemplateOutlet,
     ReactiveFormsModule,
     SearchResults,
   ],
@@ -144,6 +146,9 @@ export class CompanySearch {
   protected readonly formErrors = signal<string[]>([]);
   protected readonly exporting = signal(false);
   protected readonly exportError = signal<unknown>(null);
+
+  /** Pesquisa enviada no celular: quando responder, a tela leva ao resultado (#199). */
+  private readonly revealResults = signal(false);
 
   protected readonly exportLimit = computed(() => {
     const error = this.exportError();
@@ -211,6 +216,26 @@ export class CompanySearch {
       });
     });
 
+    // No celular, o resultado fica abaixo de um formulário longo. A contagem já é anunciada pelo
+    // `role="status"`; aqui, o foco e a rolagem levam a pessoa até ela.
+    effect(() => {
+      if (!this.revealResults() || this.results.isLoading()) return;
+
+      untracked(() => {
+        this.revealResults.set(false);
+        afterNextRender(
+          () => {
+            const heading =
+              this.host.nativeElement.querySelector<HTMLElement>('#titulo-resultados');
+
+            heading?.focus({ preventScroll: true });
+            heading?.scrollIntoView({ block: 'start' });
+          },
+          { injector: this.injector },
+        );
+      });
+    });
+
     // Sem ODS, índice mínimo, confiança mínima e ordenação não existem (UC08, regra 3).
     this.form.controls.ods.valueChanges.subscribe((ods) => {
       this.syncOdsFilters(ods);
@@ -242,6 +267,7 @@ export class CompanySearch {
     }
 
     await this.go({ ...criteria, page: 1 });
+    this.revealResults.set(this.cards());
   }
 
   protected async clear(): Promise<void> {

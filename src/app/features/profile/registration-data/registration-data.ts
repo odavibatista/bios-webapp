@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, signal } from '@angular/core';
 import type { CompanyFullProfileResponse } from '../../../core/api/generated';
 import { formatDateTime } from '../../../shared/format/date-time';
 import {
@@ -32,4 +32,12 @@ export class RegistrationData {
   protected readonly address = computed(() => addressLines(this.profile().address));
   protected readonly refreshedAt = computed(() => formatDateTime(this.profile().refreshed_at));
   protected readonly formatCnae = formatCnae;
+  protected readonly expanded = signal(false);
+  protected readonly visibleSecondary = computed(() =>
+    this.expanded() ? this.profile().secondary_cnaes : this.profile().secondary_cnaes.slice(0, 5),
+  );
+
+  protected toggleSecondary(): void {
+    this.expanded.update((value) => !value);
+  }
 }

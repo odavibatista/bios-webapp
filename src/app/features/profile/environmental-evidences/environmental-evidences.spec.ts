@@ -83,6 +83,7 @@ describe('EnvironmentalEvidences', () => {
       'GHG Protocol — Registro Público de Emissões: Não há inventário localizado',
     );
     expect(sources).toContain('Consultada em');
+    expect(sources).not.toMatch(/\s\./);
     expect(sources).not.toContain('Dados armazenados');
     expect(sources).toContain('Recarregue o perfil em cerca de 2 minutos');
     expect(screen.getByRole('link', { name: 'Consultar na fonte: 343440-D' })).toBeTruthy();

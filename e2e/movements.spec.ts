@@ -39,15 +39,29 @@ test.describe('tela principal com as movimentações (#168)', () => {
     await expect(page.locator('bios-movement-card').first()).toBeVisible();
   });
 
-  test('a busca continua na tela principal', async ({ page }) => {
-    await expect(
-      page.getByRole('search', { name: 'Buscar empresa por CNPJ ou nome' }),
-    ).toBeVisible();
+  test('recorte por categoria fica na URL e volta à primeira página', async ({ page }) => {
+    await page.goto('/painel?pagina=2');
+    const category = page.getByRole('combobox', { name: 'Categoria da evidência' });
+
+    await category.selectOption('emissoes');
+    await expect(page).toHaveURL('/painel?categoria=emissoes');
+    await expect(category).toHaveValue('emissoes');
+    await expect(page.locator('bios-movement-card').first()).toBeVisible();
+
+    await page.reload();
+    await expect(category).toHaveValue('emissoes');
+    await category.selectOption('');
+    await expect(page).toHaveURL('/painel');
   });
 
-  test('os cards rolam pelo documento e mantêm a busca acessível no desktop', async ({
+  test('a busca continua na tela principal', async ({ page }) => {
+    await expect(page.getByRole('banner').getByRole('search')).toBeVisible();
+    await expect(page.getByRole('main').getByRole('search')).toHaveCount(0);
+  });
+
+  test('o cabeçalho mantém busca e menu sem cobrir os cards durante a rolagem', async ({
     page,
-  }, testInfo) => {
+  }) => {
     // As fixtures e2e só têm movimentações na primeira página; o layout é o mesmo da página 2.
     await page.goto('/painel');
     await expect(page.getByRole('heading', { name: 'Movimentações recentes' })).toBeVisible();
@@ -63,11 +77,28 @@ test.describe('tela principal com as movimentações (#168)', () => {
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
     expect(await panelContent.evaluate((element) => element.scrollTop)).toBe(0);
 
-    const lookup = page.getByRole('search', { name: 'Buscar empresa por CNPJ ou nome' }).last();
-    if (testInfo.project.name === 'desktop') {
-      await expect(lookup).toBeInViewport();
-      await lookup.getByLabel('CNPJ ou nome da empresa').fill('00990842000138');
-      await expect(lookup.getByLabel('CNPJ ou nome da empresa')).toHaveValue('00990842000138');
+    const header = page.getByRole('banner');
+    await expect(header).toBeInViewport();
+    await expect(header.getByRole('button', { name: 'Áreas do painel' })).toBeVisible();
+    const lookup = header.getByRole('search');
+    await expect(lookup).toBeInViewport();
+    await lookup.getByLabel('Buscar empresa por CNPJ ou nome').fill('00990842000138');
+    await expect(lookup.getByLabel('Buscar empresa por CNPJ ou nome')).toHaveValue(
+      '00990842000138',
+    );
+    await expect(page.getByRole('main').getByRole('search')).toHaveCount(0);
+    await header.getByRole('button', { name: 'Áreas do painel' }).click();
+    await expect(page.getByRole('menuitem', { name: 'Empresas' })).toBeVisible();
+  });
+
+  test('a busca única no cabeçalho cabe nas larguras móvel e desktop', async ({ page }) => {
+    for (const width of [390, 1024, 1100, 1280, 1440]) {
+      await page.setViewportSize({ width, height: 800 });
+      await expect(page.getByRole('banner').getByRole('search')).toBeInViewport();
+      await expect(page.getByRole('main').getByRole('search')).toHaveCount(0);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        width,
+      );
     }
   });
 

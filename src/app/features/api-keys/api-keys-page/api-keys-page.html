@@ -45,7 +45,7 @@
     (retry)="keys.reload()"
   >
     <p class="count">{{ activeKeys().length }} de {{ maxKeys }} chaves ativas.</p>
-    <div class="table-scroll" role="region" aria-label="Tabela das chaves ativas" tabindex="0">
+    <bios-table-scroll label="Tabela das chaves ativas">
       <table>
         <thead>
           <tr>
@@ -80,7 +80,7 @@
           }
         </tbody>
       </table>
-    </div>
+    </bios-table-scroll>
   </bios-async-state>
 </section>
 
@@ -92,8 +92,17 @@
   </p>
   <pre><code>GET /v1/companies/&#123;cnpj&#125;
 x-api-key: bios_XXXXXXXX_…</code></pre>
-  <p>
-    A documentação OpenAPI, com as rotas, os parâmetros e as respostas, fica no endereço da API, em
-    <code>/docs</code>.
-  </p>
+  @if (presentation) {
+    <p>
+      A documentação OpenAPI, com as rotas, os parâmetros e as respostas, está no
+      <a href="https://github.com/odavibatista/bios-webapp/blob/main/api/openapi.json"
+        >arquivo OpenAPI publicado</a
+      >.
+    </p>
+  } @else {
+    <p>
+      A documentação OpenAPI, com as rotas, os parâmetros e as respostas, fica no endereço da API,
+      em <code>/docs</code>.
+    </p>
+  }
 </section>

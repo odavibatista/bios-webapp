@@ -58,7 +58,7 @@ describe('SearchResults', () => {
     expect(firstCells).toEqual([
       'Ativa',
       'OURO BRANCO/MG',
-      expect.stringContaining('2451200'),
+      expect.stringContaining('2451-2/00'),
       '-12,5',
       '0,62',
     ]);
@@ -67,6 +67,9 @@ describe('SearchResults', () => {
       .map((cell) => cell.textContent.trim());
     expect(secondCells.slice(-2)).toEqual(['Sem índice', 'Sem cálculo']);
     expect(secondCells[0]).toBe('Baixada');
+    const statuses = screen.getAllByText(/^(Ativa|Baixada)$/);
+    expect(statuses[0].classList.contains('status-chip--other')).toBe(false);
+    expect(statuses[1].classList.contains('status-chip--other')).toBe(true);
   });
 
   it('o nome leva ao perfil da empresa', async () => {
@@ -75,6 +78,13 @@ describe('SearchResults', () => {
     expect(
       screen.getByRole('link', { name: 'EMPRESA DEMONSTRACAO S.A.' }).getAttribute('href'),
     ).toBe('/empresas/33592510000154');
+  });
+
+  it('formata o CNAE também no cartão móvel', async () => {
+    await renderResults('cards', null);
+
+    expect(screen.getAllByText(/2451-2\/00/)).toHaveLength(2);
+    expect(screen.getByText('Baixada').classList.contains('status-chip--other')).toBe(true);
   });
 
   it('sem ODS escolhido, não há colunas de índice', async () => {

@@ -1,16 +1,23 @@
-<h1>Olá, {{ firstName() }}</h1>
-
-<section class="lookup" aria-labelledby="titulo-consulta-empresa">
-  <h2 id="titulo-consulta-empresa">Buscar uma empresa pelo CNPJ ou nome</h2>
-  <bios-cnpj-search />
-</section>
+<h1>{{ greeting() }}</h1>
 
 <section aria-labelledby="titulo-movimentacoes">
   <h2 id="titulo-movimentacoes">Movimentações recentes</h2>
   <p class="lead">
     Empresas cujo índice mudou por último, da mudança mais recente para a mais antiga. Cada mudança
-    aponta a evidência que a causou e não diz que a conduta da empresa melhorou ou piorou.
+    aponta a evidência que a causou e não diz que a conduta da empresa melhorou ou piorou. O índice
+    do ODS 13 depende de inventários públicos de emissões; a maioria das empresas não tem inventário
+    localizado, o que não indica desempenho negativo.
   </p>
+
+  <div class="movement-filter">
+    <label for="categoria-movimentacao">Categoria da evidência</label>
+    <select id="categoria-movimentacao" [value]="categorySlug()" (change)="chooseCategory($event)">
+      <option value="">Todas</option>
+      <option value="infracoes">Infrações ambientais</option>
+      <option value="conduta">Conduta administrativa</option>
+      <option value="emissoes">Emissões</option>
+    </select>
+  </div>
 
   <bios-async-state
     [loading]="movements.isLoading()"

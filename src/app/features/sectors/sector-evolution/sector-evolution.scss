@@ -27,6 +27,17 @@ h3 {
   color: var(--bios-brand-moss);
 }
 
+.popular h2 {
+  margin-bottom: 0.75rem;
+  font: var(--mat-sys-title-medium);
+}
+
+.popular-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .fields {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
@@ -84,5 +95,5 @@ button[matSuffix] {
 
 // Reserva a altura do gráfico enquanto ele carrega, para a tela não pular.
 .chart-placeholder {
-  height: 20rem;
+  height: 44rem;
 }

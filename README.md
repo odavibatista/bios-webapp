@@ -47,7 +47,8 @@ nível de confiança e a contribuição de cada evidência, sempre com o caminho
 Quem quer conhecer o histórico ambiental de uma empresa brasileira hoje consulta IBAMA, CGU, Receita
 Federal e o Registro Público de Emissões separadamente e cruza os resultados por conta própria. O
 BIOS usa o CNPJ como eixo, consolida essas fontes e transforma os registros em indicadores
-explicáveis, sem coletar nenhum dado de pessoa física.
+explicáveis. A razão social pública de empresário individual pode conter o nome do titular; o
+CPF é mascarado e o sistema não busca contatos nem perfis de pessoas físicas.
 
 A interface foi desenhada para não julgar empresas:
 
@@ -63,7 +64,9 @@ A interface foi desenhada para não julgar empresas:
 > [bios-core-api](https://github.com/odavibatista/bios-core-api), capturadas e guardadas no
 > repositório atrás de um serviço com a mesma interface da API. A base publicada tem 110.372
 > empresas, 580.166 evidências e 86 setores, processados pela API a partir de arquivos oficiais.
-> Integrar de verdade é trocar só esse serviço. Só há dados de pessoa jurídica.
+> Integrar de verdade é trocar só esse serviço. A razão social pública de empresários individuais
+> pode conter o nome do titular; sequências de CPF são mascaradas. O BIOS não busca contatos nem
+> perfis de pessoas físicas (INL02).
 
 ## Ecossistema
 

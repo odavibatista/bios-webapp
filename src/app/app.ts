@@ -5,20 +5,30 @@ import {
   inject,
   viewChild,
 } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
 import { MatIconModule } from '@angular/material/icon';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
-import { filter, skip } from 'rxjs';
+import { filter, map, skip } from 'rxjs';
 import { PRESENTATION_MODE } from './core/presentation-mode';
 import { SessionStore } from './core/session/session-store';
 import { CnpjSearch } from './features/profile/cnpj-search/cnpj-search';
+import { COMPANIES_PATH } from './features/profile/companies-path';
+import { HeaderNav } from './layout/header-nav/header-nav';
 import { UserMenu } from './layout/user-menu/user-menu';
 
 /** Casca do app: barra superior, área das rotas e rodapé. */
 @Component({
   selector: 'bios-root',
-  imports: [CnpjSearch, MatIconModule, MatToolbarModule, RouterLink, RouterOutlet, UserMenu],
+  imports: [
+    CnpjSearch,
+    HeaderNav,
+    MatIconModule,
+    MatToolbarModule,
+    RouterLink,
+    RouterOutlet,
+    UserMenu,
+  ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -28,16 +38,27 @@ export class App {
   protected readonly presentation = inject(PRESENTATION_MODE);
 
   /** Com sessão, a barra mostra quem entrou (#18). */
-  protected readonly signedIn = inject(SessionStore).isAuthenticated;
+  private readonly store = inject(SessionStore);
+  protected readonly signedIn = this.store.isAuthenticated;
 
   private readonly main = viewChild.required<ElementRef<HTMLElement>>('main');
+  private readonly router = inject(Router);
+
+  /** Em "Empresas", a busca é o conteúdo da tela, e a barra não repete o campo. */
+  protected readonly headerSearch = toSignal(
+    this.router.events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map((event) => event.urlAfterRedirects.split(/[?#]/)[0] !== COMPANIES_PATH),
+    ),
+    { initialValue: true },
+  );
 
   constructor() {
     // A cada troca de tela, o foco vai para o conteúdo, como numa página nova: o leitor de tela
     // anuncia a tela que chegou, e o Tab segue dali, sem voltar ao topo (NFIN01). A primeira
     // navegação é a carga da página, e o navegador já cuida dela.
-    inject(Router)
-      .events.pipe(
+    this.router.events
+      .pipe(
         filter((event) => event instanceof NavigationEnd),
         skip(1),
         takeUntilDestroyed(),

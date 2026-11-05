@@ -57,12 +57,7 @@
         alfabética.
       </p>
     }
-    <div
-      class="table-scroll"
-      role="region"
-      aria-label="Tabela dos domínios bloqueados"
-      tabindex="0"
-    >
+    <bios-table-scroll label="Tabela dos domínios bloqueados">
       <table>
         <thead>
           <tr>
@@ -93,7 +88,7 @@
           }
         </tbody>
       </table>
-    </div>
+    </bios-table-scroll>
 
     @if (pagination(); as pagination) {
       @if (pagination.total_pages > 1) {

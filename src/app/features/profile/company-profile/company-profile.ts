@@ -18,6 +18,11 @@ import { COMPANIES_PATH, CnpjSearch } from '../cnpj-search/cnpj-search';
 import { EnvironmentalEvidences } from '../environmental-evidences/environmental-evidences';
 import { OdsScores } from '../ods-scores/ods-scores';
 import { RegistrationData } from '../registration-data/registration-data';
+import {
+  companySizeLabel,
+  formatCnae,
+  registrationStatusLabel,
+} from '../registration-data/registration-labels';
 
 /** O que a tela mostra quando não há perfil. */
 type Problem = 'invalid' | 'not-found' | 'failure';
@@ -83,6 +88,9 @@ export class CompanyProfile {
     this.problem() === 'not-found' ? describeError(this.profile.error()).message : null,
   );
   protected readonly companiesPath = COMPANIES_PATH;
+  protected readonly sizeLabel = companySizeLabel;
+  protected readonly cnaeLabel = formatCnae;
+  protected readonly statusLabel = registrationStatusLabel;
 
   constructor() {
     effect(() => {
