@@ -1,5 +1,15 @@
 <h1>{{ greeting() }}</h1>
 
+@if (summary.hasValue()) {
+  <section class="summary" aria-labelledby="titulo-resumo">
+    <h2 id="titulo-resumo">A base em números</h2>
+    <bios-overview-totals [analytics]="summary.value()" />
+    <p>
+      <a routerLink="/pesquisa" [queryParams]="{ visao: 'panorama' }">Ver o panorama completo</a>
+    </p>
+  </section>
+}
+
 <section aria-labelledby="titulo-movimentacoes">
   <h2 id="titulo-movimentacoes">Movimentações recentes</h2>
   <p class="lead">
