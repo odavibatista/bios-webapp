@@ -120,7 +120,12 @@
     margin: 0 auto;
   }
 
+  .privacy,
   .presentation {
     margin-top: 0.5rem;
+  }
+
+  a {
+    overflow-wrap: anywhere;
   }
 }
