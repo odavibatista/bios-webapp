@@ -13,6 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router } from '@angular/router';
 import { CNPJ_ERROR_KEY, cnpjRule, parseCnpj } from '../../../shared/cnpj/cnpj';
 import { nameRule } from '../../search/search-rules';
@@ -29,6 +30,10 @@ export const companyLookupRule = (control: AbstractControl) => {
   if (parseCnpj(value)) return null;
   if (looksLikeCnpj(value)) return cnpjRule(control);
   if (!value) return { [CNPJ_ERROR_KEY]: 'Informe um CNPJ ou o nome da empresa.' };
+  // Recusa sintaxe de comando e controles; a API continua responsavel pela seguranca da consulta.
+  if (/[\p{Cc}\p{Cf}<>;=`\\{}]/u.test(value) || /--|\/\*|\*\//.test(value)) {
+    return { [CNPJ_ERROR_KEY]: 'Informe um CNPJ ou nome válido para pesquisar.' };
+  }
   const errors = nameRule(control);
   return errors ? { [CNPJ_ERROR_KEY]: (errors[RULES_ERROR_KEY] as string[])[0] } : null;
 };
@@ -40,8 +45,7 @@ export { COMPANIES_PATH };
  * local por nome. A validação acontece antes de chamar a API.
  *
  * - `form`: campo com rótulo, dica e erro (painel e `/empresas`).
- * - `toolbar`: compacto, para a barra do topo. Entrada inválida leva a `/empresas`, que mostra o
- *   erro no campo completo.
+ * - `toolbar`: compacto, para a barra do topo. Entrada inválida mostra um aviso sem navegar.
  */
 @Component({
   selector: 'bios-cnpj-search',
@@ -60,6 +64,7 @@ export class CnpjSearch {
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly snackBar = inject(MatSnackBar);
 
   readonly variant = input<'form' | 'toolbar'>('form');
   /** Valor já digitado ou presente na URL, conferido ao abrir. */
@@ -110,8 +115,12 @@ export class CnpjSearch {
     }
 
     if (this.variant() === 'toolbar') {
-      await this.router.navigate([COMPANIES_PATH], { queryParams: { cnpj: value } });
-      this.cnpj.reset();
+      this.snackBar.open('Informe um CNPJ ou nome válido para pesquisar', 'Fechar', {
+        duration: 4000,
+        verticalPosition: 'top',
+        horizontalPosition: 'center',
+      });
+      this.host.nativeElement.querySelector('input')?.focus();
       return;
     }
 
