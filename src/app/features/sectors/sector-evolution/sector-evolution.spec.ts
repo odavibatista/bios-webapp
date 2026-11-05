@@ -8,7 +8,7 @@ import { BiosApi } from '../../../core/api/bios-api';
 import type { SectorEvolution as SectorEvolutionResponse } from '../../../core/api/generated';
 import { provideMockBiosApi } from '../../../core/mocks/provide-mock-bios-api';
 import { OMITTED_AVERAGE_NOTE } from '../sector-format';
-import { SectorEvolution } from './sector-evolution';
+import { POPULAR_SECTORS, SectorEvolution } from './sector-evolution';
 
 const RECONSTRUCTED = /os anteriores foram reconstruídos/i;
 const INSUFFICIENT = 'Ainda não há janelas suficientes para mostrar a evolução deste setor.';
@@ -28,8 +28,13 @@ async function openSectors(url = '/setores') {
   TestBed.inject(InMemoryApiCredentials).setAccessToken(session.access_token);
   const evolution = vi.spyOn(api, 'getSectorEvolution');
   const harness = await RouterTestingHarness.create(url);
+  const router = TestBed.inject(Router);
 
-  return { harness, api, evolution, user: userEvent.setup(), router: TestBed.inject(Router) };
+  if (url === '/setores') {
+    await vi.waitFor(() => expect(router.url).toBe('/setores?cnae=47&ods=15'));
+  }
+
+  return { harness, api, evolution, user: userEvent.setup(), router };
 }
 
 /** Duas janelas, como a API responderá quando o job tiver gravado o segundo mês. */
@@ -61,20 +66,44 @@ const AVAILABLE: SectorEvolutionResponse = {
 };
 
 describe('SectorEvolution', () => {
-  it('sem setor e ODS na URL, não consulta e pede a escolha; o ODS começa no primeiro calculado', async () => {
-    const { evolution } = await openSectors();
+  it('sem parâmetros, abre o setor 47 no ODS 15', async () => {
+    const { evolution, router } = await openSectors();
 
-    expect(screen.getByText('Escolha um setor e um ODS para ver a evolução.')).toBeTruthy();
-    expect(evolution).not.toHaveBeenCalled();
     await vi.waitFor(() => {
-      expect(screen.getByRole('combobox', { name: 'ODS' }).textContent).toContain('ODS 13');
+      expect(router.url).toBe('/setores?cnae=47&ods=15');
+      expect(evolution).toHaveBeenCalledWith({ path: { cnae: '47' }, query: { ods: 15 } });
     });
+    expect(screen.getByRole('combobox', { name: 'ODS' }).textContent).toContain('ODS 15');
+  });
+
+  it('atalhos seguem a quantidade de empresas e aplicam o setor sem ordenar pelo índice', async () => {
+    const { user, router } = await openSectors();
+
+    expect(POPULAR_SECTORS.map((sector) => [sector.cnae, sector.companies])).toEqual([
+      ['47', 30124],
+      ['16', 12603],
+      ['46', 9218],
+    ]);
+    await user.click(
+      screen.getByRole('button', { name: /16 — Fabricação de produtos de madeira/ }),
+    );
+    expect(router.url).toBe('/setores?cnae=16&ods=15');
+  });
+
+  it('limpar o setor volta ao estado vazio, preservando o ODS', async () => {
+    const { user, router } = await openSectors();
+
+    await user.click(screen.getByRole('button', { name: 'Limpar setor' }));
+    expect(router.url).toBe('/setores?ods=15');
+    expect(screen.getByText('Escolha um setor e um ODS para ver a evolução.')).toBeTruthy();
   });
 
   it('o campo de setor sugere os setores de `listSectors`, com código e descrição oficial', async () => {
     const { user } = await openSectors();
 
-    await user.click(screen.getByRole('combobox', { name: 'Setor (CNAE)' }));
+    const sector = screen.getByRole('combobox', { name: 'Setor (CNAE)' });
+    await user.clear(sector);
+    await user.click(sector);
     const options = await screen.findAllByRole('option');
 
     expect(options.map((option) => option.textContent.trim())).toEqual([
@@ -95,7 +124,10 @@ describe('SectorEvolution', () => {
   it('consultar leva setor (sem máscara) e ODS para a URL e pede a evolução à API', async () => {
     const { user, router, evolution } = await openSectors();
 
+    await user.clear(screen.getByRole('combobox', { name: 'Setor (CNAE)' }));
     await user.type(screen.getByRole('combobox', { name: 'Setor (CNAE)' }), '24.31-8');
+    await user.click(screen.getByRole('combobox', { name: 'ODS' }));
+    await user.click(screen.getByRole('option', { name: /ODS 13/ }));
     await user.click(screen.getByRole('button', { name: 'Ver evolução' }));
 
     await vi.waitFor(() => {
@@ -108,6 +140,7 @@ describe('SectorEvolution', () => {
   it('CNAE fora do formato não sai da tela: o erro fica no campo, com a mensagem da API', async () => {
     const { user, router, evolution } = await openSectors();
 
+    await user.clear(screen.getByRole('combobox', { name: 'Setor (CNAE)' }));
     await user.type(screen.getByRole('combobox', { name: 'Setor (CNAE)' }), '2431');
     await user.click(screen.getByRole('button', { name: 'Ver evolução' }));
 
@@ -116,8 +149,8 @@ describe('SectorEvolution', () => {
         'CNAE inválido: informe a divisão (2 dígitos), o grupo, a classe ou a subclasse.',
       ),
     ).toBeTruthy();
-    expect(router.url).toBe('/setores');
-    expect(evolution).not.toHaveBeenCalled();
+    expect(router.url).toBe('/setores?cnae=47&ods=15');
+    expect(evolution).not.toHaveBeenCalledWith({ path: { cnae: '2431' }, query: { ods: 15 } });
   });
 
   it('histórico insuficiente com um mês: diz que ainda não há evolução e mostra o mês registrado', async () => {
