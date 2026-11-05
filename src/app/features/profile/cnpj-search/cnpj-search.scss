@@ -24,6 +24,10 @@
   align-items: center;
   gap: 0.25rem;
 
+  @media (max-width: 699px) {
+    width: 100%;
+  }
+
   // O Material usa a cor escura de ícones por padrão; na barra verde, a ação precisa ser branca.
   button {
     --mat-icon-button-icon-color: #fff;
@@ -32,6 +36,12 @@
 
 .toolbar-input {
   width: 12rem;
+
+  @media (max-width: 699px) {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+  }
   padding: 0.4rem 0.75rem;
   border: 1px solid transparent;
   border-radius: var(--mat-sys-corner-full);
