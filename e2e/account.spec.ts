@@ -113,6 +113,9 @@ test.describe('conta (#23)', () => {
     await expect(data).toContainText('Avenida Rio Branco, 1');
     await expect(data).toContainText('Centro, Rio de Janeiro – RJ');
     await expect(data).toContainText('CEP 20040-020');
+    // O clique em Salvar deixa um campo anterior parcialmente sob o cabeçalho fixo.
+    // Inspecione a tela inteira no estado estável, com o início do formulário visível.
+    await page.evaluate(() => window.scrollTo(0, 0));
   });
 
   test('leva à troca de senha', async ({ page }) => {
