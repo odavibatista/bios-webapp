@@ -58,7 +58,7 @@ describe('SearchResults', () => {
     expect(firstCells).toEqual([
       'Ativa',
       'OURO BRANCO/MG',
-      expect.stringContaining('2451200'),
+      expect.stringContaining('2451-2/00'),
       '-12,5',
       '0,62',
     ]);
@@ -75,6 +75,12 @@ describe('SearchResults', () => {
     expect(
       screen.getByRole('link', { name: 'EMPRESA DEMONSTRACAO S.A.' }).getAttribute('href'),
     ).toBe('/empresas/33592510000154');
+  });
+
+  it('formata o CNAE também no cartão móvel', async () => {
+    await renderResults('cards', null);
+
+    expect(screen.getAllByText(/2451-2\/00/)).toHaveLength(2);
   });
 
   it('sem ODS escolhido, não há colunas de índice', async () => {
