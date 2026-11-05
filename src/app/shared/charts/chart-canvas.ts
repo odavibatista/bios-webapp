@@ -1,0 +1,81 @@
+import { DOCUMENT } from '@angular/common';
+import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { BarChart, LineChart, PieChart, TreemapChart } from 'echarts/charts';
+import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
+import * as echarts from 'echarts/core';
+import { SVGRenderer } from 'echarts/renderers';
+import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
+import type { ChartSpec, ChartTheme } from './chart-spec';
+
+// Só o que os cards usam: o ECharts inteiro pesaria várias vezes mais.
+echarts.use([
+  BarChart,
+  LineChart,
+  PieChart,
+  TreemapChart,
+  GridComponent,
+  LegendComponent,
+  TooltipComponent,
+  SVGRenderer,
+]);
+
+/** Cores de reserva, as da apresentação, caso o tema ainda não tenha carregado. */
+const FALLBACK_THEME = { text: '#1a1a1a', grid: '#c4c8bb', surface: '#ffffff' };
+const NARROW = '(max-width: 599.98px)';
+
+/**
+ * O desenho de um gráfico. `ChartCard` o carrega sob demanda: é a única peça que traz o ECharts,
+ * e nada dela pode ser importado fora de um `@defer`.
+ */
+@Component({
+  selector: 'bios-chart-canvas',
+  imports: [NgxEchartsDirective],
+  providers: [provideEchartsCore({ echarts })],
+  template: `
+    <div
+      class="chart"
+      echarts
+      [options]="options()"
+      [initOpts]="{ renderer: 'svg' }"
+      role="img"
+      [attr.aria-label]="spec().label"
+      [style.height.rem]="spec().height"
+    ></div>
+  `,
+  styles: `
+    :host {
+      display: block;
+    }
+
+    // Largura da tela, nunca mais (NFIN02): o ECharts redesenha ao mudar o tamanho.
+    .chart {
+      width: 100%;
+    }
+  `,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class ChartCanvas {
+  private readonly document = inject(DOCUMENT);
+
+  readonly spec = input.required<ChartSpec>();
+
+  protected readonly options = computed(() => this.spec().options(this.theme()));
+
+  /** As cores do tema (`--mat-sys-*`), lidas do documento. */
+  private theme(): ChartTheme {
+    const view = this.document.defaultView;
+    const style = view?.getComputedStyle(this.document.documentElement);
+    const read = (name: string, fallback: string) => {
+      const value = style?.getPropertyValue(name).trim();
+
+      return value !== undefined && value !== '' ? value : fallback;
+    };
+
+    return {
+      text: read('--mat-sys-on-surface', FALLBACK_THEME.text),
+      grid: read('--mat-sys-outline-variant', FALLBACK_THEME.grid),
+      surface: read('--mat-sys-surface', FALLBACK_THEME.surface),
+      narrow: view?.matchMedia?.(NARROW).matches ?? false,
+    };
+  }
+}

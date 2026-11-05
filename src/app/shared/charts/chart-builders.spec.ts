@@ -1,7 +1,7 @@
 import { barChart, columnChart, donutChart, treemapChart } from './chart-builders';
 import { CATEGORY_COLORS, type ChartItem, OTHER_COLOR, SERIES_COLOR } from './chart-spec';
 
-const THEME = { text: '#111111', grid: '#cccccc', surface: '#ffffff' };
+const THEME = { text: '#111111', grid: '#cccccc', surface: '#ffffff', narrow: false };
 const HEADERS = ['Categoria', 'Empresas'] as const;
 const ITEMS: ChartItem[] = [
   { key: 'A', label: 'Comércio <varejista>', value: 12994 },
@@ -140,9 +140,9 @@ describe('columnChart', () => {
 describe('treemapChart', () => {
   it('uma cor só, com a tabela dos mesmos números', () => {
     const spec = treemapChart(base);
-    const item = optionsOf(spec).series[0]['itemStyle'] as { color: string };
+    const [first] = optionsOf(spec).series[0]['data'] as { itemStyle: { color: string } }[];
 
-    expect(item.color).toBe(SERIES_COLOR);
+    expect(first.itemStyle.color).toBe(SERIES_COLOR);
     expect(spec.table.rows).toHaveLength(2);
   });
 });

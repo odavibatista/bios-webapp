@@ -3,6 +3,8 @@ export interface ChartTheme {
   text: string;
   grid: string;
   surface: string;
+  /** Tela estreita: os rótulos dos eixos cedem espaço às barras. */
+  narrow: boolean;
 }
 
 export interface ChartTable {
@@ -39,7 +41,7 @@ export interface ChartSeries {
 export const CATEGORY_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#6250d6'];
 /** Uma única medida: a cor não diz nada além de "isto é o dado". */
 export const SERIES_COLOR = CATEGORY_COLORS[0];
-export const OTHER_COLOR = '#8b8d86';
+export const OTHER_COLOR = '#767870';
 
 export const OTHERS_KEY = 'OUTROS';
 export const UNINFORMED_KEY = 'NAO_INFORMADO';

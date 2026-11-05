@@ -1,0 +1,85 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-surface);
+}
+
+header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+}
+
+h3 {
+  margin: 0;
+  font: var(--mat-sys-title-medium);
+}
+
+.description {
+  margin: 0;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.views {
+  --mat-button-toggle-height: 2.75rem;
+
+  flex: none;
+}
+
+.body {
+  min-width: 0;
+  transition: opacity 150ms linear;
+}
+
+// Só o desenho esmaece: a tabela, com texto, não pode perder contraste nem por um instante.
+.stale bios-chart-canvas {
+  opacity: 0.55;
+}
+
+.skeleton {
+  border-radius: var(--mat-sys-corner-small);
+  background: var(--bios-brand-paper);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+  text-align: left;
+}
+
+td:last-child,
+th:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+
+  .body {
+    transition: none;
+  }
+}

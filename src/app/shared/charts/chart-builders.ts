@@ -3,6 +3,8 @@ import {
   type ChartSeries,
   type ChartSpec,
   CATEGORY_COLORS,
+  OTHER_COLOR,
+  OTHERS_KEY,
   escapeHtml,
   foldCategories,
   formatCompact,
@@ -23,6 +25,11 @@ interface ItemsChart {
   format?: (value: number) => string;
 }
 
+interface BarsChart extends ItemsChart {
+  /** Espaço dos nomes em tela larga, para categorias de nome longo. */
+  labelWidth?: number;
+}
+
 interface DonutChart extends ItemsChart {
   /** Ordem fixa das categorias, para a cor não mudar com o filtro. */
   order?: readonly string[];
@@ -40,6 +47,8 @@ interface ColumnsChart {
 const AXIS_FONT = 12;
 const BAR_ROW = 2;
 const BAR_THICKNESS = 18;
+const NARROW_LABEL = 120;
+const WIDE_LABEL = 168;
 const COMMON = { aria: { enabled: false }, animation: false };
 
 function itemTable(
@@ -99,7 +108,7 @@ export function donutChart(chart: DonutChart): ChartSpec {
 }
 
 /** Comparação de categorias sem ordem natural: uma barra por categoria, da maior para a menor. */
-export function barChart(chart: ItemsChart): ChartSpec {
+export function barChart(chart: BarsChart): ChartSpec {
   const { items } = chart;
   const format = chart.format ?? formatCount;
 
@@ -107,7 +116,7 @@ export function barChart(chart: ItemsChart): ChartSpec {
     label: chart.label,
     height: items.length * BAR_ROW + 1,
     table: itemTable(items, chart.headers, format),
-    options: ({ text, grid }) => ({
+    options: ({ text, grid, narrow }) => ({
       ...COMMON,
       color: [SERIES_COLOR],
       grid: { left: 4, right: 72, top: 4, bottom: 4, containLabel: true },
@@ -122,7 +131,7 @@ export function barChart(chart: ItemsChart): ChartSpec {
         axisLabel: {
           color: text,
           fontSize: AXIS_FONT,
-          width: 132,
+          width: narrow ? NARROW_LABEL : (chart.labelWidth ?? WIDE_LABEL),
           overflow: 'truncate',
         },
       },
@@ -236,7 +245,7 @@ export function treemapChart(chart: ItemsChart): ChartSpec {
           roam: false,
           nodeClick: false,
           breadcrumb: { show: false },
-          itemStyle: { color: SERIES_COLOR, borderColor: surface, borderWidth: 2, gapWidth: 2 },
+          itemStyle: { borderColor: surface, borderWidth: 2, gapWidth: 2 },
           label: {
             show: true,
             color: '#ffffff',
@@ -244,7 +253,12 @@ export function treemapChart(chart: ItemsChart): ChartSpec {
             overflow: 'truncate',
             formatter: ({ name }: { name: string }) => name,
           },
-          data: items.map(({ label, value }) => ({ name: label, value })),
+          data: items.map(({ key, label, value }) => ({
+            name: label,
+            value,
+            // A cor por nó: sem ela, o ECharts pinta cada categoria com uma cor da própria paleta.
+            itemStyle: { color: key === OTHERS_KEY ? OTHER_COLOR : SERIES_COLOR },
+          })),
         },
       ],
     }),
