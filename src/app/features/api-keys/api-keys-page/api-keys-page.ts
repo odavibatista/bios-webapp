@@ -25,6 +25,7 @@ import { fieldMessage } from '../../../shared/forms/account-rules';
 import { AsyncState } from '../../../shared/states/async-state';
 import { FormErrorSummary } from '../../../shared/states/form-error-summary';
 import { formatDateTime } from '../../../shared/format/date-time';
+import { TableScroll } from '../../../shared/table-scroll/table-scroll';
 import { apiKeyNameRules, MAX_ACTIVE_API_KEYS } from '../api-key-rules';
 import { showCreatedKey } from '../created-key-dialog/created-key-dialog';
 
@@ -43,6 +44,7 @@ import { showCreatedKey } from '../created-key-dialog/created-key-dialog';
     MatFormFieldModule,
     MatInputModule,
     ReactiveFormsModule,
+    TableScroll,
   ],
   templateUrl: './api-keys-page.html',
   styleUrl: './api-keys-page.scss',
