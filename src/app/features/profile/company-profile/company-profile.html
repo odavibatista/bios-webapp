@@ -45,7 +45,12 @@
           {{ profile.value().main_cnae.description }}
         </p>
       </section>
-      <bios-ods-scores class="indices" [profile]="profile.value()" />
+      <bios-ods-scores
+        class="indices"
+        [profile]="profile.value()"
+        [sectorAverages]="sectorAverages.hasValue() ? sectorAverages.value() : {}"
+      />
+      <bios-company-charts class="section" [profile]="profile.value()" />
       <bios-registration-data class="section" [profile]="profile.value()" />
       <bios-environmental-evidences
         class="environmental"

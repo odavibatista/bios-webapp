@@ -33,7 +33,54 @@ async function renderProfile(
   return { ...result, getCompanyProfile: spy, user: userEvent.setup() };
 }
 
+/** O jsdom não tem `IntersectionObserver`, que os cards do perfil usam. */
+class NoopObserver {
+  observe(): void {
+    // nada a observar no jsdom
+  }
+  unobserve(): void {
+    // idem
+  }
+  disconnect(): void {
+    // idem
+  }
+}
+
 describe('CompanyProfile', () => {
+  beforeEach(() => {
+    vi.stubGlobal('IntersectionObserver', NoopObserver);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('busca a média do setor pela divisão do CNAE, e a falha só deixa o medidor sem marca', async () => {
+    const getSectorEvolution = vi
+      .fn<BiosApi['getSectorEvolution']>()
+      .mockResolvedValueOnce({
+        windows: [{ average_score: -30 }, { average_score: -37.5 }, { average_score: null }],
+      } as Awaited<ReturnType<BiosApi['getSectorEvolution']>>)
+      .mockRejectedValue(new Error('sem setor'));
+
+    await render(CompanyProfile, {
+      inputs: { cnpj: PROFILE.cnpj },
+      providers: [
+        provideRouter([]),
+        {
+          provide: BiosApi,
+          useValue: { getCompanyProfile: () => Promise.resolve(PROFILE), getSectorEvolution },
+        },
+      ],
+    });
+
+    await vi.waitFor(() => {
+      expect(getSectorEvolution).toHaveBeenCalledTimes(PROFILE.ods_scores.length);
+    });
+    expect(getSectorEvolution.mock.calls[0][0].path.cnae).toBe(PROFILE.main_cnae.code.slice(0, 2));
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(PROFILE.legal_name);
+  });
+
   it('mostra a razão social, o CNPJ formatado e os dados cadastrais, com a empresa na aba', async () => {
     const { getCompanyProfile, container } = await renderProfile(PROFILE.cnpj, () =>
       Promise.resolve(PROFILE),
@@ -46,7 +93,13 @@ describe('CompanyProfile', () => {
     expect(screen.getByRole('region', { name: 'Índices por ODS' })).toBeTruthy();
     expect(
       [...container.querySelectorAll('h2')].map((heading) => heading.textContent?.trim()),
-    ).toEqual(['Índices por ODS', 'Dados cadastrais', 'Evidências', 'Fontes consultadas']);
+    ).toEqual([
+      'Índices por ODS',
+      'Evidências em gráficos',
+      'Dados cadastrais',
+      'Evidências',
+      'Fontes consultadas',
+    ]);
     expect(screen.getByRole('region', { name: 'Resumo cadastral' }).textContent).toContain(
       '2431-8/00',
     );
