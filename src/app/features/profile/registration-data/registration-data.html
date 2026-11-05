@@ -10,6 +10,10 @@
       <dd>{{ size() }}</dd>
     </div>
     <div>
+      <dt>Natureza jurídica</dt>
+      <dd>{{ profile().legal_nature ?? 'Não informada' }}</dd>
+    </div>
+    <div>
       <dt>Endereço</dt>
       <dd>
         @for (line of address(); track $index) {

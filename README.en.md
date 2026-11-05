@@ -203,6 +203,16 @@ The technical manual lives in [`docs/en/`](docs/en/README.md) (and, in Portugues
 | 06  | [Quality and tests](docs/en/06-Quality-and-Tests.md)         | Accessibility, accents and contribution flow      |
 | 07  | [Theme and publishing](docs/en/07-Theme-and-Publishing.md)   | Material 3 palette and publishing on Vercel       |
 
+## Privacy and data removal
+
+BIOS works with public data linked to the CNPJ. A sole proprietor's registered name and address may
+contain the owner's personal data, even though they are public at the Federal Revenue Service. A CPF
+in the registered name is masked, and partners and contacts are not collected.
+
+To request the removal of a record, write to **odavibatista@hotmail.com** with the CNPJ and proof that
+you are the owner. The details are on the
+[privacy page](https://bios-webapp.vercel.app/privacidade).
+
 ## Academic context
 
 BIOS is the individual project of Assessment 3 of the Software Engineering and Software Management

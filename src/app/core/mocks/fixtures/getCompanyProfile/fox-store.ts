@@ -21,6 +21,8 @@ export default {
     "registration_status": "INAPTA",
     "registration_status_unrecognized": null,
     "company_size": "MICRO EMPRESA",
+    "legal_nature_code": "2062",
+    "legal_nature": "Sociedade Empresária Limitada",
     "address": {
       "street": "RUA DAS ACUCENAS",
       "number": "26",

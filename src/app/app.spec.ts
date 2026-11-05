@@ -39,6 +39,20 @@ describe('App', () => {
     );
   });
 
+  it('o rodapé diz como pedir a remoção de um cadastro', async () => {
+    await renderApp();
+
+    const footer = screen.getByRole('contentinfo');
+
+    expect(footer.textContent).toContain('comprovação da titularidade');
+    expect(
+      within(footer).getByRole('link', { name: 'odavibatista@hotmail.com' }).getAttribute('href'),
+    ).toBe('mailto:odavibatista@hotmail.com');
+    expect(
+      within(footer).getByRole('link', { name: 'página de privacidade' }).getAttribute('href'),
+    ).toBe('/privacidade');
+  });
+
   it('na versão de apresentação, o rodapé avisa que os dados são capturados', async () => {
     await render(App, {
       providers: [provideRouter([]), { provide: PRESENTATION_MODE, useValue: true }],
