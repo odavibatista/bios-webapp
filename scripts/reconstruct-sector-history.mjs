@@ -13,10 +13,9 @@
 // Os arquivos de `public/presentation` são servidos como imutáveis por um ano: quem regravar um deles
 // precisa publicar a base numa pasta de versão nova, ou quem já visitou o site continua com o antigo.
 import { createReadStream, existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { delimiter, join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { createInterface } from 'node:readline';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-import { build } from 'esbuild';
+import { loadCoreRules, storedEvidences } from './core-rules.mjs';
 
 const [dump, core, months = '24'] = process.argv.slice(2);
 if (!dump || !core) throw new Error('Informe a pasta do dump e a do bios-core-api.');
@@ -26,94 +25,6 @@ const ODS = [13, 15];
 const MINIMUM_COMPANIES = 5;
 const MAX_MISMATCH = 0.001;
 const FAR_FUTURE = new Date('2100-01-01T00:00:00.000Z');
-
-/** Empacota as regras da API; os enums do Prisma são só textos. */
-async function loadCoreRules() {
-  const modules = join(resolve(core), 'src/modules').replaceAll('\\', '/');
-  const outfile = fileURLToPath(new URL('../dist/sector-rules.mjs', import.meta.url));
-
-  await build({
-    stdin: {
-      contents: `export { scoreOdsEvidences } from '@modules/scoring/domain/ods-score-rules.js';
-        export { withMinimumSample } from '@modules/scoring/domain/sector-evolution.js';`,
-      resolveDir: resolve(core),
-      loader: 'ts',
-    },
-    bundle: true,
-    format: 'esm',
-    platform: 'node',
-    outfile,
-    logLevel: 'error',
-    // `NODE_PATH` cobre um checkout do bios-core-api sem `node_modules`.
-    nodePaths: [
-      join(resolve(core), 'node_modules'),
-      ...(process.env.NODE_PATH?.split(delimiter).filter(Boolean) ?? []),
-    ],
-    plugins: [
-      {
-        name: 'regras-da-api',
-        setup(context) {
-          context.onResolve({ filter: /^@prisma\/client$/ }, () => ({
-            path: 'prisma-enums',
-            namespace: 'enums',
-          }));
-          context.onLoad({ filter: /.*/, namespace: 'enums' }, () => ({
-            contents: `const text = (...names) => Object.fromEntries(names.map((name) => [name, name]));
-              export const EvidenceCategory = text('INFRACAO_AMBIENTAL', 'CONDUTA_ADMINISTRATIVA', 'EMISSAO_GEE');
-              export const EvidenceSignal = text('POSITIVE', 'NEGATIVE');
-              export const EvidenceState = text('CONFIRMED', 'NOT_FOUND', 'UNKNOWN', 'OUTDATED');`,
-          }));
-          context.onResolve({ filter: /^@modules\// }, (args) => ({
-            path: `${modules}/${args.path.slice('@modules/'.length).replace(/\.js$/, '.ts')}`,
-          }));
-          context.onResolve({ filter: /^\.\.?\/.*\.js$/ }, (args) =>
-            args.resolveDir.includes('node_modules')
-              ? undefined
-              : { path: resolve(args.resolveDir, args.path.replace(/\.js$/, '.ts')) },
-          );
-        },
-      },
-    ],
-  });
-
-  return import(pathToFileURL(outfile).href);
-}
-
-/** Quando o fato aconteceu: a regra da movimentação (UC15, regra 8), nunca a data de coleta. */
-function factDate({ published_at: published, details }) {
-  if (published) return new Date(published);
-  if (typeof details?.startDate === 'string' && !Number.isNaN(Date.parse(details.startDate))) {
-    return new Date(details.startDate);
-  }
-
-  return typeof details?.inventoryYear === 'number'
-    ? new Date(Date.UTC(details.inventoryYear, 11, 31))
-    : null;
-}
-
-function storedEvidences(cnpj, profile) {
-  return profile.evidences.flatMap(({ category, evidences }) =>
-    evidences.map((evidence) => ({
-      id: evidence.id,
-      key: `${evidence.source_slug}:${cnpj}:${evidence.source_reference ?? evidence.state}`,
-      cnpj,
-      sourceSlug: evidence.source_slug,
-      sourceName: evidence.source,
-      category,
-      odsNumber: evidence.ods_number,
-      state: evidence.state,
-      signal: evidence.signal,
-      summary: evidence.summary,
-      sourceReference: evidence.source_reference,
-      sourceUrl: evidence.source_url,
-      details: evidence.details,
-      publishedAt: evidence.published_at ? new Date(evidence.published_at) : null,
-      collectedAt: new Date(evidence.collected_at),
-      validUntil: new Date(evidence.valid_until),
-      factDate: factDate(evidence),
-    })),
-  );
-}
 
 /**
  * A empresa como estava em `at`. Registro posterior some, e a fonte que ficou sem nenhum passa a
@@ -155,7 +66,10 @@ function asOf(evidences, at) {
   return kept;
 }
 
-const { scoreOdsEvidences, withMinimumSample } = await loadCoreRules();
+const { scoreOdsEvidences, withMinimumSample } = await loadCoreRules(core, 'sector-rules', {
+  'scoring/domain/ods-score-rules.js': ['scoreOdsEvidences'],
+  'scoring/domain/sector-evolution.js': ['withMinimumSample'],
+});
 
 const original = join(dump, 'sectors.api.json');
 const current = join(dump, 'sectors.json');
