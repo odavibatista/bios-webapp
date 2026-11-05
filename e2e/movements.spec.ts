@@ -77,7 +77,7 @@ test.describe('tela principal com as movimentações (#168)', () => {
   });
 
   test('a busca única no cabeçalho cabe nas larguras móvel e desktop', async ({ page }) => {
-    for (const width of [390, 1100, 1280, 1440]) {
+    for (const width of [390, 1024, 1100, 1280, 1440]) {
       await page.setViewportSize({ width, height: 800 });
       await expect(page.getByRole('banner').getByRole('search')).toBeInViewport();
       await expect(page.getByRole('main').getByRole('search')).toHaveCount(0);
