@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { InMemoryApiCredentials } from '../api/api-credentials';
 import { BiosApi } from '../api/bios-api';
 import type {
+  CompanyAnalytics,
   CompanyIndexEvolution,
   CompanyMovementItem,
   ScoreExplanationResponse,
@@ -15,6 +16,7 @@ import { provideMockBiosApi } from './provide-mock-bios-api';
 const PROFILE = PROFILES.get('17469701000177')!;
 const EXPLANATION = { cnpj: PROFILE.cnpj, ods_number: 13 } as ScoreExplanationResponse;
 const SERIES = { cnae_division: '10', ods_number: 13 } as SectorEvolution;
+const BASE_ANALYTICS = { companies: 110372 } as CompanyAnalytics;
 const EVOLUTION = { cnpj: PROFILE.cnpj, reconstructed: true, ods: [] } as CompanyIndexEvolution;
 
 const MOVEMENTS = ['1', '2', '3'].map(
@@ -53,6 +55,8 @@ class MemoryArchive extends CompanyArchive {
   movements = () => Promise.resolve(MOVEMENTS);
 
   facts = () => Promise.resolve(new Map([[PROFILE.cnpj, companyFacts(PROFILE)]]));
+
+  baseAnalytics = () => Promise.resolve(BASE_ANALYTICS);
 }
 
 describe('MockBiosApi com a base publicada', () => {
@@ -160,9 +164,10 @@ describe('MockBiosApi com a base publicada', () => {
   });
 
   it('o panorama sem critério cobre a base, e com critério só o que a pesquisa traria', async () => {
-    const all = await api.getCompanyAnalytics();
+    const all = await api.getCompanyAnalytics({ query: { uf: 'MG' } });
     const none = await api.getCompanyAnalytics({ query: { uf: 'AC' } });
 
+    await expect(api.getCompanyAnalytics()).resolves.toBe(BASE_ANALYTICS);
     expect(all.companies).toBe(1);
     expect(all.totals.confirmed_evidences).toBe(companyFacts(PROFILE).confirmedEvidences);
     expect(all.registration.sector).toEqual([{ key: '24', label: 'METALURGIA', count: 1 }]);

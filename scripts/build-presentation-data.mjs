@@ -13,6 +13,7 @@
 //   companies/NNN.json.gz    empresas cujo CNPJ começa em NNN, sem alterar as respostas da API,
 //                            mais a evolução do índice, calculada com as regras da própria API
 //   analytics.json.gz        fatos de cada empresa para o panorama, na ordem do índice da pesquisa
+//   analytics-base.json.gz   o panorama da base inteira, pronto: abre sem baixar o índice
 //   sectors.json.gz          setores e evolução por divisão e ODS
 //   movements.json.gz        as empresas de movimentação mais recente, já na ordem da lista
 //
@@ -37,7 +38,7 @@ import {
   companyMovementOf,
   PUBLISHED_MOVEMENTS_LIMIT,
 } from '../src/app/core/mocks/company-movements.ts';
-import { companyFacts } from '../src/app/core/mocks/company-analytics.ts';
+import { companyFacts, summarizeCompanies } from '../src/app/core/mocks/company-analytics.ts';
 import { loadCoreRules, storedEvidences } from './core-rules.mjs';
 
 const [dump, core] = process.argv.slice(2);
@@ -196,6 +197,7 @@ const cnaes = new Table();
 const rows = [];
 const movements = [];
 const facts = new Map();
+const analyticsCompanies = [];
 const sizes = new Table();
 const natures = new Table();
 const categories = { biomes: new Table(), infractionTypes: new Table(), sanctions: new Table() };
@@ -226,7 +228,15 @@ for (const file of readdirSync(dump)
     // A base não muda ao recarregar: o prazo sugerido para uma nova consulta não vale aqui.
     profile.provenance.retry_after_seconds = null;
     shard[cnpj] = { profile, explanations, evolution: evolutionOf(cnpj, profile, explanations) };
-    facts.set(cnpj, packFacts(companyFacts(profile)));
+    const scoreOf = (ods) => profile.ods_scores.find((item) => item.ods_number === ods);
+    const companyFact = companyFacts(profile);
+    facts.set(cnpj, packFacts(companyFact));
+    analyticsCompanies.push({
+      registrationStatus: profile.registration_status,
+      uf: profile.address.uf ?? '',
+      scores: ODS.map((ods) => ({ ods, ...scoreOf(ods) })),
+      facts: companyFact,
+    });
 
     const movement = companyMovementOf({ profile, explanations }, NOW);
 
@@ -236,7 +246,6 @@ for (const file of readdirSync(dump)
     }
 
     for (const group of profile.evidences) evidences += group.evidences.length;
-    const scoreOf = (ods) => profile.ods_scores.find((item) => item.ods_number === ods);
     if (scoreOf(13)?.score_value != null) coverage.com_indice_13 += 1;
     if (scoreOf(15)?.score_value != null) coverage.com_indice_15 += 1;
     for (const source of Object.values(explanations)) {
@@ -293,6 +302,14 @@ writeFileSync(join(OUT, 'analytics.json.gz'), analytics);
 
 const sectors = JSON.parse(readFileSync(join(dump, 'sectors.json'), 'utf8'));
 writeFileSync(join(OUT, 'sectors.json.gz'), gz(sectors));
+
+const sectorNames = new Map(
+  sectors.sectors.data.map((item) => [item.cnae_division, item.description]),
+);
+writeFileSync(
+  join(OUT, 'analytics-base.json.gz'),
+  gz(summarizeCompanies(analyticsCompanies, ODS, (code) => sectorNames.get(code) ?? code)),
+);
 
 const sortedMovements = movements.sort(byMostRecentMovement);
 const publishedMovements = sortedMovements.filter(

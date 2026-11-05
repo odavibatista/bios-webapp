@@ -22,7 +22,8 @@ with an emissions movement, rebuilt with the API rule (UC15, rule 8) from the da
 fact. Each company file also holds the index evolution (UC07, RF36), computed with the bios-core-api
 rules themselves: generation fails if a last step does not reproduce the current index.
 `analytics.json.gz` keeps only each company's facts for the overview (UC19, RF37), with no name or CNPJ,
-in the order of the search index. The generator runs with
+in the order of the search index, and `analytics-base.json.gz` holds the overview of the whole base, so
+the main screen opens without downloading the index. The generator runs with
 `node --experimental-strip-types`, because it reuses those rules from the app code, and takes the dump
 and the bios-core-api folder.
 

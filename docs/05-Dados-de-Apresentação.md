@@ -22,7 +22,8 @@ movimentação de emissões, reconstruídas pela regra da API (UC15, regra 8), c
 registrado. O arquivo de cada empresa traz também a evolução do índice (UC07, RF36), calculada com as
 regras do próprio bios-core-api: a geração falha se um último degrau não reproduzir o índice atual.
 `analytics.json.gz` guarda só os fatos de cada empresa para o panorama (UC19, RF37), sem nome nem
-CNPJ, na ordem do índice da pesquisa. O gerador roda com
+CNPJ, na ordem do índice da pesquisa, e `analytics-base.json.gz`, o panorama da base inteira, para a
+tela principal abrir sem baixar o índice. O gerador roda com
 `node --experimental-strip-types`, porque reaproveita essas regras do código do app, e recebe o dump
 e a pasta do bios-core-api.
 

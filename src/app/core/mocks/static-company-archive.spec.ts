@@ -176,6 +176,22 @@ describe('StaticCompanyArchive', () => {
     expect(facts.get('04735087000104')).toMatchObject({ size: null, confirmedEvidences: 0 });
   });
 
+  it('o panorama da base não baixa o índice da pesquisa', async () => {
+    fetchMock.mockResolvedValue(gzipped({ companies: 3 }));
+
+    await expect(archive.baseAnalytics()).resolves.toEqual({ companies: 3 });
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith('presentation/v5/analytics-base.json.gz');
+  });
+
+  it('falha ao baixar o panorama da base não fica guardada', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('sem rede'));
+    await expect(archive.baseAnalytics()).rejects.toBeDefined();
+
+    fetchMock.mockResolvedValue(gzipped({ companies: 3 }));
+
+    await expect(archive.baseAnalytics()).resolves.toEqual({ companies: 3 });
+  });
+
   it('falha ao baixar o panorama não fica guardada', async () => {
     fetchMock.mockRejectedValueOnce(new Error('sem rede'));
     await expect(archive.facts()).rejects.toBeDefined();

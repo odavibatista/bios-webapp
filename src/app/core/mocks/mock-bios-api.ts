@@ -769,6 +769,12 @@ export class MockBiosApi extends BiosApi {
 
       if (!this.archive) return this.d.capturedAnalytics(input?.query);
 
+      const criteria = Object.values(input?.query ?? {}).some(
+        (value) => value !== undefined && value !== '',
+      );
+
+      if (!criteria) return this.archive.baseAnalytics();
+
       const [entries, facts, sectors] = await Promise.all([
         this.archive.entries(),
         this.archive.facts(),

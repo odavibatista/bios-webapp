@@ -1,4 +1,5 @@
 import type {
+  CompanyAnalytics,
   CompanyFullProfileResponse,
   CompanyIndexEvolution,
   CompanyMovementItem,
@@ -52,4 +53,6 @@ export abstract class CompanyArchive {
   abstract evolution(division: string, ods: number): Promise<SectorEvolution | null>;
   /** Fatos de cada empresa para o panorama, por CNPJ. */
   abstract facts(): Promise<ReadonlyMap<string, CompanyFacts>>;
+  /** O panorama da base inteira, pronto, sem baixar o índice da pesquisa. */
+  abstract baseAnalytics(): Promise<CompanyAnalytics>;
 }

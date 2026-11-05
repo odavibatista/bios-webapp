@@ -195,7 +195,7 @@ function odsAnalytics(
     companies: rows.length,
     companies_with_index: indexed.length,
     average_score: hidden ? null : average(indexed.map(({ score }) => score)),
-    average_confidence: hidden ? null : average(rows.map(({ confidence }) => confidence)),
+    average_confidence: hidden ? null : average(indexed.map(({ confidence }) => confidence)),
     score_ranges: hidden
       ? []
       : toRanges(
@@ -240,7 +240,7 @@ export function summarizeCompanies(
       status: toDistribution(countBy(companies, (company) => company.registrationStatus)),
       size: toDistribution(countBy(companies, (company) => company.facts.size)),
       legal_nature: toDistribution([...natures.values()]),
-      uf: toDistribution(countBy(companies, (company) => company.uf)),
+      uf: toDistribution(countBy(companies, (company) => company.uf || null)),
       sector: toDistribution(
         countBy(companies, (company) => company.facts.sector),
         sectorName,

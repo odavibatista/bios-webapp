@@ -1,6 +1,11 @@
 import { Injectable } from '@angular/core';
 import { ApiError } from '../api/api-error';
-import type { CompanyMovementItem, ListSectorsResponse, SectorEvolution } from '../api/generated';
+import type {
+  CompanyAnalytics,
+  CompanyMovementItem,
+  ListSectorsResponse,
+  SectorEvolution,
+} from '../api/generated';
 import type { CompanyFacts } from './company-analytics';
 import {
   CompanyArchive,
@@ -175,6 +180,7 @@ export class StaticCompanyArchive extends CompanyArchive {
   private sectorData?: Promise<SectorArchive>;
   private movementList?: Promise<CompanyMovementItem[]>;
   private factList?: Promise<Map<string, CompanyFacts>>;
+  private baseSummary?: Promise<CompanyAnalytics>;
   private readonly shards = new Map<string, Promise<Shard>>();
 
   entries(): Promise<readonly CompanyEntry[]> {
@@ -186,6 +192,17 @@ export class StaticCompanyArchive extends CompanyArchive {
       });
 
     return this.index;
+  }
+
+  baseAnalytics(): Promise<CompanyAnalytics> {
+    this.baseSummary ??= this.required<CompanyAnalytics>('analytics-base').catch(
+      (error: unknown) => {
+        this.baseSummary = undefined;
+        throw error;
+      },
+    );
+
+    return this.baseSummary;
   }
 
   facts(): Promise<ReadonlyMap<string, CompanyFacts>> {
