@@ -32,5 +32,7 @@ export function presentScore(score: CompanyOdsScore) {
     confidenceLabel: pending ? 'Pendente' : formatConfidence(score.confidence_value),
     coverageLabel: pending ? null : score.coverage_status ? COVERAGE[score.coverage_status] : null,
     position: value === null ? null : (value + 100) / 2,
+    fillStart: value === null ? null : Math.min(50, (value + 100) / 2),
+    fillWidth: value === null ? null : Math.abs(value / 2),
   };
 }

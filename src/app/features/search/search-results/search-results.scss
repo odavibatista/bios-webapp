@@ -112,6 +112,21 @@ tbody th {
   color: var(--mat-sys-on-surface-variant);
 }
 
+.status-chip {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 999px;
+  white-space: nowrap;
+  font: var(--mat-sys-label-medium);
+}
+
+.status-chip--other {
+  background: var(--mat-sys-surface-container-high);
+  border-color: var(--mat-sys-outline);
+  font-weight: 600;
+}
+
 .unscored-divider {
   color: var(--mat-sys-on-surface-variant);
   background: var(--mat-sys-surface-container-low);

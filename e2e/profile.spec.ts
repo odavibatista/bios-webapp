@@ -21,6 +21,28 @@ function toolbarField(page: Page) {
 }
 
 test.describe('perfil da empresa (#24)', () => {
+  test('em 1280 por 800, o índice aparece antes dos dados completos sem rolagem horizontal', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await signIn(page);
+    await toolbarField(page).fill('00.990.842/0001-38');
+    await toolbarField(page).press('Enter');
+
+    const summary = page.getByRole('region', { name: 'Resumo cadastral' });
+    const scores = page.getByRole('region', { name: 'Índices por ODS' });
+    const data = page.getByRole('region', { name: 'Dados cadastrais' });
+    await expect(summary).toContainText('2431-8/00');
+    await expect(scores).toBeVisible();
+    const scoreBox = await scores.getByRole('heading', { name: 'Índices por ODS' }).boundingBox();
+    const dataBox = await data.boundingBox();
+    expect(scoreBox!.y).toBeLessThan(800);
+    expect(scoreBox!.y).toBeLessThan(dataBox!.y);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      1280,
+    );
+  });
+
   test('CNPJ com máscara, no painel, abre o perfil com os dados cadastrais', async ({
     page,
   }, testInfo) => {

@@ -28,14 +28,29 @@
       <dt>Atividades secundárias</dt>
       <dd>
         @if (profile().secondary_cnaes.length) {
-          <ul class="cnaes">
-            @for (cnae of profile().secondary_cnaes; track cnae.code) {
+          <ul class="cnaes" id="cnaes-secundarios">
+            @for (cnae of visibleSecondary(); track cnae.code) {
               <li>
                 <span class="cnae-code">{{ formatCnae(cnae.code) }}</span>
                 {{ cnae.description }}
               </li>
             }
           </ul>
+          @if (profile().secondary_cnaes.length > 5) {
+            <button
+              type="button"
+              class="show-more"
+              aria-controls="cnaes-secundarios"
+              [attr.aria-expanded]="expanded()"
+              (click)="toggleSecondary()"
+            >
+              {{
+                expanded()
+                  ? 'Mostrar menos atividades'
+                  : 'Mostrar todas as ' + profile().secondary_cnaes.length + ' atividades'
+              }}
+            </button>
+          }
         } @else {
           Nenhuma informada.
         }

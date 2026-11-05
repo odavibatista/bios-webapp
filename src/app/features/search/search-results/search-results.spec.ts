@@ -67,6 +67,9 @@ describe('SearchResults', () => {
       .map((cell) => cell.textContent.trim());
     expect(secondCells.slice(-2)).toEqual(['Sem índice', 'Sem cálculo']);
     expect(secondCells[0]).toBe('Baixada');
+    const statuses = screen.getAllByText(/^(Ativa|Baixada)$/);
+    expect(statuses[0].classList.contains('status-chip--other')).toBe(false);
+    expect(statuses[1].classList.contains('status-chip--other')).toBe(true);
   });
 
   it('o nome leva ao perfil da empresa', async () => {
@@ -81,6 +84,7 @@ describe('SearchResults', () => {
     await renderResults('cards', null);
 
     expect(screen.getAllByText(/2451-2\/00/)).toHaveLength(2);
+    expect(screen.getByText('Baixada').classList.contains('status-chip--other')).toBe(true);
   });
 
   it('sem ODS escolhido, não há colunas de índice', async () => {

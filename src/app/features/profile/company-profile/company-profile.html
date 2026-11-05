@@ -29,8 +29,24 @@
         <p class="cnpj">CNPJ {{ formatted() }}</p>
       </header>
 
-      <bios-registration-data class="section" [profile]="profile.value()" />
+      <section class="overview" aria-label="Resumo cadastral">
+        <p>
+          <strong>Situação cadastral:</strong>
+          {{
+            statusLabel(
+              profile.value().registration_status,
+              profile.value().registration_status_unrecognized
+            )
+          }}
+        </p>
+        <p><strong>Porte:</strong> {{ sizeLabel(profile.value().company_size) }}</p>
+        <p>
+          <strong>CNAE principal:</strong> {{ cnaeLabel(profile.value().main_cnae.code) }} —
+          {{ profile.value().main_cnae.description }}
+        </p>
+      </section>
       <bios-ods-scores class="indices" [profile]="profile.value()" />
+      <bios-registration-data class="section" [profile]="profile.value()" />
       <bios-environmental-evidences
         class="environmental"
         [profile]="profile.value()"
