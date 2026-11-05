@@ -4,7 +4,7 @@
 //
 // Entrada: <dump>/NNN.jsonl (uma empresa por linha, com perfil e explicações, como a API respondeu)
 // e <dump>/sectors.json (setores e séries, depois de `reconstruct-sector-history.mjs`). Saída:
-// public/presentation/v2:
+// public/presentation/v3:
 //   manifest.json            data da captura e contagens
 //   search.json.gz           índice leve da pesquisa, com tabelas para não repetir texto
 //   companies/NNN.json.gz    empresas cujo CNPJ começa em NNN, sem alterar as respostas da API
@@ -35,7 +35,7 @@ import {
 const [dump] = process.argv.slice(2);
 if (!dump) throw new Error('Informe a pasta do dump.');
 
-const OUT = fileURLToPath(new URL('../public/presentation/v2/', import.meta.url));
+const OUT = fileURLToPath(new URL('../public/presentation/v3/', import.meta.url));
 const ODS = [13, 15];
 const CPF_FORMATTED = /\b\d{3}\.\d{3}\.\d{3}-\d{2}\b/;
 const CPF_DIGITS = /(?<![\w.\-/])\d{11}(?![\w.\-/])/;
@@ -190,7 +190,13 @@ writeFileSync(join(OUT, 'search.json.gz'), search);
 const sectors = JSON.parse(readFileSync(join(dump, 'sectors.json'), 'utf8'));
 writeFileSync(join(OUT, 'sectors.json.gz'), gz(sectors));
 
-const movementList = gz(movements.sort(byMostRecentMovement).slice(0, PUBLISHED_MOVEMENTS_LIMIT));
+const sortedMovements = movements.sort(byMostRecentMovement);
+const publishedMovements = sortedMovements.filter(
+  (item, index) =>
+    index < PUBLISHED_MOVEMENTS_LIMIT ||
+    item.ods.some(({ movement }) => movement?.evidence_category === 'EMISSAO_GEE'),
+);
+const movementList = gz(publishedMovements);
 writeFileSync(join(OUT, 'movements.json.gz'), movementList);
 
 const size = (dir) =>
@@ -205,7 +211,7 @@ const manifest = {
   evidences,
   ...coverage,
   sectors: sectors.sectors.data.length,
-  movements: Math.min(movements.length, PUBLISHED_MOVEMENTS_LIMIT),
+  movements: publishedMovements.length,
 };
 writeFileSync(join(OUT, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(manifest);

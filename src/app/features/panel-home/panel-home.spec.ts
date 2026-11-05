@@ -9,6 +9,7 @@ import type { CompanyMovementItem, ListCompanyMovementsResponse } from '../../co
 import { SessionStore } from '../../core/session/session-store';
 import {
   MOVEMENTS_PAGE_SIZE,
+  NO_CATEGORY_MOVEMENTS_MESSAGE,
   NO_MOVEMENTS_MESSAGE,
   PAGE_WITHOUT_MOVEMENTS_MESSAGE,
   PANEL_SHORTCUTS,
@@ -46,7 +47,10 @@ function page(
 describe('PanelHome', () => {
   const listCompanyMovements = vi.fn<BiosApi['listCompanyMovements']>();
 
-  async function renderHome(inputs: { pagina?: string } = {}, presentation = false) {
+  async function renderHome(
+    inputs: { pagina?: string; categoria?: string } = {},
+    presentation = false,
+  ) {
     return render(PanelHome, {
       inputs,
       providers: [
@@ -122,6 +126,32 @@ describe('PanelHome', () => {
     });
   });
 
+  it('lê o recorte da URL e repassa a categoria para a API', async () => {
+    await renderHome({ pagina: '2', categoria: 'emissoes' });
+
+    await screen.findByRole('link', { name: 'Empresa Um' });
+    expect(
+      screen.getByRole<HTMLSelectElement>('combobox', { name: 'Categoria da evidência' }).value,
+    ).toBe('emissoes');
+    expect(listCompanyMovements).toHaveBeenLastCalledWith({
+      query: { page: 2, page_size: MOVEMENTS_PAGE_SIZE, category: 'EMISSAO_GEE' },
+    });
+  });
+
+  it('mudar o recorte limpa a página e mantém a URL compartilhável', async () => {
+    await renderHome({ pagina: '2', categoria: 'infracoes' });
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    await userEvent
+      .setup()
+      .selectOptions(screen.getByRole('combobox', { name: 'Categoria da evidência' }), 'conduta');
+
+    expect(navigate).toHaveBeenCalledWith(
+      [],
+      expect.objectContaining({ queryParams: { categoria: 'conduta' } }),
+    );
+  });
+
   it('página inválida na URL vale como a primeira', async () => {
     await renderHome({ pagina: 'abc' });
 
@@ -195,6 +225,13 @@ describe('PanelHome', () => {
         screen.getByRole('link', { name: new RegExp(shortcut.title) }).getAttribute('href'),
       ).toBe(shortcut.path);
     }
+  });
+
+  it('categoria sem movimentações mostra estado vazio específico', async () => {
+    listCompanyMovements.mockResolvedValue(page([]));
+    await renderHome({ categoria: 'emissoes' });
+
+    expect(await screen.findByText(NO_CATEGORY_MOVEMENTS_MESSAGE)).toBeTruthy();
   });
 
   it('página além do fim não finge que a base está vazia', async () => {

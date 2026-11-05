@@ -39,6 +39,21 @@ test.describe('tela principal com as movimentações (#168)', () => {
     await expect(page.locator('bios-movement-card').first()).toBeVisible();
   });
 
+  test('recorte por categoria fica na URL e volta à primeira página', async ({ page }) => {
+    await page.goto('/painel?pagina=2');
+    const category = page.getByRole('combobox', { name: 'Categoria da evidência' });
+
+    await category.selectOption('emissoes');
+    await expect(page).toHaveURL('/painel?categoria=emissoes');
+    await expect(category).toHaveValue('emissoes');
+    await expect(page.locator('bios-movement-card').first()).toBeVisible();
+
+    await page.reload();
+    await expect(category).toHaveValue('emissoes');
+    await category.selectOption('');
+    await expect(page).toHaveURL('/painel');
+  });
+
   test('a busca continua na tela principal', async ({ page }) => {
     await expect(page.getByRole('banner').getByRole('search')).toBeVisible();
     await expect(page.getByRole('main').getByRole('search')).toHaveCount(0);

@@ -724,18 +724,23 @@ export class MockBiosApi extends BiosApi {
     return this.run('listCompanyMovements', async () => {
       this.authenticated('/companies/movements');
 
-      const { page = 1, page_size: pageSize = 20 } = input?.query ?? {};
+      const { page = 1, page_size: pageSize = 20, category } = input?.query ?? {};
       const items = this.archive
         ? await this.archive.movements()
         : this.d.capturedMovements(this.now());
+      const filtered = category
+        ? items.filter((item) =>
+            item.ods.some(({ movement }) => movement?.evidence_category === category),
+          )
+        : items;
 
       return {
-        data: items.slice((page - 1) * pageSize, page * pageSize),
+        data: filtered.slice((page - 1) * pageSize, page * pageSize),
         pagination: {
           page,
           page_size: pageSize,
-          total: items.length,
-          total_pages: Math.ceil(items.length / pageSize),
+          total: filtered.length,
+          total_pages: Math.ceil(filtered.length / pageSize),
         },
       };
     });
