@@ -12,6 +12,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { BiosApi } from '../../core/api/bios-api';
 import { SessionStore } from '../../core/session/session-store';
+import { PRESENTATION_MODE } from '../../core/presentation-mode';
 import { AsyncState } from '../../shared/states/async-state';
 import { CnpjSearch } from '../profile/cnpj-search/cnpj-search';
 import { MovementCard } from './movement-card/movement-card';
@@ -82,6 +83,7 @@ function pageFrom(value: string | undefined): number {
 export class PanelHome {
   private readonly api = inject(BiosApi);
   private readonly store = inject(SessionStore);
+  private readonly presentation = inject(PRESENTATION_MODE);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
 
@@ -90,7 +92,9 @@ export class PanelHome {
 
   protected readonly shortcuts = PANEL_SHORTCUTS;
 
-  protected readonly firstName = computed(() => this.store.user()?.name.split(' ')[0] ?? '');
+  protected readonly greeting = computed(() =>
+    this.presentation ? 'Olá!' : `Olá, ${this.store.user()?.name.split(' ')[0] ?? ''}`,
+  );
 
   protected readonly movements = resource({
     params: () => pageFrom(this.pagina()),
