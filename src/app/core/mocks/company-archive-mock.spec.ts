@@ -14,7 +14,15 @@ const PROFILE = PROFILES.get('17469701000177')!;
 const EXPLANATION = { cnpj: PROFILE.cnpj, ods_number: 13 } as ScoreExplanationResponse;
 const SERIES = { cnae_division: '10', ods_number: 13 } as SectorEvolution;
 
-const MOVEMENTS = ['1', '2', '3'].map((cnpj) => ({ cnpj }) as CompanyMovementItem);
+const MOVEMENTS = ['1', '2', '3'].map(
+  (cnpj, index) =>
+    ({
+      cnpj,
+      ods: [
+        { movement: { evidence_category: index === 1 ? 'EMISSAO_GEE' : 'INFRACAO_AMBIENTAL' } },
+      ],
+    }) as CompanyMovementItem,
+);
 
 class MemoryArchive extends CompanyArchive {
   /** Só uma empresa: se o mock usasse as capturas, a pesquisa traria as outras. */
@@ -89,6 +97,15 @@ describe('MockBiosApi com a base publicada', () => {
     await expect(api.listCompanyMovements({ query: { page: 2, page_size: 2 } })).resolves.toEqual({
       data: [MOVEMENTS[2]],
       pagination: { page: 2, page_size: 2, total: 3, total_pages: 2 },
+    });
+  });
+
+  it('filtra a base publicada pela categoria e pagina somente os resultados', async () => {
+    await expect(
+      api.listCompanyMovements({ query: { category: 'EMISSAO_GEE', page: 1, page_size: 2 } }),
+    ).resolves.toEqual({
+      data: [MOVEMENTS[1]],
+      pagination: { page: 1, page_size: 2, total: 1, total_pages: 1 },
     });
   });
 
