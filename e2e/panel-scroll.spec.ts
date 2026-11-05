@@ -40,11 +40,13 @@ test('pesquisa, setores e chaves mantêm a rolagem dentro das tabelas', async ({
     }
     if (testInfo.project.name === 'celular' && !path.startsWith('/pesquisa')) {
       await expect(page.locator('.table-scroll')).toBeVisible();
-      expect(
-        await page
-          .locator('.table-scroll')
-          .evaluate((element) => element.scrollWidth > element.clientWidth),
-      ).toBe(true);
+      await expect
+        .poll(() =>
+          page
+            .locator('.table-scroll')
+            .evaluate((element) => element.scrollWidth > element.clientWidth),
+        )
+        .toBe(true);
     }
   }
 });
