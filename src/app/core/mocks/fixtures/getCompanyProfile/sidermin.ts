@@ -21,6 +21,8 @@ export default {
     "registration_status": "ATIVA",
     "registration_status_unrecognized": null,
     "company_size": "DEMAIS",
+    "legal_nature_code": "2062",
+    "legal_nature": "Sociedade Empresária Limitada",
     "address": {
       "street": "RODOVIA BR-040",
       "number": "000",

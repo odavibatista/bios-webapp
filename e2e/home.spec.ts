@@ -1,6 +1,23 @@
 import { expectAccessible, expectNoHorizontalScroll } from './support/accessibility';
 import { expect, test } from './support/test';
 
+test.describe('privacidade', () => {
+  test('sem login, o rodapé leva à página que explica como pedir a remoção', async ({ page }) => {
+    await page.goto('/');
+
+    await page
+      .getByRole('contentinfo')
+      .getByRole('link', { name: 'página de privacidade' })
+      .click();
+
+    await expect(page).toHaveURL('/privacidade');
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Privacidade');
+    await expect(
+      page.getByRole('heading', { name: 'Pedir a remoção de um cadastro' }),
+    ).toBeVisible();
+  });
+});
+
 test.describe('página inicial', () => {
   test('abre em português, com a marca e os ODS calculados', async ({ page }) => {
     await page.goto('/');

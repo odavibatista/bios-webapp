@@ -9,10 +9,10 @@
 As respostas vêm de uma API local com empresas reais, capturadas por `scripts/capture-api.mjs`, e não
 de dados inventados: a demonstração mostra o comportamento verdadeiro da API, inclusive os erros.
 
-A versão publicada lê `public/presentation/v3`, com respostas da API real para 110.372 empresas,
+A versão publicada lê `public/presentation/v4`, com respostas da API real para 110.372 empresas,
 580.166 evidências e 86 setores, geradas por `scripts/build-presentation-data.mjs`. O cadastro veio
 do dump oficial da Receita e as sanções, dos arquivos oficiais da CGU, processados pela API real.
-Os testes e2e continuam usando as capturas de fixtures. A evolução setorial traz 24 meses:
+A natureza jurídica vem do arquivo `Empresas` da Receita, em `legal-nature.json` no dump. Um cadastro retirado a pedido do titular entra em `removed-cnpjs.json`, também no dump, e fica fora de uma nova versão da base. Essa lista nunca vai ao repositório. Os testes e2e continuam usando as capturas de fixtures. A evolução setorial traz 24 meses:
 o último é o agregado real da API, e os anteriores vêm de `scripts/reconstruct-sector-history.mjs`,
 que reaplica as regras da própria API ao que existia no fim de cada mês. Antes de gravar, ele reproduz
 o índice atual de todas as empresas, e a geração falha se não bater. A tela avisa que a série é

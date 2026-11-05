@@ -28,6 +28,7 @@ describe('RegistrationData', () => {
     expect(valueOf('Porte').textContent.trim()).toBe(
       'Demais (nem microempresa nem de pequeno porte)',
     );
+    expect(valueOf('Natureza jurídica').textContent.trim()).toBe(PROFILE.legal_nature);
     expect(valueOf('Endereço').textContent).toContain(
       `${PROFILE.address.city}/${PROFILE.address.uf}`,
     );

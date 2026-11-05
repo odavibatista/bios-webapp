@@ -34,6 +34,12 @@ export const routes: Routes = [
         children: [],
       },
       {
+        path: 'privacidade',
+        title: 'Privacidade — BIOS',
+        data: { public: true },
+        loadComponent: () => import('./features/privacy/privacy-page').then((m) => m.PrivacyPage),
+      },
+      {
         // `LOGIN_PATH`: para onde o guard e a renovação da sessão mandam quem não tem sessão.
         path: 'entrar',
         title: 'Entrar — BIOS',

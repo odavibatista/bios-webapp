@@ -10,7 +10,7 @@ import {
 
 /**
  * Seção "Dados cadastrais" do perfil (UC06, passo 4; RF05, RF06; #24): situação, porte,
- * endereço e CNAEs com a descrição oficial. Só dados da pessoa jurídica: não há campo para sócio,
+ * natureza jurídica, endereço e CNAEs com a descrição oficial. Só dados da pessoa jurídica: não há campo para sócio,
  * administrador ou contato (INL02).
  */
 @Component({
