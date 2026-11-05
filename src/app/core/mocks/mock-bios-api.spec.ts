@@ -634,6 +634,44 @@ describe('MockBiosApi', () => {
       );
     });
 
+    it('a evolução das capturas termina no índice atual, e o CNPJ fora da base dá 404', async () => {
+      const { ods, reconstructed } = await api.getCompanyIndexEvolution({
+        path: { cnpj: '04735087000104' },
+      });
+      const profile = await api.getCompanyProfile({ path: { cnpj: '04735087000104' } });
+      const series = ods.find(({ ods_number }) => ods_number === 15)!;
+
+      expect(reconstructed).toBe(true);
+      expect(series.status).toBe('AVAILABLE');
+      expect(series.steps.at(-1)?.score_value).toBe(
+        profile.ods_scores.find(({ ods_number }) => ods_number === 15)?.score_value,
+      );
+      expect(ods.find(({ ods_number }) => ods_number === 13)).toMatchObject({
+        status: 'SHORT_HISTORY',
+        steps: [],
+      });
+      await expectError(
+        api.getCompanyIndexEvolution({ path: { cnpj: '12ABC34501DE35' } }),
+        404,
+        'COMPANY_NOT_FOUND',
+      );
+    });
+
+    it('o panorama soma as capturas e respeita os critérios da pesquisa', async () => {
+      const base = await api.getCompanyAnalytics();
+      const company = await api.getCompanyAnalytics({ query: { name: 'SIDERMIN' } });
+
+      expect(base.companies).toBeGreaterThan(company.companies);
+      expect(company.companies).toBe(1);
+      expect(base.minimum_sample).toBe(5);
+      await expectError(
+        api.getCompanyAnalytics({ query: { min_score: 10 } }),
+        422,
+        'VALIDATION_FAILED',
+      );
+      await expectError(api.getCompanyAnalytics({ query: { ods: 1 } }), 422, 'ODS_NOT_AVAILABLE');
+    });
+
     it('explicação do índice capturada; ODS não calculado e CNPJ fora da base', async () => {
       await expect(
         api.getScoreExplanation({ path: { cnpj: '60894730000105', odsNumber: 15 } }),

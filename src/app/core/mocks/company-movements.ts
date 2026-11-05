@@ -5,7 +5,7 @@ import type {
   OdsMovement,
   ScoreContribution,
 } from '../api/generated';
-import type { ArchivedCompany } from './company-archive';
+import type { CompanySnapshot } from './company-archive';
 
 /** Quantas empresas a base publicada leva na lista: a tela não precisa da base inteira. */
 export const PUBLISHED_MOVEMENTS_LIMIT = 5_000;
@@ -27,7 +27,9 @@ function factDate({ published_at: published, details }: CompanyEvidence): string
   return typeof inventoryYear === 'number' ? `${inventoryYear}-12-31T00:00:00.000Z` : null;
 }
 
-function evidenceDates(company: ArchivedCompany): ReadonlyMap<string, string> {
+export function evidenceDates(
+  company: Pick<CompanySnapshot, 'profile'>,
+): ReadonlyMap<string, string> {
   return new Map(
     company.profile.evidences.flatMap(({ evidences }) =>
       evidences.flatMap((evidence) => {
@@ -78,7 +80,7 @@ function reconstructed(
 
 /** A empresa na lista de movimentações; `null` quando não há nada a mostrar nela. */
 export function companyMovementOf(
-  company: ArchivedCompany,
+  company: CompanySnapshot,
   now: number,
 ): CompanyMovementItem | null {
   const { profile, explanations } = company;

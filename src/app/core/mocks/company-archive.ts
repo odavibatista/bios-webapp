@@ -1,10 +1,12 @@
 import type {
   CompanyFullProfileResponse,
+  CompanyIndexEvolution,
   CompanyMovementItem,
   ListSectorsResponse,
   ScoreExplanationResponse,
   SectorEvolution,
 } from '../api/generated';
+import type { CompanyFacts } from './company-analytics';
 
 /** Índice e confiança de uma empresa num ODS, como a pesquisa os mostra. */
 export interface CompanyEntryScore {
@@ -31,7 +33,11 @@ export interface CompanyEntry {
 export interface ArchivedCompany {
   profile: CompanyFullProfileResponse;
   explanations: Readonly<Record<number, ScoreExplanationResponse>>;
+  evolution: CompanyIndexEvolution;
 }
+
+/** A empresa na base, sem a série do índice. */
+export type CompanySnapshot = Pick<ArchivedCompany, 'profile' | 'explanations'>;
 
 /**
  * Base de empresas da versão publicada: respostas da API real guardadas como arquivos estáticos e
@@ -44,4 +50,6 @@ export abstract class CompanyArchive {
   abstract movements(): Promise<readonly CompanyMovementItem[]>;
   abstract sectors(): Promise<ListSectorsResponse>;
   abstract evolution(division: string, ods: number): Promise<SectorEvolution | null>;
+  /** Fatos de cada empresa para o panorama, por CNPJ. */
+  abstract facts(): Promise<ReadonlyMap<string, CompanyFacts>>;
 }
