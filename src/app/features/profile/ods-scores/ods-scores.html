@@ -39,6 +39,11 @@
               "
             >
               <div class="track" aria-hidden="true">
+                <span
+                  class="fill"
+                  [style.left.%]="score.fillStart"
+                  [style.width.%]="score.fillWidth"
+                ></span>
                 <span class="zero"></span>
                 <span class="marker" [style.left.%]="score.position"></span>
               </div>
