@@ -41,7 +41,14 @@
                 <span class="trade-name">{{ item.trade_name }}</span>
               }
             </th>
-            <td>{{ status(item.registration_status) }}</td>
+            <td>
+              <span
+                class="status-chip"
+                [class.status-chip--other]="item.registration_status !== 'ATIVA'"
+              >
+                {{ status(item.registration_status) }}
+              </span>
+            </td>
             <td>{{ item.city }}/{{ item.uf }}</td>
             <td>
               <span class="nowrap">{{ cnae(item.main_cnae.code) }}</span>
@@ -81,7 +88,14 @@
             </div>
             <div>
               <dt>Situação</dt>
-              <dd>{{ status(item.registration_status) }}</dd>
+              <dd>
+                <span
+                  class="status-chip"
+                  [class.status-chip--other]="item.registration_status !== 'ATIVA'"
+                >
+                  {{ status(item.registration_status) }}
+                </span>
+              </dd>
             </div>
             <div>
               <dt>Município</dt>

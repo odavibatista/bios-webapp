@@ -176,6 +176,13 @@ describe('CompanySearch', () => {
     expect(screen.getByLabelText<HTMLInputElement>('CNAE').value).toBe('24');
   });
 
+  it('sem ODS, orienta como ver índice e confiança na lista', async () => {
+    await openSearch('/pesquisa?cnae=24');
+
+    expect(await resultRows()).toHaveLength(10);
+    expect(screen.getByText('Escolha um ODS para ver o índice e a confiança.')).toBeTruthy();
+  });
+
   it('pagina pela URL: próxima página e voltar, com o tamanho escolhido', async () => {
     const { search, user, router } = await openSearch('/pesquisa?cnae=24&por_pagina=5');
 

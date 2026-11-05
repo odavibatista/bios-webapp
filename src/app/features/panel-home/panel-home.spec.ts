@@ -110,6 +110,7 @@ describe('PanelHome', () => {
     await renderHome();
 
     expect(screen.getByText(/não diz que a conduta da empresa melhorou ou piorou/)).toBeTruthy();
+    expect(screen.getByText(/a maioria das empresas não tem inventário localizado/)).toBeTruthy();
   });
 
   it('lê a página da URL', async () => {
