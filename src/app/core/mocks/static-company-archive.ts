@@ -1,6 +1,12 @@
 import { Injectable } from '@angular/core';
 import { ApiError } from '../api/api-error';
-import type { CompanyMovementItem, ListSectorsResponse, SectorEvolution } from '../api/generated';
+import type {
+  CompanyAnalytics,
+  CompanyMovementItem,
+  ListSectorsResponse,
+  SectorEvolution,
+} from '../api/generated';
+import type { CompanyFacts } from './company-analytics';
 import {
   CompanyArchive,
   type ArchivedCompany,
@@ -9,7 +15,7 @@ import {
 } from './company-archive';
 
 /** Versão no caminho: os arquivos são imutáveis, e uma base nova vem numa pasta nova. */
-const BASE = 'presentation/v4';
+const BASE = 'presentation/v5';
 
 /** `cnpj`, nomes, tabelas e índices: ver `scripts/build-presentation-data.mjs`. */
 interface SearchIndex {
@@ -26,6 +32,28 @@ interface SearchIndex {
     mainCnae: number,
     secondaryCnaes: number[],
     ...scores: (number | null)[],
+  ][];
+}
+
+/** Fatos das empresas, na ordem do índice: ver `packFacts` no gerador. */
+interface AnalyticsArchive {
+  sizes: (string | null)[];
+  natures: [code: string | null, label: string | null][];
+  biomes: string[];
+  infractionTypes: string[];
+  sanctions: string[];
+  rows: [
+    size: number,
+    nature: number,
+    sector: string,
+    confirmed: number,
+    fineNotices: number,
+    fineAmount: number,
+    hectares: number,
+    biomes: number[],
+    infractionTypes: number[],
+    sanctions: number[],
+    years: number[],
   ][];
 }
 
@@ -71,6 +99,47 @@ async function readArchive<T>(file: string): Promise<T | null> {
   }
 }
 
+/** Pares `[posição, quantidade]` de volta a `{ nome: quantidade }`. */
+function unpack(
+  pairs: readonly number[],
+  names: readonly (string | number)[],
+): Record<string, number> {
+  const result: Record<string, number> = {};
+
+  for (let i = 0; i < pairs.length; i += 2) result[names[pairs[i]]] = pairs[i + 1];
+
+  return result;
+}
+
+function factsOf(archive: AnalyticsArchive, cnpjs: readonly string[]): Map<string, CompanyFacts> {
+  const facts = new Map<string, CompanyFacts>();
+
+  archive.rows.forEach((row, position) => {
+    const [size, nature, sector, confirmed, notices, amount, hectares, biomes, types, sanctions] =
+      row;
+    const years = row[10];
+    const yearCounts: Record<string, number> = {};
+
+    for (let i = 0; i < years.length; i += 2) yearCounts[years[i]] = years[i + 1];
+
+    facts.set(cnpjs[position], {
+      size: archive.sizes[size],
+      legalNature: archive.natures[nature],
+      sector,
+      confirmedEvidences: confirmed,
+      fineNotices: notices,
+      fineAmount: amount,
+      hectares,
+      biomes: unpack(biomes, archive.biomes),
+      infractionTypes: unpack(types, archive.infractionTypes),
+      sanctions: unpack(sanctions, archive.sanctions),
+      years: yearCounts,
+    });
+  });
+
+  return facts;
+}
+
 function entriesOf(index: SearchIndex): CompanyEntry[] {
   const cnaes = index.cnaes.map(([code, description]) => ({ code, description }));
 
@@ -110,6 +179,8 @@ export class StaticCompanyArchive extends CompanyArchive {
   private index?: Promise<CompanyEntry[]>;
   private sectorData?: Promise<SectorArchive>;
   private movementList?: Promise<CompanyMovementItem[]>;
+  private factList?: Promise<Map<string, CompanyFacts>>;
+  private baseSummary?: Promise<CompanyAnalytics>;
   private readonly shards = new Map<string, Promise<Shard>>();
 
   entries(): Promise<readonly CompanyEntry[]> {
@@ -121,6 +192,33 @@ export class StaticCompanyArchive extends CompanyArchive {
       });
 
     return this.index;
+  }
+
+  baseAnalytics(): Promise<CompanyAnalytics> {
+    this.baseSummary ??= this.required<CompanyAnalytics>('analytics-base').catch(
+      (error: unknown) => {
+        this.baseSummary = undefined;
+        throw error;
+      },
+    );
+
+    return this.baseSummary;
+  }
+
+  facts(): Promise<ReadonlyMap<string, CompanyFacts>> {
+    this.factList ??= Promise.all([this.required<AnalyticsArchive>('analytics'), this.entries()])
+      .then(([archive, entries]) =>
+        factsOf(
+          archive,
+          entries.map(({ cnpj }) => cnpj),
+        ),
+      )
+      .catch((error: unknown) => {
+        this.factList = undefined;
+        throw error;
+      });
+
+    return this.factList;
   }
 
   async company(cnpj: string): Promise<ArchivedCompany | null> {

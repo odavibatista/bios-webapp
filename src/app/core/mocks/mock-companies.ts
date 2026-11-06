@@ -1,7 +1,10 @@
 import type {
+  CompanyAnalytics,
   CompanyFullProfileResponse,
+  CompanyIndexEvolution,
   CompanyMovementItem,
   CompanySearchItem,
+  ListSectorsResponse,
   OdsListResponse,
   ScoreExplanationResponse,
   SearchCompaniesData,
@@ -9,8 +12,14 @@ import type {
   SectorEvolution,
 } from '../api/generated';
 import type { ApiError } from '../api/api-error';
+import {
+  companyFacts,
+  summarizeCompanies,
+  type AnalyticsCompany,
+  type CompanyFacts,
+} from './company-analytics';
 import type { CompanyEntry } from './company-archive';
-import { byMostRecentMovement, companyMovementOf } from './company-movements';
+import { byMostRecentMovement, companyMovementOf, evidenceDates } from './company-movements';
 import { capturedBody, capturedError, capturesOf, notInPresentation } from './mock-captures';
 
 /**
@@ -174,10 +183,14 @@ export function searchCriteriaError(
   query: SearchQuery | undefined,
   path: string,
   now: number,
+  { criterionRequired = true } = {},
 ): ApiError | null {
   const { name, uf, city, cnae, ods, order, min_score, min_confidence } = query ?? {};
+  const noCriterion = [name, uf, city, cnae, ods].every(
+    (value) => value === undefined || value === '',
+  );
 
-  if ([name, uf, city, cnae, ods].every((value) => value === undefined || value === '')) {
+  if (criterionRequired && noCriterion) {
     return capturedError('searchCompanies/sem-criterio', path, now);
   }
   if (name !== undefined && !words(name).some((word) => word.length >= 3)) {
@@ -332,6 +345,119 @@ export function searchEntries(
 /** Pesquisa sobre os perfis capturados. */
 export function searchProfiles(query: SearchQuery | undefined): SearchCompaniesResponse {
   return searchEntries([...PROFILES.values()].map(entryOf), query);
+}
+
+/** O panorama de um conjunto de empresas, a partir dos fatos da base publicada. */
+export function analyticsOf(
+  entries: readonly CompanyEntry[],
+  facts: ReadonlyMap<string, CompanyFacts>,
+  sectors: ListSectorsResponse,
+): CompanyAnalytics {
+  const names = new Map(sectors.data.map((item) => [item.cnae_division, item.description]));
+  const ods = activeOds();
+
+  return summarizeCompanies(
+    entries.flatMap((entry) => {
+      const company = facts.get(entry.cnpj);
+
+      return company ? [analyticsCompany(entry, company, ods)] : [];
+    }),
+    ods,
+    (division) => names.get(division) ?? division,
+  );
+}
+
+function analyticsCompany(
+  entry: CompanyEntry,
+  facts: CompanyFacts,
+  ods: readonly number[],
+): AnalyticsCompany {
+  return {
+    registrationStatus: entry.registration_status,
+    uf: entry.uf,
+    scores: ods.map((number) => ({ ods: number, ...entry.scores[number] })),
+    facts,
+  };
+}
+
+/** O panorama das empresas capturadas, para os testes sem a base publicada. */
+export function capturedAnalytics(query: SearchQuery | undefined): CompanyAnalytics {
+  const profiles = new Map([...PROFILES.values()].map((item) => [item.cnpj, item]));
+  const ods = activeOds();
+
+  return summarizeCompanies(
+    matchEntries([...profiles.values()].map(entryOf), query).map((entry) =>
+      analyticsCompany(entry, companyFacts(profiles.get(entry.cnpj)!), ods),
+    ),
+    ods,
+    (division) => division,
+  );
+}
+
+/** A evolução das empresas capturadas: as contribuições somadas na ordem das datas. */
+export function companyEvolution(cnpj: string, now: number): CompanyIndexEvolution {
+  const profile = companyProfile(cnpj, now);
+  const nature = profile.legal_nature_code;
+  const blocked =
+    nature === null ? 'LEGAL_NATURE_PENDING' : nature === '2135' ? 'INDIVIDUAL_ENTREPRENEUR' : null;
+
+  return {
+    cnpj: profile.cnpj,
+    reconstructed: true,
+    ods: profile.ods_scores.map((score) => {
+      if (blocked) return { ods_number: score.ods_number, status: blocked, steps: [] };
+
+      return capturedOdsEvolution(profile, score);
+    }),
+  };
+}
+
+function capturedOdsEvolution(
+  profile: CompanyFullProfileResponse,
+  score: CompanyFullProfileResponse['ods_scores'][number],
+): CompanyIndexEvolution['ods'][number] {
+  const dates = evidenceDates({ profile });
+  const dated = score.contributions
+    .flatMap((contribution) => {
+      const date = dates.get(contribution.evidence.id);
+
+      return date ? [{ contribution, date }] : [];
+    })
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const years = new Set(dated.map(({ date }) => date.slice(0, 4)));
+
+  if (!dated.length) {
+    return { ods_number: score.ods_number, status: 'NO_DATED_EVIDENCE', steps: [] };
+  }
+  if (years.size < 2) return { ods_number: score.ods_number, status: 'SHORT_HISTORY', steps: [] };
+
+  const steps: CompanyIndexEvolution['ods'][number]['steps'] = [];
+  let total = 0;
+
+  for (const { contribution, date } of dated) {
+    const { id, category, source_slug, source, source_reference, source_url } =
+      contribution.evidence;
+    const previous = steps.at(-1)?.date === date ? steps.pop() : undefined;
+
+    total += contribution.points;
+    steps.push({
+      date,
+      score_value: total,
+      cause: 'EVIDENCE_ADDED',
+      evidence_count: (previous?.evidence_count ?? 0) + 1,
+      evidence: {
+        id,
+        category,
+        source_slug,
+        source,
+        summary: null,
+        source_reference,
+        source_url,
+      },
+    });
+  }
+
+  return { ods_number: score.ods_number, status: 'AVAILABLE', steps };
 }
 
 /** Pesquisa capturada com os mesmos critérios e a mesma página, se houver. */

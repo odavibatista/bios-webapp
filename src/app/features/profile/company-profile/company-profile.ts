@@ -15,7 +15,9 @@ import { describeError } from '../../../shared/errors/describe-error';
 import { ErrorState } from '../../../shared/states/error-state';
 import { LoadingState } from '../../../shared/states/loading-state';
 import { COMPANIES_PATH, CnpjSearch } from '../cnpj-search/cnpj-search';
+import { CompanyCharts } from '../company-charts/company-charts';
 import { EnvironmentalEvidences } from '../environmental-evidences/environmental-evidences';
+import { IndexEvolution } from '../index-evolution/index-evolution';
 import { OdsScores } from '../ods-scores/ods-scores';
 import { RegistrationData } from '../registration-data/registration-data';
 import {
@@ -39,8 +41,10 @@ type Problem = 'invalid' | 'not-found' | 'failure';
 @Component({
   selector: 'bios-company-profile',
   imports: [
+    CompanyCharts,
     CnpjSearch,
     EnvironmentalEvidences,
+    IndexEvolution,
     OdsScores,
     ErrorState,
     LoadingState,
@@ -73,6 +77,24 @@ export class CompanyProfile {
     loader: ({ params: cnpj }) => this.api.getCompanyProfile({ path: { cnpj } }),
   });
 
+  /** A média mais recente do setor por ODS. Sem média publicada, o medidor fica sem marca. */
+  protected readonly sectorAverages = resource({
+    params: () => {
+      if (!this.profile.hasValue()) return undefined;
+
+      const { main_cnae, ods_scores } = this.profile.value();
+
+      return { cnae: main_cnae.code.slice(0, 2), ods: ods_scores.map((score) => score.ods_number) };
+    },
+    loader: async ({ params: { cnae, ods } }) => {
+      const averages = await Promise.all(ods.map((item) => this.sectorAverage(cnae, item)));
+
+      return Object.fromEntries(
+        averages.flatMap((average, index) => (average === null ? [] : [[ods[index], average]])),
+      );
+    },
+  });
+
   protected readonly problem = computed<Problem | null>(() => {
     if (!this.normalized()) return 'invalid';
     if (this.profile.status() !== 'error') return null;
@@ -91,6 +113,21 @@ export class CompanyProfile {
   protected readonly sizeLabel = companySizeLabel;
   protected readonly cnaeLabel = formatCnae;
   protected readonly statusLabel = registrationStatusLabel;
+
+  private async sectorAverage(cnae: string, ods: number): Promise<number | null> {
+    try {
+      const { windows } = await this.api.getSectorEvolution({
+        path: { cnae },
+        query: { ods },
+      });
+
+      const published = windows.filter(({ average_score }) => average_score !== null);
+
+      return published[published.length - 1]?.average_score ?? null;
+    } catch {
+      return null;
+    }
+  }
 
   constructor() {
     effect(() => {

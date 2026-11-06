@@ -2257,6 +2257,153 @@
         ]
       }
     },
+    "/companies/analytics": {
+      "get": {
+        "description": "Aceita os critérios de `GET /companies`, sem paginação; sem critério, responde pela base inteira. Traz cadastros por situação, porte, natureza jurídica, UF e setor; evidências confirmadas por bioma, tipo de infração, sanção e ano; e, por ODS, médias e faixas de índice e de confiança, separadas. Abaixo da amostra mínima (`SECTOR_SNAPSHOT_MIN_COMPANIES`, padrão 5), médias e faixas ficam omitidas e as contagens continuam. Nenhuma empresa é citada, e nada é ordenado por índice, multa ou número de evidências. `fine_amount` é o valor lançado nos autos, e não o valor pago. Os números se referem às empresas da base, e não a todas as empresas do Brasil.",
+        "operationId": "getCompanyAnalytics",
+        "parameters": [
+          {
+            "name": "name",
+            "required": false,
+            "in": "query",
+            "description": "Razão social ou nome fantasia, inteiro ou em parte; acentos e caixa são ignorados. Exige ao menos uma palavra com 3 letras ou mais",
+            "schema": {
+              "description": "Razão social ou nome fantasia, inteiro ou em parte; acentos e caixa são ignorados. Exige ao menos uma palavra com 3 letras ou mais",
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "uf",
+            "required": false,
+            "in": "query",
+            "description": "Sigla da unidade da federação (ex.: SP)",
+            "schema": {
+              "description": "Sigla da unidade da federação (ex.: SP)",
+              "type": "string"
+            }
+          },
+          {
+            "name": "city",
+            "required": false,
+            "in": "query",
+            "description": "Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado",
+            "schema": {
+              "description": "Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado",
+              "type": "string",
+              "maxLength": 100
+            }
+          },
+          {
+            "name": "cnae",
+            "required": false,
+            "in": "query",
+            "description": "Código CNAE de 2 a 7 dígitos (divisão, grupo, classe ou subclasse), pontuação opcional. Casa o CNAE principal ou algum secundário",
+            "schema": {
+              "description": "Código CNAE de 2 a 7 dígitos (divisão, grupo, classe ou subclasse), pontuação opcional. Casa o CNAE principal ou algum secundário",
+              "type": "string"
+            }
+          },
+          {
+            "name": "ods",
+            "required": false,
+            "in": "query",
+            "description": "Número do ODS selecionado; devolve o índice e a confiança dele em cada empresa",
+            "schema": {
+              "description": "Número do ODS selecionado; devolve o índice e a confiança dele em cada empresa",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 17
+            }
+          },
+          {
+            "name": "min_score",
+            "required": false,
+            "in": "query",
+            "description": "Índice mínimo no ODS selecionado (de -100 a 100); exige `ods`",
+            "schema": {
+              "description": "Índice mínimo no ODS selecionado (de -100 a 100); exige `ods`",
+              "type": "number",
+              "minimum": -100,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "min_confidence",
+            "required": false,
+            "in": "query",
+            "description": "Confiança mínima no ODS selecionado (de 0 a 1); exige `ods`",
+            "schema": {
+              "description": "Confiança mínima no ODS selecionado (de 0 a 1); exige `ods`",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          {
+            "name": "order",
+            "required": false,
+            "in": "query",
+            "description": "Ordena pelo índice do ODS selecionado, do menor para o maior (`asc`) ou do maior para o menor (`desc`); exige `ods`. Empresa sem índice calculado vem sempre ao fim, nos dois sentidos",
+            "schema": {
+              "description": "Ordena pelo índice do ODS selecionado, do menor para o maior (`asc`) ou do maior para o menor (`desc`); exige `ods`. Empresa sem índice calculado vem sempre ao fim, nos dois sentidos",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Panorama do conjunto de empresas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyAnalytics"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Totais e distribuições do conjunto de empresas",
+        "tags": [
+          "Empresas"
+        ]
+      }
+    },
     "/companies/movements": {
       "get": {
         "description": "A lista da tela principal (UC18): empresas com perfil e movimentação registrada, da mais recente para a mais antiga, com o CNPJ como desempate. O parâmetro opcional category restringe a empresas com movimentação da categoria indicada e exibe somente esse conjunto na página. Cada empresa aparece uma vez e traz, para cada ODS ativo, o índice e a confiança atuais e a última movimentação, com sentido, causa e data. Não traz índice anterior, variação nem histórico por empresa (IND03), e a ordem é só cronológica. Lê apenas o que já foi gravado, sem consultar fontes externas nem recalcular. Sem movimentações, responde 200 com a lista vazia.",
@@ -2453,6 +2600,85 @@
         "summary": "Consulta evidências e referências às fontes originais",
         "tags": [
           "Evidências"
+        ]
+      }
+    },
+    "/companies/{cnpj}/index-evolution": {
+      "get": {
+        "description": "Reaplica as regras vigentes às evidências que compõem o índice atual e devolve, por ODS, os degraus em ordem cronológica, cada um com a evidência que o causou. A série é reconstruída na leitura e não é gravada: registros que a fonte retirou não entram. Não traz variação nem comparação com outras empresas. `status` diz por que a evolução aparece ou não: `INDIVIDUAL_ENTREPRENEUR` (empresário individual, sem série), `LEGAL_NATURE_PENDING` (natureza jurídica ainda desconhecida), `SHORT_HISTORY` (menos de dois anos de evidências ou de dois degraus), `NO_DATED_EVIDENCE` e `NOT_REPRODUCIBLE` (a série não chegaria ao índice gravado).",
+        "operationId": "getCompanyIndexEvolution",
+        "parameters": [
+          {
+            "name": "cnpj",
+            "required": true,
+            "in": "path",
+            "description": "CNPJ válido da empresa",
+            "schema": {
+              "example": "11222333000181",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Evolução do índice, por ODS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyIndexEvolution"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Mostra como o índice da empresa chegou ao valor atual",
+        "tags": [
+          "Índices por ODS"
         ]
       }
     },
@@ -4079,6 +4305,281 @@
         "additionalProperties": false,
         "description": "Índice e confiança no ODS selecionado"
       },
+      "CompanyAnalytics": {
+        "type": "object",
+        "properties": {
+          "companies": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Empresas no conjunto"
+          },
+          "minimum_sample": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "description": "Abaixo disso, médias e faixas ficam omitidas"
+          },
+          "totals": {
+            "type": "object",
+            "properties": {
+              "confirmed_evidences": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "fine_notices": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "fine_amount": {
+                "type": "number",
+                "minimum": 0,
+                "description": "Valor lançado nos autos, e não o valor pago"
+              },
+              "area_hectares": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "confirmed_evidences",
+              "fine_notices",
+              "fine_amount",
+              "area_hectares"
+            ],
+            "additionalProperties": false
+          },
+          "registration": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AnalyticsDistributionItem"
+                },
+                "description": "Categorias da maior para a menor, com as pequenas em \"Outros\""
+              },
+              "size": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AnalyticsDistributionItem"
+                },
+                "description": "Categorias da maior para a menor, com as pequenas em \"Outros\""
+              },
+              "legal_nature": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AnalyticsDistributionItem"
+                },
+                "description": "Categorias da maior para a menor, com as pequenas em \"Outros\""
+              },
+              "uf": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AnalyticsDistributionItem"
+                },
+                "description": "Categorias da maior para a menor, com as pequenas em \"Outros\""
+              },
+              "sector": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AnalyticsDistributionItem"
+                },
+                "description": "Categorias da maior para a menor, com as pequenas em \"Outros\""
+              }
+            },
+            "required": [
+              "status",
+              "size",
+              "legal_nature",
+              "uf",
+              "sector"
+            ],
+            "additionalProperties": false
+          },
+          "evidence": {
+            "type": "object",
+            "properties": {
+              "biome": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AnalyticsDistributionItem"
+                },
+                "description": "Categorias da maior para a menor, com as pequenas em \"Outros\""
+              },
+              "infraction_type": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AnalyticsDistributionItem"
+                },
+                "description": "Categorias da maior para a menor, com as pequenas em \"Outros\""
+              },
+              "sanction": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AnalyticsDistributionItem"
+                },
+                "description": "Categorias da maior para a menor, com as pequenas em \"Outros\""
+              },
+              "year": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "year": {
+                      "type": "integer",
+                      "minimum": -9007199254740991,
+                      "maximum": 9007199254740991
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "exclusiveMinimum": true,
+                      "maximum": 9007199254740991
+                    }
+                  },
+                  "required": [
+                    "year",
+                    "count"
+                  ],
+                  "additionalProperties": false
+                },
+                "description": "Anos com evidência, em ordem; ano sem evidência não vem"
+              }
+            },
+            "required": [
+              "biome",
+              "infraction_type",
+              "sanction",
+              "year"
+            ],
+            "additionalProperties": false
+          },
+          "ods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdsAnalytics"
+            }
+          }
+        },
+        "required": [
+          "companies",
+          "minimum_sample",
+          "totals",
+          "registration",
+          "evidence",
+          "ods"
+        ],
+        "additionalProperties": false,
+        "description": "Totais e distribuições do conjunto de empresas"
+      },
+      "AnalyticsDistributionItem": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Código ou valor da categoria"
+          },
+          "label": {
+            "type": "string",
+            "description": "Texto da categoria"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "count"
+        ],
+        "additionalProperties": false
+      },
+      "OdsAnalytics": {
+        "type": "object",
+        "properties": {
+          "ods_number": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991
+          },
+          "companies": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991,
+            "description": "Empresas avaliadas"
+          },
+          "companies_with_index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          },
+          "average_score": {
+            "nullable": true,
+            "description": "Média do índice; omitida abaixo da amostra mínima",
+            "type": "number"
+          },
+          "average_confidence": {
+            "nullable": true,
+            "description": "Média da confiança, sempre separada do índice",
+            "type": "number"
+          },
+          "score_ranges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRange"
+            },
+            "description": "Faixas de índice; vazias abaixo da amostra mínima"
+          },
+          "confidence_ranges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsRange"
+            },
+            "description": "Faixas de confiança; vazias abaixo da amostra mínima"
+          }
+        },
+        "required": [
+          "ods_number",
+          "companies",
+          "companies_with_index",
+          "average_score",
+          "average_confidence",
+          "score_ranges",
+          "confidence_ranges"
+        ],
+        "additionalProperties": false
+      },
+      "AnalyticsRange": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "number",
+            "description": "Início da faixa, inclusive"
+          },
+          "to": {
+            "type": "number",
+            "description": "Fim da faixa"
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 9007199254740991
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "count"
+        ],
+        "additionalProperties": false
+      },
       "CompanyMovementsResponse": {
         "type": "object",
         "properties": {
@@ -4408,6 +4909,157 @@
             }
           }
         ]
+      },
+      "CompanyIndexEvolution": {
+        "type": "object",
+        "properties": {
+          "cnpj": {
+            "type": "string"
+          },
+          "reconstructed": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "A série é reconstruída com as regras vigentes, a partir das evidências atuais"
+          },
+          "ods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OdsIndexEvolution"
+            }
+          }
+        },
+        "required": [
+          "cnpj",
+          "reconstructed",
+          "ods"
+        ],
+        "additionalProperties": false,
+        "description": "Evolução do índice da empresa, por ODS"
+      },
+      "OdsIndexEvolution": {
+        "type": "object",
+        "properties": {
+          "ods_number": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "INDIVIDUAL_ENTREPRENEUR",
+              "LEGAL_NATURE_PENDING",
+              "SHORT_HISTORY",
+              "NO_DATED_EVIDENCE",
+              "NOT_REPRODUCIBLE"
+            ],
+            "description": "Por que a evolução aparece ou não"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IndexEvolutionStep"
+            },
+            "description": "Degraus em ordem cronológica; vazio fora de AVAILABLE"
+          }
+        },
+        "required": [
+          "ods_number",
+          "status",
+          "steps"
+        ],
+        "additionalProperties": false
+      },
+      "IndexEvolutionStep": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$",
+            "description": "Fim do dia em que o índice passou a valer"
+          },
+          "score_value": {
+            "type": "number",
+            "minimum": -100,
+            "maximum": 100
+          },
+          "cause": {
+            "type": "string",
+            "enum": [
+              "EVIDENCE_ADDED",
+              "EVIDENCE_REMOVED",
+              "WEIGHT_CHANGED"
+            ]
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/IndexEvolutionEvidence"
+          },
+          "evidence_count": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "description": "Quantas evidências mudaram o índice nessa data"
+          }
+        },
+        "required": [
+          "date",
+          "score_value",
+          "cause",
+          "evidence",
+          "evidence_count"
+        ],
+        "additionalProperties": false
+      },
+      "IndexEvolutionEvidence": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "INFRACAO_AMBIENTAL",
+              "CONDUTA_ADMINISTRATIVA",
+              "EMISSAO_GEE"
+            ]
+          },
+          "source_slug": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "summary": {
+            "nullable": true,
+            "type": "string"
+          },
+          "source_reference": {
+            "nullable": true,
+            "type": "string"
+          },
+          "source_url": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "source_slug",
+          "source",
+          "summary",
+          "source_reference",
+          "source_url"
+        ],
+        "additionalProperties": false,
+        "description": "A evidência que causou o degrau"
       },
       "CompanyFullProfileResponse": {
         "type": "object",

@@ -2,10 +2,13 @@ import { TestBed } from '@angular/core/testing';
 import { InMemoryApiCredentials } from '../api/api-credentials';
 import { BiosApi } from '../api/bios-api';
 import type {
+  CompanyAnalytics,
+  CompanyIndexEvolution,
   CompanyMovementItem,
   ScoreExplanationResponse,
   SectorEvolution,
 } from '../api/generated';
+import { companyFacts } from './company-analytics';
 import { CompanyArchive, type ArchivedCompany, type CompanyEntry } from './company-archive';
 import { entryOf, PROFILES } from './mock-companies';
 import { provideMockBiosApi } from './provide-mock-bios-api';
@@ -13,6 +16,8 @@ import { provideMockBiosApi } from './provide-mock-bios-api';
 const PROFILE = PROFILES.get('17469701000177')!;
 const EXPLANATION = { cnpj: PROFILE.cnpj, ods_number: 13 } as ScoreExplanationResponse;
 const SERIES = { cnae_division: '10', ods_number: 13 } as SectorEvolution;
+const BASE_ANALYTICS = { companies: 110372 } as CompanyAnalytics;
+const EVOLUTION = { cnpj: PROFILE.cnpj, reconstructed: true, ods: [] } as CompanyIndexEvolution;
 
 const MOVEMENTS = ['1', '2', '3'].map(
   (cnpj, index) =>
@@ -32,14 +37,26 @@ class MemoryArchive extends CompanyArchive {
 
   company = (cnpj: string): Promise<ArchivedCompany | null> =>
     Promise.resolve(
-      cnpj === PROFILE.cnpj ? { profile: PROFILE, explanations: { 13: EXPLANATION } } : null,
+      cnpj === PROFILE.cnpj
+        ? { profile: PROFILE, explanations: { 13: EXPLANATION }, evolution: EVOLUTION }
+        : null,
     );
 
-  sectors = () => Promise.resolve({ data: [{ cnae_division: '10', description: 'ALIMENTOS' }] });
+  sectors = () =>
+    Promise.resolve({
+      data: [
+        { cnae_division: '10', description: 'ALIMENTOS' },
+        { cnae_division: '24', description: 'METALURGIA' },
+      ],
+    });
 
   evolution = (division: string) => Promise.resolve(division === '10' ? SERIES : null);
 
   movements = () => Promise.resolve(MOVEMENTS);
+
+  facts = () => Promise.resolve(new Map([[PROFILE.cnpj, companyFacts(PROFILE)]]));
+
+  baseAnalytics = () => Promise.resolve(BASE_ANALYTICS);
 }
 
 describe('MockBiosApi com a base publicada', () => {
@@ -135,8 +152,32 @@ describe('MockBiosApi com a base publicada', () => {
     await expectError(api.exportCompaniesXlsx({ query: { cnae: '24' } }), 422, 'EXPORT_TOO_LARGE');
   });
 
+  it('entrega a evolução guardada com a empresa', async () => {
+    await expect(api.getCompanyIndexEvolution({ path: { cnpj: PROFILE.cnpj } })).resolves.toBe(
+      EVOLUTION,
+    );
+    await expectError(
+      api.getCompanyIndexEvolution({ path: { cnpj: '04735087000104' } }),
+      404,
+      'COMPANY_NOT_FOUND',
+    );
+  });
+
+  it('o panorama sem critério cobre a base, e com critério só o que a pesquisa traria', async () => {
+    const all = await api.getCompanyAnalytics({ query: { uf: 'MG' } });
+    const none = await api.getCompanyAnalytics({ query: { uf: 'AC' } });
+
+    await expect(api.getCompanyAnalytics()).resolves.toBe(BASE_ANALYTICS);
+    expect(all.companies).toBe(1);
+    expect(all.totals.confirmed_evidences).toBe(companyFacts(PROFILE).confirmedEvidences);
+    expect(all.registration.sector).toEqual([{ key: '24', label: 'METALURGIA', count: 1 }]);
+    expect(none.companies).toBe(0);
+  });
+
   it('entrega setores e série do arquivo, e setor sem série é avisado', async () => {
-    await expect(api.listSectors()).resolves.toMatchObject({ data: [{ cnae_division: '10' }] });
+    await expect(api.listSectors()).resolves.toMatchObject({
+      data: [{ cnae_division: '10' }, { cnae_division: '24' }],
+    });
     await expect(
       api.getSectorEvolution({ path: { cnae: '10' }, query: { ods: 13 } }),
     ).resolves.toEqual(SERIES);

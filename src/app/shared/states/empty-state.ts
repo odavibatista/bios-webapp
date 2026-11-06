@@ -28,6 +28,11 @@ import { MatIconModule } from '@angular/material/icon';
       color: var(--bios-brand-ink);
     }
 
+    // Texto longo não esmaga o ícone.
+    mat-icon {
+      flex: none;
+    }
+
     p {
       margin: 0 0 0.5rem;
     }

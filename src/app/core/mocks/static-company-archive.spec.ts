@@ -19,12 +19,28 @@ const INDEX = {
     ['04735087000104', 'SIDERMIN', 'SIDERMIN', 1, 1, 1, [], null, null, null, 0],
   ],
 };
+const ANALYTICS = {
+  sizes: ['DEMAIS', null],
+  natures: [
+    ['2054', 'Sociedade Anônima Fechada'],
+    ['2062', 'Sociedade Empresária Limitada'],
+  ],
+  biomes: ['Amazônia', 'Cerrado'],
+  infractionTypes: ['Flora'],
+  sanctions: ['Inidoneidade'],
+  rows: [
+    [0, 0, '24', 3, 1, 500, 2, [1, 2], [0, 1], [], [2019, 1, 2021, 2]],
+    [1, 1, '02', 0, 0, 0, 0, [], [], [], []],
+  ],
+};
 const COMPANY = {
   profile: { cnpj: '17469701000177' },
   explanations: {},
 } as unknown as ArchivedCompany;
 
 const gzipped = (value: unknown) => new Response(gzipSync(JSON.stringify(value)));
+const serveAnalytics = (url: unknown) =>
+  Promise.resolve(gzipped(String(url).endsWith('analytics.json.gz') ? ANALYTICS : INDEX));
 
 describe('StaticCompanyArchive', () => {
   let archive: StaticCompanyArchive;
@@ -45,7 +61,7 @@ describe('StaticCompanyArchive', () => {
 
     const [first, second] = await archive.entries();
 
-    expect(fetchMock).toHaveBeenCalledWith('presentation/v4/search.json.gz');
+    expect(fetchMock).toHaveBeenCalledWith('presentation/v5/search.json.gz');
     expect(first).toEqual({
       cnpj: '17469701000177',
       legal_name: 'ARCELORMITTAL BRASIL S.A.',
@@ -79,7 +95,7 @@ describe('StaticCompanyArchive', () => {
     await expect(archive.company('17400000000100')).resolves.toBeNull();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith('presentation/v4/companies/174.json.gz');
+    expect(fetchMock).toHaveBeenCalledWith('presentation/v5/companies/174.json.gz');
   });
 
   it('fatia que não existe é empresa fora da base, e não falha', async () => {
@@ -127,7 +143,7 @@ describe('StaticCompanyArchive', () => {
     await archive.movements();
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock).toHaveBeenCalledWith('presentation/v4/movements.json.gz');
+    expect(fetchMock).toHaveBeenCalledWith('presentation/v5/movements.json.gz');
   });
 
   it('download da lista que falha não fica guardado', async () => {
@@ -136,6 +152,53 @@ describe('StaticCompanyArchive', () => {
 
     await expect(archive.movements()).rejects.toMatchObject({ status: 503 });
     await expect(archive.movements()).resolves.toEqual([]);
+  });
+
+  it('devolve os fatos do panorama por CNPJ, na ordem do índice da pesquisa', async () => {
+    fetchMock.mockImplementation(serveAnalytics);
+
+    const facts = await archive.facts();
+
+    expect(fetchMock).toHaveBeenCalledWith('presentation/v5/analytics.json.gz');
+    expect(facts.get('17469701000177')).toEqual({
+      size: 'DEMAIS',
+      legalNature: ['2054', 'Sociedade Anônima Fechada'],
+      sector: '24',
+      confirmedEvidences: 3,
+      fineNotices: 1,
+      fineAmount: 500,
+      hectares: 2,
+      biomes: { Cerrado: 2 },
+      infractionTypes: { Flora: 1 },
+      sanctions: {},
+      years: { 2019: 1, 2021: 2 },
+    });
+    expect(facts.get('04735087000104')).toMatchObject({ size: null, confirmedEvidences: 0 });
+  });
+
+  it('o panorama da base não baixa o índice da pesquisa', async () => {
+    fetchMock.mockResolvedValue(gzipped({ companies: 3 }));
+
+    await expect(archive.baseAnalytics()).resolves.toEqual({ companies: 3 });
+    expect(fetchMock).toHaveBeenCalledExactlyOnceWith('presentation/v5/analytics-base.json.gz');
+  });
+
+  it('falha ao baixar o panorama da base não fica guardada', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('sem rede'));
+    await expect(archive.baseAnalytics()).rejects.toBeDefined();
+
+    fetchMock.mockResolvedValue(gzipped({ companies: 3 }));
+
+    await expect(archive.baseAnalytics()).resolves.toEqual({ companies: 3 });
+  });
+
+  it('falha ao baixar o panorama não fica guardada', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('sem rede'));
+    await expect(archive.facts()).rejects.toBeDefined();
+
+    fetchMock.mockImplementation(serveAnalytics);
+
+    await expect(archive.facts()).resolves.toHaveProperty('size', 2);
   });
 
   it('entrega os setores e a série por divisão e ODS', async () => {

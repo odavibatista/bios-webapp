@@ -4,7 +4,7 @@ import type {
   ScoreContribution,
   ScoreExplanationResponse,
 } from '../api/generated';
-import type { ArchivedCompany } from './company-archive';
+import type { CompanySnapshot } from './company-archive';
 import { byMostRecentMovement, companyMovementOf } from './company-movements';
 
 const NOW = Date.parse('2026-11-04T12:00:00.000Z');
@@ -24,7 +24,7 @@ function contribution({ id, points, category = 'INFRACAO_AMBIENTAL' }: Item): Sc
   return { evidence: { id, category }, points } as unknown as ScoreContribution;
 }
 
-function company(items: readonly Item[], score: number | null = -40): ArchivedCompany {
+function company(items: readonly Item[], score: number | null = -40): CompanySnapshot {
   const profile = {
     cnpj: '11222333000181',
     legal_name: 'Empresa',

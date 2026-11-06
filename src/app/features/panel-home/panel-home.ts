@@ -15,6 +15,7 @@ import type { OdsMovement } from '../../core/api/generated';
 import { SessionStore } from '../../core/session/session-store';
 import { PRESENTATION_MODE } from '../../core/presentation-mode';
 import { AsyncState } from '../../shared/states/async-state';
+import { OverviewTotals } from '../overview/overview-totals/overview-totals';
 import { MovementCard } from './movement-card/movement-card';
 
 interface Shortcut {
@@ -77,7 +78,15 @@ function pageFrom(value: string | undefined): number {
  */
 @Component({
   selector: 'bios-panel-home',
-  imports: [AsyncState, MatButtonModule, MatCardModule, MatIconModule, MovementCard, RouterLink],
+  imports: [
+    AsyncState,
+    MatButtonModule,
+    MatCardModule,
+    MatIconModule,
+    MovementCard,
+    OverviewTotals,
+    RouterLink,
+  ],
   templateUrl: './panel-home.html',
   styleUrl: './panel-home.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -102,6 +111,9 @@ export class PanelHome {
   protected readonly greeting = computed(() =>
     this.presentation ? 'Olá!' : `Olá, ${this.store.user()?.name.split(' ')[0] ?? ''}`,
   );
+
+  /** Se os totais falharem, a tela segue sem eles: a lista é o que importa aqui (UC18, 2.2). */
+  protected readonly summary = resource({ loader: () => this.api.getCompanyAnalytics() });
 
   protected readonly movements = resource({
     params: () => ({ page: pageFrom(this.pagina()), category: this.category() }),
