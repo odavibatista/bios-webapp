@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import type {
   CompanyFullProfileResponse,
   CompanySourceProvenance,
@@ -87,13 +88,15 @@ function emptySourceStatus(source: CompanySourceProvenance): {
 /** Evidências do mesmo retrato do cadastro, sem nova consulta à API. */
 @Component({
   selector: 'bios-environmental-evidences',
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './environmental-evidences.html',
   styleUrl: './environmental-evidences.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EnvironmentalEvidences {
   readonly profile = input.required<CompanyFullProfileResponse>();
+  readonly refreshing = input(false);
+  readonly refreshNotice = input('');
   readonly refresh = output<void>();
   protected readonly ghgNoInventoryLabel = GHG_NO_INVENTORY_LABEL;
   protected readonly ghgNoInventoryMessage = GHG_NO_INVENTORY_MESSAGE;

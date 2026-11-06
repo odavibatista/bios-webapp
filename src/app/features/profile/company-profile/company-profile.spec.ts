@@ -5,6 +5,7 @@ import { render, screen } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { ApiError } from '../../../core/api/api-error';
 import { BiosApi } from '../../../core/api/bios-api';
+import { PRESENTATION_MODE } from '../../../core/presentation-mode';
 import type { CompanyFullProfileResponse, ErrorResponse } from '../../../core/api/generated';
 import acoCearense from '../../../core/mocks/fixtures/getCompanyProfile/aco-cearense';
 import notFound from '../../../core/mocks/fixtures/getCompanyProfile/nao-encontrada';
@@ -169,6 +170,69 @@ describe('CompanyProfile', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: PROFILE.legal_name })).toBeTruthy();
     expect(getCompanyProfile).toHaveBeenCalledTimes(2);
+  });
+
+  describe('"Atualizar perfil" (#265)', () => {
+    const refreshButton = () => screen.getByRole('button', { name: 'Atualizar perfil' });
+
+    it('consulta de novo e diz quando terminou', async () => {
+      const { getCompanyProfile, user } = await renderProfile(PROFILE.cnpj, () =>
+        Promise.resolve(PROFILE),
+      );
+
+      await user.click(await screen.findByRole('button', { name: 'Atualizar perfil' }));
+
+      expect(getCompanyProfile).toHaveBeenCalledTimes(2);
+      expect(
+        (await screen.findByText(/^Perfil (atualizado às|atualizado\.)/)).textContent,
+      ).toBeTruthy();
+    });
+
+    it('um clique a mais durante a consulta não repete o pedido', async () => {
+      const { getCompanyProfile, user } = await renderProfile(PROFILE.cnpj, () =>
+        Promise.resolve(PROFILE),
+      );
+
+      await screen.findByRole('button', { name: 'Atualizar perfil' });
+      getCompanyProfile.mockImplementation(() => new Promise(() => undefined));
+      await user.click(refreshButton());
+      await user.click(await screen.findByRole('button', { name: 'Atualizando…' }));
+
+      expect(getCompanyProfile).toHaveBeenCalledTimes(2);
+    });
+
+    it('falha avisa e mantém o perfil na tela', async () => {
+      const { getCompanyProfile, user } = await renderProfile(PROFILE.cnpj, () =>
+        Promise.resolve(PROFILE),
+      );
+
+      await screen.findByRole('button', { name: 'Atualizar perfil' });
+      getCompanyProfile.mockRejectedValue(UNAVAILABLE);
+      await user.click(refreshButton());
+
+      expect(await screen.findByText(/temporariamente indisponíveis/)).toBeTruthy();
+      expect(screen.getByRole('heading', { level: 1 }).textContent).toContain(PROFILE.legal_name);
+    });
+
+    it('na apresentação, diz que nenhuma fonte foi consultada', async () => {
+      await render(CompanyProfile, {
+        inputs: { cnpj: PROFILE.cnpj },
+        providers: [
+          provideRouter([]),
+          { provide: PRESENTATION_MODE, useValue: true },
+          {
+            provide: BiosApi,
+            useValue: { getCompanyProfile: vi.fn(() => Promise.resolve(PROFILE)) },
+          },
+        ],
+      });
+
+      await userEvent
+        .setup()
+        .click(await screen.findByRole('button', { name: 'Atualizar perfil' }));
+
+      expect(await screen.findByText(/nenhuma fonte foi consultada/)).toBeTruthy();
+    });
   });
 
   it('enquanto consulta, mostra o carregando', async () => {
