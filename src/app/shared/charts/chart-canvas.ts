@@ -41,6 +41,16 @@ const NARROW = '(max-width: 599.98px)';
       [attr.aria-label]="spec().label"
       [style.height.rem]="spec().height"
     ></div>
+    @if (spec().legend; as legend) {
+      <ul class="legend">
+        @for (entry of legend; track entry.label) {
+          <li>
+            <span class="swatch" [style.background-color]="entry.color"></span>
+            <span>{{ entry.label }} {{ entry.share }}</span>
+          </li>
+        }
+      </ul>
+    }
   `,
   styles: `
     :host {
@@ -50,6 +60,33 @@ const NARROW = '(max-width: 599.98px)';
     // Largura da tela, nunca mais (NFIN02): o ECharts redesenha ao mudar o tamanho.
     .chart {
       width: 100%;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.25rem 1rem;
+      margin: 0.5rem 0 0;
+      padding: 0;
+      list-style: none;
+      font: var(--mat-sys-body-small);
+      color: var(--mat-sys-on-surface);
+    }
+
+    li {
+      display: flex;
+      gap: 0.375rem;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .swatch {
+      flex: none;
+      width: 0.75rem;
+      height: 0.75rem;
+      margin-top: 0.125rem;
+      border-radius: 2px;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

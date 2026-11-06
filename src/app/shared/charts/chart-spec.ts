@@ -12,13 +12,22 @@ export interface ChartTable {
   rows: readonly (readonly string[])[];
 }
 
+/** Uma linha da legenda em HTML: a categoria, a parte dela no todo e a cor da fatia. */
+export interface ChartLegendEntry {
+  label: string;
+  share: string;
+  color: string;
+}
+
 /** Tudo o que o card precisa de um gráfico, sem carregar o ECharts. */
 export interface ChartSpec {
   /** Nome lido pelo leitor de tela. */
   label: string;
-  /** Altura em rem, com os eixos e a legenda dentro dela. */
+  /** Altura em rem, com os eixos e a legenda do gráfico dentro dela. */
   height: number;
   options: (theme: ChartTheme) => Record<string, unknown>;
+  /** Legenda fora do desenho, para nomes longos quebrarem a linha em vez de serem cortados. */
+  legend?: readonly ChartLegendEntry[];
   /** Os mesmos números do gráfico, em texto. */
   table: ChartTable;
 }
