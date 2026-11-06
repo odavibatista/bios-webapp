@@ -91,7 +91,14 @@ test.describe('panorama de dados (#234)', () => {
         has: page.getByRole('heading', { name: 'Situação cadastral' }),
       });
       await expect(await firstChart(page)).toBeVisible();
-      await expect(card.locator('bios-chart-canvas svg')).toContainText(/\d+,\d%/);
+      const entries = card.getByRole('listitem');
+
+      await expect(entries.first()).toContainText(/\d+,\d%/);
+      for (const entry of await entries.all()) {
+        await entry.scrollIntoViewIfNeeded();
+        await expect(entry).toBeInViewport({ ratio: 1 });
+      }
+
       await card.getByRole('radio', { name: 'Tabela' }).click();
       await expect(card.getByRole('columnheader', { name: 'Percentual' })).toBeVisible();
       await expect(card.getByRole('table')).toContainText(/\d+,\d%/);
