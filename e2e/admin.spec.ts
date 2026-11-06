@@ -1,22 +1,17 @@
-import type { Page, TestInfo } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
+import { openPanelArea } from './support/panel-menu';
 import { expect, test } from './support/test';
 
 /** Entra como administrador e abre a blacklist pelo menu do painel, sem recarregar a página. */
-async function openBlacklist(page: Page, testInfo: TestInfo) {
+async function openBlacklist(page: Page) {
   await page.goto('/entrar');
   await page.getByLabel('E-mail').fill('administracao@example.com');
   await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
   await page.getByRole('button', { name: 'Entrar', exact: true }).click();
   await expect(page).toHaveURL('/painel');
 
-  if (testInfo.project.name === 'celular') {
-    await page.getByRole('button', { name: 'Menu do painel' }).click();
-  }
-  await page
-    .getByRole('navigation', { name: 'Áreas do painel' })
-    .getByRole('link', { name: /Administração/ })
-    .click();
+  await openPanelArea(page, /Administração/);
   await expect(page).toHaveURL('/admin/dominios-bloqueados');
   await expect(page.getByText(/domínios bloqueados, em ordem alfabética/)).toBeVisible();
 }
@@ -30,7 +25,7 @@ test.describe('blacklist de domínios (#28)', () => {
   test('lista, inclui em minúsculas, recusa inválido e duplicado, e remove com confirmação', async ({
     page,
   }, testInfo) => {
-    await openBlacklist(page, testInfo);
+    await openBlacklist(page);
     await expect(page).toHaveTitle('Domínios bloqueados — BIOS');
     await expect(page.getByRole('cell', { name: 'Carga inicial' }).first()).toBeVisible();
     await expectAccessible(page, testInfo, 'blacklist');
@@ -61,8 +56,8 @@ test.describe('blacklist de domínios (#28)', () => {
     await expect(page.getByText('20 domínios bloqueados, em ordem alfabética.')).toBeVisible();
   });
 
-  test('o domínio bloqueado passa a recusar o cadastro na hora', async ({ page }, testInfo) => {
-    await openBlacklist(page, testInfo);
+  test('o domínio bloqueado passa a recusar o cadastro na hora', async ({ page }) => {
+    await openBlacklist(page);
     await block(page, 'bloqueio-imediato.example');
     await expect(page.getByRole('status')).toContainText('bloqueio-imediato.example bloqueado');
 

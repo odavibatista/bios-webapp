@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
+import { openPanelArea } from './support/panel-menu';
 import { expect, test } from './support/test';
 
 const USER = 'apresentacao@example.com';
@@ -57,11 +58,16 @@ test.describe('login (#20)', () => {
     ).toBeVisible();
 
     if (testInfo.project.name === 'celular') {
-      await page.getByRole('button', { name: 'Menu do painel' }).click();
+      await page.getByRole('banner').getByRole('button', { name: 'Áreas do painel' }).click();
+      await expect(page.getByRole('menuitem', { name: /Setores/ })).toBeVisible();
+      await expect(page.getByRole('menuitem', { name: /Administração/ })).toHaveCount(0);
+      await page.keyboard.press('Escape');
+    } else {
+      const menu = page.getByRole('navigation', { name: 'Áreas do painel' });
+
+      await expect(menu.getByRole('link', { name: /Setores/ })).toBeVisible();
+      await expect(menu.getByRole('link', { name: /Administração/ })).toHaveCount(0);
     }
-    const menu = page.getByRole('navigation', { name: 'Áreas do painel' });
-    await expect(menu.getByRole('link', { name: /Setores/ })).toBeVisible();
-    await expect(menu.getByRole('link', { name: /Administração/ })).toHaveCount(0);
   });
 
   test('recarregar mantém a sessão, e uma aba nova começa sem ela', async ({ page, context }) => {
@@ -93,18 +99,12 @@ test.describe('login (#20)', () => {
     await expect(page.getByText('Seu perfil não permite acessar esta área.')).toBeVisible();
   });
 
-  test('ADMIN vê e abre a administração', async ({ page }, testInfo) => {
+  test('ADMIN vê e abre a administração', async ({ page }) => {
     await page.goto('/entrar');
     await signInByKeyboard(page, ADMIN, PASSWORD);
     await expect(page).toHaveURL('/painel');
 
-    if (testInfo.project.name === 'celular') {
-      await page.getByRole('button', { name: 'Menu do painel' }).click();
-    }
-    await page
-      .getByRole('navigation', { name: 'Áreas do painel' })
-      .getByRole('link', { name: /Administração/ })
-      .click();
+    await openPanelArea(page, /Administração/);
 
     await expect(page).toHaveURL('/admin/dominios-bloqueados');
   });

@@ -36,6 +36,11 @@
   // dentro dela (menu da conta). Um `color` no botão empata em especificidade com o do Material e
   // perde quando os estilos são reinseridos (ao sair e entrar de novo): texto escuro sobre o verde.
   --mat-toolbar-container-text-color: #fff;
+
+  // Paisagem do celular: fixo, tomaria quase um terço da altura (#263).
+  @media (max-height: 480px) {
+    position: static;
+  }
 }
 
 .topbar-inner {
@@ -49,7 +54,8 @@
 
   @media (max-width: 959.98px) {
     flex-wrap: wrap;
-    padding-block: 0.35rem;
+    gap: 0.25rem 1rem;
+    padding-block: 0.25rem;
   }
 }
 
@@ -78,6 +84,10 @@
 
 .user-menu {
   margin-left: auto;
+
+  @media (max-width: 959.98px) {
+    margin-left: 0;
+  }
 }
 
 .nav-trigger {
