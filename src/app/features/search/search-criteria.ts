@@ -4,6 +4,7 @@ import type {
   GetCompanyAnalyticsData,
   SearchCompaniesData,
 } from '../../core/api/generated';
+import { FOREIGN_UF } from '../../shared/forms/address-rules';
 
 /** Siglas das 27 unidades da federação, na ordem da API (UC08, regra 4). */
 export const BRAZILIAN_UFS = [
@@ -100,6 +101,17 @@ function number(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function isKnownUf(uf: string): boolean {
+  return uf === FOREIGN_UF || (BRAZILIAN_UFS as readonly string[]).includes(uf);
+}
+
+/** A UF da URL que não existe, para a tela avisar por que a ignorou. */
+export function ignoredUf(params: Params): string | null {
+  const uf = text(params[QUERY_KEYS.uf])?.toUpperCase() ?? null;
+
+  return uf === null || isKnownUf(uf) ? null : uf;
+}
+
 function positiveInteger(value: unknown, fallback: number, max = Infinity): number {
   const parsed = number(value);
 
@@ -119,10 +131,11 @@ export function criteriaFromParams(params: Params): SearchCriteria {
   const order = text(params[QUERY_KEYS.order])?.toLowerCase();
   const cnae = text(params[QUERY_KEYS.cnae]);
   const cityCode = text(params[QUERY_KEYS.cityCode]);
+  const uf = text(params[QUERY_KEYS.uf])?.toUpperCase() ?? null;
 
   return {
     name: text(params[QUERY_KEYS.name]),
-    uf: text(params[QUERY_KEYS.uf])?.toUpperCase() ?? null,
+    uf: uf !== null && isKnownUf(uf) ? uf : null,
     city: text(params[QUERY_KEYS.city]),
     cityCode: /^\d{7}$/.test(cityCode ?? '') ? cityCode : null,
     cnae: cnae === null ? null : cnaeDigits(cnae),

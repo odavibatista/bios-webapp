@@ -1,5 +1,6 @@
 import {
   criteriaFromParams,
+  ignoredUf,
   criteriaToParams,
   DEFAULT_PAGE_SIZE,
   hasCriterion,
@@ -23,6 +24,23 @@ const EMPTY: SearchCriteria = {
   page: 1,
   pageSize: DEFAULT_PAGE_SIZE,
 };
+
+describe('UF da URL', () => {
+  it('UF que não existe fica fora da pesquisa, e a tela sabe qual foi', () => {
+    expect(criteriaFromParams({ uf: 'xx' }).uf).toBeNull();
+    expect(ignoredUf({ uf: 'xx' })).toBe('XX');
+  });
+
+  it('o exterior é uma opção válida', () => {
+    expect(criteriaFromParams({ uf: 'ex' }).uf).toBe('EX');
+    expect(ignoredUf({ uf: 'ex' })).toBeNull();
+  });
+
+  it('UF válida ou ausente não gera aviso', () => {
+    expect(ignoredUf({ uf: 'SP' })).toBeNull();
+    expect(ignoredUf({})).toBeNull();
+  });
+});
 
 describe('critérios da pesquisa', () => {
   it('lê a URL com nomes em português, sem os espaços das bordas', () => {

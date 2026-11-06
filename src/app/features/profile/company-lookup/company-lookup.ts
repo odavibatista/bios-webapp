@@ -13,6 +13,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
 import { BiosApi } from '../../../core/api/bios-api';
+import { formatCount } from '../../../shared/charts/chart-spec';
 import { RULES_ERROR_KEY } from '../../../shared/forms/account-rules';
 import { AsyncState } from '../../../shared/states/async-state';
 import { ErrorState } from '../../../shared/states/error-state';
@@ -39,6 +40,7 @@ export class CompanyLookup {
   private readonly query = toSignal(this.route.queryParamMap, {
     initialValue: this.route.snapshot.queryParamMap,
   });
+  protected readonly count = formatCount;
   protected readonly name = computed(() => this.query().get('nome')?.trim() ?? '');
   protected readonly page = computed(() => {
     const raw = this.query().get('pagina');
