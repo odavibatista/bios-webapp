@@ -77,7 +77,7 @@ jobs:
   test:
     name: Testes
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -100,8 +100,24 @@ jobs:
       - name: Build de produção (orçamento de tamanho do bundle)
         run: npm run build
 
+      - name: Versão do navegador dos testes e2e
+        id: playwright-version
+        run: echo "version=$(node -p "require('playwright-core/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache do navegador dos testes e2e
+        id: playwright-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - name: Dependências de sistema do Chromium
+        run: npx playwright install-deps chromium
+
       - name: Navegador dos testes e2e
-        run: npx playwright install --with-deps chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        timeout-minutes: 5
+        run: npx playwright install chromium
 
       - name: Testes e2e (Playwright)
         run: npm run test:e2e
