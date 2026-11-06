@@ -61,7 +61,7 @@ test.describe('um único menu no celular (#249)', () => {
 
       await trigger.focus();
       await page.keyboard.press('Enter');
-      await expect(page.getByRole('menuitem', { name: /Setores/ })).toBeVisible();
+      await expect(page.getByRole('menuitem', { name: /Empresas/ })).toBeFocused();
       await page.keyboard.press('Escape');
       await expect(page.getByRole('menuitem', { name: /Setores/ })).toHaveCount(0);
       await expect(trigger).toBeFocused();
