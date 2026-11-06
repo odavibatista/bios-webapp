@@ -65,7 +65,10 @@
               maxlength="9"
               (input)="maskPostalCode()"
             />
-            <mat-hint>8 dígitos</mat-hint>
+            @if (lookingUpCep()) {
+              <mat-spinner matSuffix diameter="20" aria-hidden="true" />
+            }
+            <mat-hint>{{ lookingUpCep() ? 'Buscando o endereço…' : '8 dígitos' }}</mat-hint>
             <mat-error>{{ messageOf(form.controls.address.controls.postal_code) }}</mat-error>
           </mat-form-field>
 
@@ -74,6 +77,24 @@
             <input matInput formControlName="street" autocomplete="address-line1" />
             <mat-error>{{ messageOf(form.controls.address.controls.street) }}</mat-error>
           </mat-form-field>
+
+          <div class="cep-result" [class.idle]="!cepNotice()">
+            <p class="cep-notice" role="status">{{ cepNotice() }}</p>
+            @if (pendingAddress(); as found) {
+              <p class="cep-found">
+                {{ found.street ?? 'Sem logradouro' }}, {{ found.neighborhood ?? 'sem bairro' }},
+                {{ found.city }} – {{ found.state }}
+              </p>
+              <div class="cep-actions">
+                <button mat-stroked-button type="button" (click)="usePendingAddress()">
+                  Usar este endereço
+                </button>
+                <button mat-button type="button" (click)="keepTypedAddress()">
+                  Manter o que digitei
+                </button>
+              </div>
+            }
+          </div>
 
           <mat-form-field appearance="outline" class="number">
             <mat-label>Número</mat-label>

@@ -7,6 +7,7 @@ import { ApiError } from '../../../core/api/api-error';
 import { BiosApi } from '../../../core/api/bios-api';
 import { provideMockBiosApi } from '../../../core/mocks/provide-mock-bios-api';
 import { SessionStore } from '../../../core/session/session-store';
+import type { PostalAddress } from '../../../core/api/generated';
 import { AccountPage } from './account-page';
 
 const USER = 'apresentacao@example.com';
@@ -40,7 +41,28 @@ function savedData(): HTMLElement {
   return screen.getByRole('region', { name: 'Seus dados' });
 }
 
+const PAULISTA: PostalAddress = {
+  postal_code: '01310200',
+  street: 'Avenida Paulista',
+  neighborhood: 'Bela Vista',
+  city: 'São Paulo',
+  city_ibge_code: '3550308',
+  state: 'SP',
+};
+const CENTRO: PostalAddress = {
+  postal_code: '20040020',
+  street: 'Avenida Rio Branco',
+  neighborhood: 'Centro',
+  city: 'Rio de Janeiro',
+  city_ibge_code: '3304557',
+  state: 'RJ',
+};
+
 describe('AccountPage', () => {
+  beforeEach(() => {
+    vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('sem rede nos testes'));
+  });
+
   it('mostra os dados da conta: nome, e-mail, papel e endereço com o CEP formatado', async () => {
     await renderAccount();
 
@@ -210,6 +232,153 @@ describe('AccountPage', () => {
           city_ibge_code: '3509502',
         }) as unknown,
       },
+    });
+  });
+
+  describe('endereço pelo CEP (#271)', () => {
+    function answerWith(address: PostalAddress) {
+      return vi.spyOn(TestBed.inject(BiosApi), 'lookupPostalCode').mockResolvedValue(address);
+    }
+
+    const value = (label: string) => screen.getByLabelText<HTMLInputElement>(label).value;
+
+    it('com os 8 dígitos preenche o que veio, sem tocar em número e complemento', async () => {
+      const { user } = await renderAccount(ADMIN);
+      const lookup = answerWith(PAULISTA);
+
+      await user.type(screen.getByLabelText('Número'), '10');
+      await user.type(screen.getByLabelText(/^Complemento/), 'Sala 2');
+      await user.type(screen.getByLabelText('CEP'), '01310200');
+
+      expect(
+        await screen.findByText('Endereço preenchido pelo CEP. Confira os campos.'),
+      ).toBeTruthy();
+      expect(lookup).toHaveBeenCalledExactlyOnceWith({ path: { cep: '01310200' } });
+      expect(value('Logradouro')).toBe('Avenida Paulista');
+      expect(value('Bairro')).toBe('Bela Vista');
+      expect(value('Cidade')).toBe('São Paulo');
+      expect(value('Número')).toBe('10');
+      expect(screen.getByLabelText<HTMLInputElement>(/^Complemento/).value).toBe('Sala 2');
+    });
+
+    it('não consulta antes dos 8 dígitos nem o CEP já gravado', async () => {
+      const { user } = await renderAccount();
+      const lookup = answerWith(PAULISTA);
+
+      await user.type(screen.getByLabelText('Nome'), 'x');
+      await user.type(screen.getByLabelText('CEP'), '{Backspace}');
+
+      expect(lookup).not.toHaveBeenCalled();
+    });
+
+    it('quem segue no CEP vai para o número', async () => {
+      const { user } = await renderAccount(ADMIN);
+
+      answerWith(PAULISTA);
+      await user.type(screen.getByLabelText('CEP'), '01310200');
+
+      await vi.waitFor(() => {
+        expect(document.activeElement).toBe(screen.getByLabelText('Número'));
+      });
+    });
+
+    it('CEP geral preenche a cidade e leva ao logradouro', async () => {
+      const { user } = await renderAccount(ADMIN);
+
+      answerWith({ ...PAULISTA, street: null, neighborhood: null });
+      await user.type(screen.getByLabelText('CEP'), '01000000');
+
+      expect(await screen.findByText(/Este CEP é geral/)).toBeTruthy();
+      expect(value('Cidade')).toBe('São Paulo');
+      expect(value('Logradouro')).toBe('');
+      expect(document.activeElement).toBe(screen.getByLabelText('Logradouro'));
+    });
+
+    it('com outro endereço preenchido, pergunta antes de trocar', async () => {
+      const { user } = await renderAccount();
+      const cep = screen.getByLabelText('CEP');
+
+      answerWith(CENTRO);
+      await user.clear(cep);
+      await user.type(cep, '20040020');
+
+      expect(await screen.findByText(/Avenida Rio Branco, Centro/)).toBeTruthy();
+      expect(value('Logradouro')).toBe('Avenida Paulista');
+
+      await user.click(screen.getByRole('button', { name: 'Usar este endereço' }));
+
+      expect(value('Logradouro')).toBe('Avenida Rio Branco');
+      expect(value('Cidade')).toBe('Rio de Janeiro');
+      expect(screen.queryByRole('button', { name: 'Usar este endereço' })).toBeNull();
+    });
+
+    it('"Manter o que digitei" não troca nada', async () => {
+      const { user } = await renderAccount();
+      const cep = screen.getByLabelText('CEP');
+
+      answerWith(CENTRO);
+      await user.clear(cep);
+      await user.type(cep, '20040020');
+      await user.click(await screen.findByRole('button', { name: 'Manter o que digitei' }));
+
+      expect(value('Logradouro')).toBe('Avenida Paulista');
+      expect(screen.queryByRole('button', { name: 'Usar este endereço' })).toBeNull();
+    });
+
+    it('endereço igual ao digitado não pergunta', async () => {
+      const { user } = await renderAccount();
+      const cep = screen.getByLabelText('CEP');
+
+      answerWith(PAULISTA);
+      await user.clear(cep);
+      await user.type(cep, '01310200');
+
+      expect(await screen.findByText(/Endereço preenchido pelo CEP/)).toBeTruthy();
+    });
+
+    it('falha na consulta mostra a mensagem, mantém os dados e deixa salvar', async () => {
+      const { user } = await renderAccount();
+      const update = vi.spyOn(TestBed.inject(BiosApi), 'updateOwnAccount');
+      const cep = screen.getByLabelText('CEP');
+
+      await user.clear(cep);
+      await user.type(cep, '00000000');
+
+      expect(await screen.findByText(/Preencha o endereço à mão/)).toBeTruthy();
+      expect(value('Logradouro')).toBe('Avenida Paulista');
+
+      await user.click(saveButton());
+
+      expect(update).toHaveBeenCalled();
+    });
+
+    it('ignora a resposta de um CEP que já foi trocado', async () => {
+      const { user } = await renderAccount(ADMIN);
+      const cep = screen.getByLabelText('CEP');
+      let answer: (address: PostalAddress) => void = () => undefined;
+
+      vi.spyOn(TestBed.inject(BiosApi), 'lookupPostalCode').mockReturnValueOnce(
+        new Promise((resolve) => {
+          answer = resolve;
+        }),
+      );
+      await user.type(cep, '01310200');
+      await user.type(cep, '{Backspace}');
+      answer(PAULISTA);
+      await Promise.resolve();
+
+      expect(value('Logradouro')).toBe('');
+      expect(screen.getByText('8 dígitos')).toBeTruthy();
+    });
+
+    it('cidade que não está no catálogo fica como veio e pede a escolha na lista', async () => {
+      const { user } = await renderAccount(ADMIN);
+
+      answerWith({ ...PAULISTA, city: 'Cidade Nova', city_ibge_code: null });
+      await user.type(screen.getByLabelText('CEP'), '01310200');
+      await screen.findByText(/Endereço preenchido pelo CEP/);
+
+      expect(value('Cidade')).toBe('Cidade Nova');
     });
   });
 

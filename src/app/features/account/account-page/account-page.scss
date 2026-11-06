@@ -103,7 +103,14 @@ form {
   @media (max-width: 600px) {
     grid-template-columns: 1fr;
 
-    mat-form-field {
+    // Sem isto, o `span` de cima sobrevive e cria uma segunda coluna implícita.
+    .cep,
+    .number,
+    .state,
+    .street,
+    .complement,
+    .neighborhood,
+    .city {
       grid-column: auto;
     }
   }
@@ -125,6 +132,37 @@ form {
   .danger {
     --mat-button-outlined-label-text-color: var(--mat-sys-error);
     --mat-button-outlined-outline-color: var(--mat-sys-error);
+  }
+}
+
+.cep-result {
+  grid-column: 1 / -1;
+
+  // Vazio, fica fora da grade: a região precisa existir antes do aviso para ser anunciada.
+  &.idle {
+    position: absolute;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  .cep-notice {
+    color: var(--mat-sys-on-surface-variant);
+    font: var(--mat-sys-body-small);
+  }
+
+  .cep-found {
+    margin-top: 0.25rem;
+    font: var(--mat-sys-body-medium);
+    overflow-wrap: anywhere;
+  }
+
+  .cep-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
   }
 }
 
