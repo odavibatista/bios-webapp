@@ -58,7 +58,7 @@ export class App {
         takeUntilDestroyed(),
       )
       .subscribe(() => {
-        this.main().nativeElement.focus();
+        this.main().nativeElement.focus({ preventScroll: true });
       });
   }
 }

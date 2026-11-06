@@ -1,12 +1,25 @@
 import { registerLocaleData } from '@angular/common';
 import { provideHttpClient, withFetch } from '@angular/common/http';
 import localePt from '@angular/common/locales/pt';
-import { ApplicationConfig, LOCALE_ID, provideBrowserGlobalErrorListeners } from '@angular/core';
+import {
+  ApplicationConfig,
+  inject,
+  LOCALE_ID,
+  provideBrowserGlobalErrorListeners,
+  provideEnvironmentInitializer,
+} from '@angular/core';
 import { MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/material/form-field';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import {
+  provideRouter,
+  withComponentInputBinding,
+  withInMemoryScrolling,
+  withNavigationErrorHandler,
+} from '@angular/router';
 import { routes } from './app.routes';
 import { COMPANY_ARCHIVE_PROVIDERS } from './core/mocks/company-archive.providers';
 import { provideMockBiosApi } from './core/mocks/provide-mock-bios-api';
+import { handleNavigationFailure } from './core/navigation/navigation-failure';
+import { ScrollMemory } from './core/navigation/scroll-memory';
 import { provideSession } from './core/session/provide-session';
 import { TabStorage } from './core/session/tab-storage';
 
@@ -16,7 +29,16 @@ registerLocaleData(localePt);
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideRouter(routes, withComponentInputBinding()),
+    provideRouter(
+      routes,
+      withComponentInputBinding(),
+      // O roteador guarda as posições; quem as aplica é o `ScrollMemory`.
+      withInMemoryScrolling({ scrollPositionRestoration: 'disabled' }),
+      withNavigationErrorHandler(handleNavigationFailure),
+    ),
+    provideEnvironmentInitializer(() => {
+      inject(ScrollMemory).start();
+    }),
     provideHttpClient(withFetch()),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
     {
