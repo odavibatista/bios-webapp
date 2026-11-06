@@ -1,5 +1,4 @@
-import { DOCUMENT } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import type { CompanyFullProfileResponse } from '../../../core/api/generated';
 import { retryHint } from '../environmental-evidences/evidence-presentation';
 import { presentExplanation } from './explanation-presentation';
@@ -16,7 +15,8 @@ export class OdsScores {
   readonly profile = input.required<CompanyFullProfileResponse>();
   /** A média do setor por ODS, quando publicada. Só situa o valor: não julga a empresa. */
   readonly sectorAverages = input<Readonly<Record<number, number>>>({});
-  private readonly document = inject(DOCUMENT);
+  /** "Ver evidência": a seção de evidências abre o grupo e chega até o item. */
+  readonly evidenceRequested = output<string>();
 
   protected readonly scores = computed(() =>
     this.profile()
@@ -30,10 +30,4 @@ export class OdsScores {
   protected readonly retry = computed(() =>
     retryHint(this.profile().provenance.retry_after_seconds),
   );
-
-  protected showEvidence(anchor: string): void {
-    const evidence = this.document.getElementById(anchor);
-    evidence?.scrollIntoView({ block: 'start' });
-    evidence?.focus({ preventScroll: true });
-  }
 }

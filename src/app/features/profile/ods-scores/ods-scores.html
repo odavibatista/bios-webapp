@@ -103,7 +103,7 @@
                         <button
                           type="button"
                           class="evidence-link"
-                          (click)="showEvidence(item.evidenceAnchor)"
+                          (click)="evidenceRequested.emit(item.evidenceAnchor)"
                         >
                           Ver evidência no perfil
                         </button>
