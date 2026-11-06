@@ -126,6 +126,11 @@ h2 {
   padding-block: 0.5rem;
 }
 
+// Ao levar a pessoa aos resultados, as abas ficam inteiras sob o cabeçalho, sem uma nesga cortada.
+#titulo-resultados {
+  scroll-margin-top: 3.5rem;
+}
+
 .overview h2 {
   margin-top: 1rem;
 }
