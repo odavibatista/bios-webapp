@@ -75,6 +75,7 @@
           <mat-form-field appearance="outline" class="street">
             <mat-label>Logradouro</mat-label>
             <input matInput formControlName="street" autocomplete="address-line1" />
+            <mat-hint>Ex.: Rua, Avenida, Travessa</mat-hint>
             <mat-error>{{ messageOf(form.controls.address.controls.street) }}</mat-error>
           </mat-form-field>
 
@@ -104,8 +105,9 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="complement">
-            <mat-label>Complemento (opcional)</mat-label>
+            <mat-label>Complemento</mat-label>
             <input matInput formControlName="complement" autocomplete="address-line2" />
+            <mat-hint>Opcional</mat-hint>
             <mat-error>{{ messageOf(form.controls.address.controls.complement) }}</mat-error>
           </mat-form-field>
 
