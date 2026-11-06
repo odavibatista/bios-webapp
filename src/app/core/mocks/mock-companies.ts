@@ -21,6 +21,7 @@ import {
 import type { CompanyEntry } from './company-archive';
 import { byMostRecentMovement, companyMovementOf, evidenceDates } from './company-movements';
 import { capturedBody, capturedError, capturesOf, notInPresentation } from './mock-captures';
+import { E2E_STRESS_PROFILE } from './profile-stress';
 
 /**
  * Regras das empresas na versão de apresentação: perfis, explicações e setores vêm das
@@ -552,6 +553,10 @@ export function companyProfile(cnpj: string, now: number): CompanyFullProfileRes
   const path = `/companies/${cnpj}`;
 
   if (!isValidCnpj(normalized)) throw capturedError('getCompanyProfile/cnpj-invalido', path, now);
+
+  if (E2E_STRESS_PROFILE?.cnpj === normalized) {
+    return JSON.parse(JSON.stringify(E2E_STRESS_PROFILE)) as CompanyFullProfileResponse;
+  }
 
   const profile = PROFILES.get(normalized);
 

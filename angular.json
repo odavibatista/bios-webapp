@@ -72,6 +72,10 @@
                 {
                   "replace": "src/app/core/mocks/company-archive.providers.ts",
                   "with": "src/app/core/mocks/company-archive.providers.e2e.ts"
+                },
+                {
+                  "replace": "src/app/core/mocks/profile-stress.ts",
+                  "with": "src/app/core/mocks/profile-stress.e2e.ts"
                 }
               ]
             }
