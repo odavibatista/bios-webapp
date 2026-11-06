@@ -21,7 +21,7 @@
   </div>
 </mat-toolbar>
 
-<main #main id="conteudo" class="content" tabindex="-1">
+<main #main id="conteudo" class="content" [class.signed-in]="signedIn()" tabindex="-1">
   <router-outlet />
 </main>
 

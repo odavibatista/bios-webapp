@@ -84,6 +84,14 @@ a:focus-visible {
   }
 }
 
+// A página pública de privacidade alinha com as telas do painel quando há sessão.
+@media (min-width: 960px) {
+  .content.signed-in > bios-privacy-page {
+    width: calc(100% - 17.5rem);
+    margin-inline-start: 17.5rem;
+  }
+}
+
 // O ODS escolhido quebra a linha em vez de cortar o nome no celular (#198).
 .mat-mdc-select .mat-mdc-select-value,
 .mat-mdc-select .mat-mdc-select-value-text,
