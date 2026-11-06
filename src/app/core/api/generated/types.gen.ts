@@ -172,6 +172,10 @@ export type Address = {
      */
     city: string;
     /**
+     * Código IBGE do município escolhido. Quando vem, precisa ser da UF informada, e o nome passa a ser o do catálogo
+     */
+    city_ibge_code?: string;
+    /**
      * Unidade da federação (sigla)
      */
     state: 'AC' | 'AL' | 'AP' | 'AM' | 'BA' | 'CE' | 'DF' | 'ES' | 'GO' | 'MA' | 'MT' | 'MS' | 'MG' | 'PA' | 'PB' | 'PR' | 'PE' | 'PI' | 'RJ' | 'RN' | 'RS' | 'RO' | 'RR' | 'SC' | 'SP' | 'SE' | 'TO';
@@ -278,6 +282,93 @@ export type AddBlockedEmailDomainRequest = {
      * Domínio a bloquear, sem @ (ex.: mailinator.com); gravado em minúsculas
      */
     domain: string;
+};
+
+/**
+ * Unidades da federação
+ */
+export type IbgeStateList = {
+    /**
+     * UFs, por nome
+     */
+    data: Array<IbgeState>;
+};
+
+/**
+ * Unidade da federação
+ */
+export type IbgeState = {
+    /**
+     * Código IBGE da UF
+     */
+    ibge_code: string;
+    /**
+     * Sigla da UF
+     */
+    acronym: string;
+    /**
+     * Nome oficial da UF
+     */
+    name: string;
+};
+
+/**
+ * Página de municípios
+ */
+export type IbgeCityList = {
+    /**
+     * Itens da página
+     */
+    data: Array<IbgeCity>;
+    pagination: PaginationMeta;
+};
+
+/**
+ * Município
+ */
+export type IbgeCity = {
+    /**
+     * Código IBGE do município, com 7 dígitos
+     */
+    ibge_code: string;
+    /**
+     * Nome oficial do município
+     */
+    name: string;
+    /**
+     * Sigla da UF
+     */
+    uf: string;
+};
+
+/**
+ * Endereço de um CEP
+ */
+export type PostalAddress = {
+    /**
+     * CEP, só com os dígitos
+     */
+    postal_code: string;
+    /**
+     * Logradouro; nulo em CEP geral de município
+     */
+    street: string | null;
+    /**
+     * Bairro; nulo em CEP geral de município
+     */
+    neighborhood: string | null;
+    /**
+     * Nome do município
+     */
+    city: string;
+    /**
+     * Código IBGE do município; nulo quando não está no catálogo
+     */
+    city_ibge_code: string | null;
+    /**
+     * Sigla da UF
+     */
+    state: string;
 };
 
 /**
@@ -1664,6 +1755,132 @@ export type RemoveBlockedEmailDomainResponses = {
 
 export type RemoveBlockedEmailDomainResponse = RemoveBlockedEmailDomainResponses[keyof RemoveBlockedEmailDomainResponses];
 
+export type ListStatesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/locations/states';
+};
+
+export type ListStatesErrors = {
+    /**
+     * UNAUTHORIZED
+     */
+    401: ErrorResponse;
+    /**
+     * TOO_MANY_REQUESTS
+     */
+    429: ErrorResponse;
+};
+
+export type ListStatesError = ListStatesErrors[keyof ListStatesErrors];
+
+export type ListStatesResponses = {
+    /**
+     * Unidades da federação
+     */
+    200: IbgeStateList;
+};
+
+export type ListStatesResponse = ListStatesResponses[keyof ListStatesResponses];
+
+export type ListCitiesData = {
+    body?: never;
+    path: {
+        /**
+         * Sigla da UF
+         */
+        uf: string;
+    };
+    query?: {
+        /**
+         * Página solicitada (a partir de 1)
+         */
+        page?: number;
+        /**
+         * Quantidade de itens por página (máximo de 100)
+         */
+        page_size?: number;
+        /**
+         * Trecho do nome do município; acentos, caixa e pontuação são ignorados
+         */
+        search?: string;
+    };
+    url: '/locations/states/{uf}/cities';
+};
+
+export type ListCitiesErrors = {
+    /**
+     * UNAUTHORIZED
+     */
+    401: ErrorResponse;
+    /**
+     * UNPROCESSABLE_ENTITY
+     */
+    422: ErrorResponse;
+    /**
+     * TOO_MANY_REQUESTS
+     */
+    429: ErrorResponse;
+};
+
+export type ListCitiesError = ListCitiesErrors[keyof ListCitiesErrors];
+
+export type ListCitiesResponses = {
+    /**
+     * Página de municípios
+     */
+    200: IbgeCityList;
+};
+
+export type ListCitiesResponse = ListCitiesResponses[keyof ListCitiesResponses];
+
+export type LookupPostalCodeData = {
+    body?: never;
+    path: {
+        /**
+         * CEP, com ou sem hífen
+         */
+        cep: string;
+    };
+    query?: never;
+    url: '/locations/postal-codes/{cep}';
+};
+
+export type LookupPostalCodeErrors = {
+    /**
+     * UNAUTHORIZED
+     */
+    401: ErrorResponse;
+    /**
+     * NOT_FOUND
+     */
+    404: ErrorResponse;
+    /**
+     * UNPROCESSABLE_ENTITY
+     */
+    422: ErrorResponse;
+    /**
+     * TOO_MANY_REQUESTS
+     */
+    429: ErrorResponse;
+    /**
+     * SERVICE_UNAVAILABLE
+     */
+    503: ErrorResponse;
+};
+
+export type LookupPostalCodeError = LookupPostalCodeErrors[keyof LookupPostalCodeErrors];
+
+export type LookupPostalCodeResponses = {
+    /**
+     * Endereço do CEP
+     */
+    200: PostalAddress;
+};
+
+export type LookupPostalCodeResponse = LookupPostalCodeResponses[keyof LookupPostalCodeResponses];
+
 export type LoginData = {
     body: LoginRequest;
     path?: never;
@@ -2296,9 +2513,13 @@ export type SearchCompaniesData = {
          */
         uf?: string;
         /**
-         * Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado
+         * Nome inteiro do município, exige `uf`; acentos, caixa e pontuação são ignorados
          */
         city?: string;
+        /**
+         * Código IBGE do município, exige `uf`. Alcança também as grafias usadas por outras fontes
+         */
+        city_ibge_code?: string;
         /**
          * Código CNAE de 2 a 7 dígitos (divisão, grupo, classe ou subclasse), pontuação opcional. Casa o CNAE principal ou algum secundário
          */
@@ -2362,9 +2583,13 @@ export type ExportCompaniesXlsxData = {
          */
         uf?: string;
         /**
-         * Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado
+         * Nome inteiro do município, exige `uf`; acentos, caixa e pontuação são ignorados
          */
         city?: string;
+        /**
+         * Código IBGE do município, exige `uf`. Alcança também as grafias usadas por outras fontes
+         */
+        city_ibge_code?: string;
         /**
          * Código CNAE de 2 a 7 dígitos (divisão, grupo, classe ou subclasse), pontuação opcional. Casa o CNAE principal ou algum secundário
          */
@@ -2432,9 +2657,13 @@ export type GetCompanyAnalyticsData = {
          */
         uf?: string;
         /**
-         * Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado
+         * Nome inteiro do município, exige `uf`; acentos, caixa e pontuação são ignorados
          */
         city?: string;
+        /**
+         * Código IBGE do município, exige `uf`. Alcança também as grafias usadas por outras fontes
+         */
+        city_ibge_code?: string;
         /**
          * Código CNAE de 2 a 7 dígitos (divisão, grupo, classe ou subclasse), pontuação opcional. Casa o CNAE principal ou algum secundário
          */

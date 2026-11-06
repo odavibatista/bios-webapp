@@ -12,6 +12,58 @@ async function signInToSearch(page: Page, query = '') {
   await expect(page).toHaveURL(`/pesquisa${query}`);
 }
 
+test.describe('município ligado à UF (#270)', () => {
+  test('só habilita com a UF, filtra pela UF e guarda o município na URL', async ({
+    page,
+  }, testInfo) => {
+    await signInToSearch(page);
+
+    const city = page.getByLabel('Município');
+
+    await expect(city).toBeDisabled();
+    await expect(page.getByText('Escolha a UF primeiro.')).toBeVisible();
+
+    await page.getByLabel('UF').click();
+    await page.getByRole('option', { name: 'RJ', exact: true }).click();
+    await city.fill('PARATI');
+    await expect(page.getByRole('option', { name: 'Paraty' })).toBeVisible();
+    await expect(page.getByRole('option', { name: 'São Paulo' })).toHaveCount(0);
+    await expectAccessible(page, testInfo, 'lista de municípios');
+
+    await page.getByRole('option', { name: 'Paraty' }).click();
+    await page.getByRole('button', { name: 'Pesquisar', exact: true }).click();
+
+    await expect(page).toHaveURL(/uf=RJ&municipio=Paraty&municipio_ibge=3303807/);
+  });
+
+  test('trocar a UF limpa o município', async ({ page }) => {
+    await signInToSearch(page, '?uf=RJ&municipio=Paraty&municipio_ibge=3303807');
+
+    const city = page.getByLabel('Município');
+
+    await expect(city).toHaveValue('Paraty');
+    await page.getByLabel('UF').click();
+    await page.getByRole('option', { name: 'SP', exact: true }).click();
+
+    await expect(city).toHaveValue('');
+  });
+
+  test('município digitado sem escolher da lista pede a escolha', async ({ page }) => {
+    await signInToSearch(page, '?uf=RJ');
+
+    await page.getByLabel('Município').fill('Xique');
+    await page.getByRole('button', { name: 'Pesquisar', exact: true }).click();
+
+    await expect(page.getByText('Escolha um município da lista.')).toBeVisible();
+  });
+
+  test('link com município e sem UF avisa, em vez de lista vazia', async ({ page }) => {
+    await signInToSearch(page, '?municipio=Paraty');
+
+    await expect(page.getByText('Informe a UF do município.').first()).toBeVisible();
+  });
+});
+
 test.describe('pesquisa de empresas (#25)', () => {
   test('sem critério, explica que é preciso ao menos um', async ({ page }) => {
     await signInToSearch(page);

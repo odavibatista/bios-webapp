@@ -29,6 +29,7 @@ describe('accountFormValue', () => {
         complement: '',
         neighborhood: 'Bela Vista',
         city: 'São Paulo',
+        city_ibge_code: '',
         state: 'SP',
       },
     });

@@ -20,7 +20,7 @@
 
       <mat-form-field appearance="outline">
         <mat-label>UF</mat-label>
-        <mat-select formControlName="uf">
+        <mat-select formControlName="uf" (selectionChange)="clearCity()">
           <mat-option value="">Todas</mat-option>
           @for (uf of ufs; track uf) {
             <mat-option [value]="uf">{{ uf }}</mat-option>
@@ -30,12 +30,11 @@
         <mat-error>{{ messageOf(form.controls.uf) }}</mat-error>
       </mat-form-field>
 
-      <mat-form-field appearance="outline">
-        <mat-label>Município</mat-label>
-        <input matInput formControlName="city" autocomplete="off" />
-        <mat-hint>Nome inteiro; acento e caixa não importam</mat-hint>
-        <mat-error>{{ messageOf(form.controls.city) }}</mat-error>
-      </mat-form-field>
+      <bios-city-field
+        [ufControl]="form.controls.uf"
+        [text]="form.controls.city"
+        [code]="form.controls.city_ibge_code"
+      />
 
       <mat-form-field appearance="outline">
         <mat-label>CNAE</mat-label>

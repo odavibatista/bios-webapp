@@ -34,7 +34,14 @@ export const BRAZILIAN_STATES = [
 
 /** Os campos do endereço, com os nomes da API (os `details[].path` de um 422 são `address.<campo>`). */
 export type AddressField =
-  'postal_code' | 'street' | 'number' | 'complement' | 'neighborhood' | 'city' | 'state';
+  | 'postal_code'
+  | 'street'
+  | 'number'
+  | 'complement'
+  | 'neighborhood'
+  | 'state'
+  | 'city'
+  | 'city_ibge_code';
 
 export type AddressValue = Record<AddressField, string>;
 
@@ -83,6 +90,7 @@ const FIELD_RULES: Record<AddressField, (value: string) => string[]> = {
       'Informe a cidade.',
       'A cidade deve ter no máximo 100 caracteres.',
     ),
+  city_ibge_code: () => [],
   state: (value) =>
     (BRAZILIAN_STATES as readonly string[]).includes(value)
       ? []

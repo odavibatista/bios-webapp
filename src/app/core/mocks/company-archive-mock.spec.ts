@@ -1,3 +1,4 @@
+import { LOCATION_FIXTURE } from './location-fixture';
 import { TestBed } from '@angular/core/testing';
 import { InMemoryApiCredentials } from '../api/api-credentials';
 import { BiosApi } from '../api/bios-api';
@@ -57,6 +58,8 @@ class MemoryArchive extends CompanyArchive {
   facts = () => Promise.resolve(new Map([[PROFILE.cnpj, companyFacts(PROFILE)]]));
 
   baseAnalytics = () => Promise.resolve(BASE_ANALYTICS);
+
+  locations = () => Promise.resolve(LOCATION_FIXTURE);
 }
 
 describe('MockBiosApi com a base publicada', () => {
