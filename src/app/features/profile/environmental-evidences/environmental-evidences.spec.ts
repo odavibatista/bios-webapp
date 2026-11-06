@@ -153,6 +153,83 @@ describe('EnvironmentalEvidences', () => {
     expect(screen.getByText(/Os dados venceram desde a coleta/)).toBeTruthy();
   });
 
+  describe('muitas evidências (#267)', () => {
+    function manyEvidences(total: number): CompanyFullProfileResponse {
+      const model = ACO.evidences[0].evidences[0];
+
+      return {
+        ...ACO,
+        evidences: [
+          {
+            ...ACO.evidences[0],
+            evidences: Array.from({ length: total }, (_, index) => ({
+              ...model,
+              id: `item-${String(index)}`,
+            })),
+          },
+        ],
+      };
+    }
+
+    const articles = () => screen.queryAllByRole('article');
+
+    it('grupo grande começa recolhido, com o total à vista', async () => {
+      await render(EnvironmentalEvidences, { inputs: { profile: manyEvidences(2535) } });
+
+      expect(screen.getByText(/2\.535\s+evidências/)).toBeTruthy();
+      expect(articles()).toHaveLength(0);
+    });
+
+    it('aberto, mostra 20 de cada vez', async () => {
+      const user = userEvent.setup();
+
+      const { container, fixture } = await render(EnvironmentalEvidences, {
+        inputs: { profile: manyEvidences(45) },
+      });
+      const group = container.querySelector('details');
+
+      // O jsdom não abre `details` pelo clique: a abertura e o evento são os do navegador.
+      group?.toggleAttribute('open', true);
+      group?.dispatchEvent(new Event('toggle'));
+      await fixture.whenStable();
+
+      expect(articles()).toHaveLength(20);
+      expect(screen.getByText('Mostrando 20 de 45.')).toBeTruthy();
+
+      await user.click(screen.getByRole('button', { name: 'Mostrar mais' }));
+
+      expect(articles()).toHaveLength(40);
+
+      await user.click(screen.getByRole('button', { name: 'Mostrar mais' }));
+
+      expect(articles()).toHaveLength(45);
+      expect(screen.queryByRole('button', { name: 'Mostrar mais' })).toBeNull();
+    });
+
+    it('grupo pequeno segue aberto', async () => {
+      await render(EnvironmentalEvidences, { inputs: { profile: manyEvidences(3) } });
+
+      expect(articles()).toHaveLength(3);
+    });
+
+    it('"Ver evidência" abre o grupo e chega até o item', async () => {
+      const scrollIntoView = vi.fn();
+
+      Element.prototype.scrollIntoView = scrollIntoView;
+
+      const { fixture } = await render(EnvironmentalEvidences, {
+        inputs: { profile: manyEvidences(45) },
+      });
+
+      fixture.componentInstance.reveal('evidencia-item-30');
+      await fixture.whenStable();
+
+      expect(articles()).toHaveLength(21);
+      expect(document.activeElement?.id).toBe('evidencia-item-30');
+      expect(scrollIntoView).toHaveBeenCalled();
+    });
+  });
+
   it('o botão de atualização emite o pedido ao perfil', async () => {
     const user = userEvent.setup();
     const refreshed = vi.fn();
@@ -160,5 +237,17 @@ describe('EnvironmentalEvidences', () => {
     result.fixture.componentInstance.refresh.subscribe(refreshed);
     await user.click(screen.getByRole('button', { name: 'Atualizar perfil' }));
     expect(refreshed).toHaveBeenCalledOnce();
+  });
+
+  it('durante a atualização, o botão diz o que faz, e o resultado fica na região de status', async () => {
+    const { rerender } = await render(EnvironmentalEvidences, {
+      inputs: { profile: ACO, refreshing: true },
+    });
+
+    expect(screen.getByRole('button', { name: 'Atualizando…' }).ariaDisabled).toBe('true');
+
+    await rerender({ inputs: { profile: ACO, refreshing: false, refreshNotice: 'Pronto.' } });
+
+    expect(screen.getByRole('status').textContent).toBe('Pronto.');
   });
 });

@@ -21,22 +21,26 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTabsModule } from '@angular/material/tabs';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, type NavigationExtras, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { isApiError } from '../../../core/api/api-error';
 import { BiosApi } from '../../../core/api/bios-api';
 import type { CompanyAnalytics } from '../../../core/api/generated';
 import { describeError } from '../../../shared/errors/describe-error';
 import { fieldMessage } from '../../../shared/forms/account-rules';
+import { chosenCityRule, CityField } from '../../../shared/forms/city-field/city-field';
 import { AsyncState } from '../../../shared/states/async-state';
 import { ErrorState } from '../../../shared/states/error-state';
 import { FormErrorSummary } from '../../../shared/states/form-error-summary';
+import { formatCount } from '../../../shared/charts/chart-spec';
+import { FOREIGN_UF } from '../../../shared/forms/address-rules';
 import {
   BRAZILIAN_UFS,
   cnaeDigits,
   criteriaFromParams,
   criteriaToParams,
   hasCriterion,
+  ignoredUf,
   PAGE_SIZE_OPTIONS,
   sameQuery,
   type SearchCriteria,
@@ -72,6 +76,7 @@ type CriteriaForm = FormGroup<{
   name: FormControl<string>;
   uf: FormControl<string>;
   city: FormControl<string>;
+  city_ibge_code: FormControl<string>;
   cnae: FormControl<string>;
   ods: FormControl<number | null>;
   order: FormControl<SearchOrder | null>;
@@ -101,6 +106,7 @@ function blank(value: string): string | null {
   selector: 'bios-company-search',
   imports: [
     AsyncState,
+    CityField,
     DataOverview,
     ErrorState,
     FormErrorSummary,
@@ -127,6 +133,7 @@ export class CompanySearch {
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   protected readonly ufs = BRAZILIAN_UFS;
+  protected readonly foreignUf = FOREIGN_UF;
   protected readonly messageOf = fieldMessage;
 
   /** Os critérios da URL: a única fonte da pesquisa. */
@@ -135,6 +142,12 @@ export class CompanySearch {
     { initialValue: criteriaFromParams(this.route.snapshot.queryParams) },
   );
   protected readonly searched = computed(() => hasCriterion(this.criteria()));
+
+  /** UF da URL que não existe: fica fora da pesquisa, e a tela avisa. */
+  protected readonly ignoredUf = toSignal(
+    this.route.queryParams.pipe(map((params) => ignoredUf(params))),
+    { initialValue: ignoredUf(this.route.snapshot.queryParams) },
+  );
 
   /** Aba escolhida na URL (`?visao=`). Sem escolha, quem pesquisou vê a lista; os demais, a base. */
   private readonly chosenView = toSignal(
@@ -180,16 +193,28 @@ export class CompanySearch {
     },
   );
 
+  protected readonly count = formatCount;
+
   protected readonly form: CriteriaForm = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: [nameRule] }),
     uf: new FormControl('', { nonNullable: true, validators: [ufRule] }),
-    city: new FormControl('', { nonNullable: true, validators: [cityRule] }),
+    city: new FormControl('', {
+      nonNullable: true,
+      validators: [cityRule, chosenCityRule(() => this.criteria().city)],
+    }),
+    city_ibge_code: new FormControl('', { nonNullable: true }),
     cnae: new FormControl('', { nonNullable: true, validators: [cnaeRule] }),
     ods: new FormControl<number | null>(null),
     order: new FormControl<SearchOrder | null>(null),
     min_score: new FormControl('', { nonNullable: true, validators: [minScoreRule] }),
     min_confidence: new FormControl('', { nonNullable: true, validators: [minConfidenceRule] }),
   });
+
+  /** A dica só faz sentido enquanto falta critério (e ela só descreve o botão nesse tempo). */
+  protected readonly criterionFilled = toSignal(
+    this.form.valueChanges.pipe(map(() => hasCriterion(this.criteriaFromForm()))),
+    { initialValue: false },
+  );
 
   /** Erros do formulário fora dos campos (ex.: nenhum critério). */
   protected readonly formErrors = signal<string[]>([]);
@@ -226,6 +251,13 @@ export class CompanySearch {
   protected readonly page = computed(() =>
     this.results.hasValue() ? this.results.value().pagination : null,
   );
+
+  /** Página além da última (link antigo): há empresas, só não nesta página. */
+  protected readonly pastLastPage = computed(() => {
+    const page = this.page();
+
+    return page !== null && page.total > 0 && page.page > page.total_pages;
+  });
 
   /** O tamanho da página atual entre as opções, mesmo que a URL traga um fora da lista. */
   protected readonly pageSizes = computed(() => {
@@ -285,6 +317,16 @@ export class CompanySearch {
       });
     });
 
+    effect(() => {
+      const page = this.page();
+
+      if (this.pastLastPage() && page) {
+        untracked(() => {
+          void this.go({ ...this.criteria(), page: page.total_pages }, { replaceUrl: true });
+        });
+      }
+    });
+
     // Sem ODS, índice mínimo, confiança mínima e ordenação não existem (UC08, regra 3).
     this.form.controls.ods.valueChanges.subscribe((ods) => {
       this.syncOdsFilters(ods);
@@ -317,6 +359,12 @@ export class CompanySearch {
 
     await this.go({ ...criteria, page: 1 });
     this.revealResults.set(this.cards());
+  }
+
+  /** Trocar a UF desfaz o município escolhido, que era de outra lista (RF38). */
+  protected clearCity(): void {
+    this.form.controls.city.reset();
+    this.form.controls.city_ibge_code.reset();
   }
 
   protected async clear(): Promise<void> {
@@ -359,10 +407,11 @@ export class CompanySearch {
     await this.go({ ...this.criteria(), ods, page: 1 });
   }
 
-  private go(criteria: SearchCriteria): Promise<boolean> {
+  private go(criteria: SearchCriteria, extras: NavigationExtras = {}): Promise<boolean> {
     const view = this.chosenView();
 
     return this.router.navigate([], {
+      ...extras,
       relativeTo: this.route,
       queryParams: { ...criteriaToParams(criteria), ...(view ? { visao: view } : {}) },
     });
@@ -377,6 +426,7 @@ export class CompanySearch {
       name: blank(raw.name),
       uf: blank(raw.uf)?.toUpperCase() ?? null,
       city: blank(raw.city),
+      cityCode: blank(raw.city_ibge_code),
       cnae: cnae === null ? null : cnaeDigits(cnae),
       ods,
       minScore: ods === null ? null : decimal(raw.min_score),
@@ -392,6 +442,7 @@ export class CompanySearch {
       name: criteria.name ?? '',
       uf: criteria.uf ?? '',
       city: criteria.city ?? '',
+      city_ibge_code: criteria.cityCode ?? '',
       cnae: criteria.cnae ?? '',
       ods: criteria.ods,
       order: criteria.order,

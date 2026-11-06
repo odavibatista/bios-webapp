@@ -7,8 +7,22 @@
         um índice.
       </p>
     </div>
-    <button mat-stroked-button type="button" (click)="refresh.emit()">Atualizar perfil</button>
+    <button
+      mat-stroked-button
+      type="button"
+      disabledInteractive
+      [disabled]="refreshing()"
+      (click)="refresh.emit()"
+    >
+      @if (refreshing()) {
+        <mat-spinner diameter="18" aria-hidden="true" />
+        Atualizando…
+      } @else {
+        Atualizar perfil
+      }
+    </button>
   </div>
+  <p class="refresh-notice" role="status">{{ refreshNotice() }}</p>
 
   @for (section of sections(); track section.category) {
     <section class="category" [attr.aria-labelledby]="'categoria-' + section.category">
@@ -19,79 +33,100 @@
           registro histórico não confirma vigência atual.
         </p>
       }
-      @if (section.evidences.length) {
-        <ul class="entries">
-          @for (evidence of section.evidences; track evidence.id) {
-            <li>
-              <article
-                class="evidence"
-                [id]="'evidencia-' + evidence.id"
-                tabindex="-1"
-                [class.outdated]="evidence.state === 'OUTDATED'"
-              >
-                <div class="evidence-heading">
-                  <h4>{{ evidence.source }}</h4>
-                  <span class="state">{{
-                    section.ghgNoInventory && evidence.state === 'UNKNOWN'
-                      ? 'Inventário não localizado no registro voluntário'
-                      : evidence.stateLabel
-                  }}</span>
-                </div>
-                @if (evidence.state === 'UNKNOWN') {
-                  @if (section.ghgNoInventory) {
-                    <p>{{ ghgNoInventoryMessage }}</p>
-                  } @else {
-                    <p>
-                      Esta fonte não pôde ser verificada; isso não confirma ausência de registro.
-                    </p>
-                  }
-                } @else if (evidence.state === 'NOT_FOUND') {
-                  <p>A consulta à fonte não encontrou registro para esta empresa.</p>
-                } @else {
-                  @if (evidence.summary) {
-                    <p class="summary">{{ evidence.summary }}</p>
-                  }
-                  @if (evidence.state === 'OUTDATED') {
-                    <p>Os dados venceram desde a coleta. Confira a fonte antes de usá-los.</p>
-                  }
-                  @if (evidence.sanctionPeriod) {
-                    <p>
-                      Período informado pela fonte: {{ evidence.sanctionPeriod }}. Confira a
-                      situação atual no órgão de origem.
-                    </p>
-                  }
-                  @if (evidence.url; as url) {
-                    <p>
-                      <a [href]="url" target="_blank" rel="noopener noreferrer"
-                        >Consultar na fonte{{
-                          evidence.reference ? ': ' + evidence.reference : ''
-                        }}</a
-                      >
-                    </p>
-                  } @else if (evidence.reference) {
-                    <p>
-                      Referência na fonte: <strong>{{ evidence.reference }}</strong>
-                    </p>
-                  }
+      @if (section.groups.length) {
+        @for (group of section.groups; track group.key) {
+          <details class="source-group" [open]="isOpen(group)" (toggle)="setOpen(group, $event)">
+            <summary>
+              {{ group.label }}: {{ count(group.total) }}
+              {{ group.total === 1 ? 'evidência' : 'evidências' }}
+            </summary>
+            @if (isOpen(group)) {
+              <ul class="entries">
+                @for (evidence of visible(group); track evidence.id) {
+                  <li>
+                    <article
+                      class="evidence"
+                      [id]="'evidencia-' + evidence.id"
+                      tabindex="-1"
+                      [class.outdated]="evidence.state === 'OUTDATED'"
+                    >
+                      <div class="evidence-heading">
+                        <h4>{{ evidence.source }}</h4>
+                        <span class="state">{{
+                          section.ghgNoInventory && evidence.state === 'UNKNOWN'
+                            ? ghgNoInventoryLabel
+                            : evidence.stateLabel
+                        }}</span>
+                      </div>
+                      @if (evidence.state === 'UNKNOWN') {
+                        @if (section.ghgNoInventory) {
+                          <p>{{ ghgNoInventoryMessage }}</p>
+                        } @else {
+                          <p>
+                            Esta fonte não pôde ser verificada; isso não confirma ausência de
+                            registro.
+                          </p>
+                        }
+                      } @else if (evidence.state === 'NOT_FOUND') {
+                        <p>A consulta à fonte não encontrou registro para esta empresa.</p>
+                      } @else {
+                        @if (evidence.summary) {
+                          <p class="summary">{{ evidence.summary }}</p>
+                        }
+                        @if (evidence.state === 'OUTDATED') {
+                          <p>Os dados venceram desde a coleta. Confira a fonte antes de usá-los.</p>
+                        }
+                        @if (evidence.sanctionPeriod) {
+                          <p>
+                            Período informado pela fonte: {{ evidence.sanctionPeriod }}. Confira a
+                            situação atual no órgão de origem.
+                          </p>
+                        }
+                        @if (evidence.url; as url) {
+                          <p>
+                            <a [href]="url" target="_blank" rel="noopener noreferrer"
+                              >Consultar na fonte{{
+                                evidence.reference ? ': ' + evidence.reference : ''
+                              }}</a
+                            >
+                          </p>
+                        } @else if (evidence.reference) {
+                          <p>
+                            Referência na fonte: <strong>{{ evidence.reference }}</strong>
+                          </p>
+                        }
+                      }
+                      <dl class="dates">
+                        <div>
+                          <dt>Publicação</dt>
+                          <dd>{{ evidence.publishedAt ?? 'Não informada' }}</dd>
+                        </div>
+                        <div>
+                          <dt>Coleta</dt>
+                          <dd>{{ evidence.collectedAt }}</dd>
+                        </div>
+                        <div>
+                          <dt>Validade da coleta</dt>
+                          <dd>{{ evidence.validUntil }}</dd>
+                        </div>
+                      </dl>
+                    </article>
+                  </li>
                 }
-                <dl class="dates">
-                  <div>
-                    <dt>Publicação</dt>
-                    <dd>{{ evidence.publishedAt ?? 'Não informada' }}</dd>
-                  </div>
-                  <div>
-                    <dt>Coleta</dt>
-                    <dd>{{ evidence.collectedAt }}</dd>
-                  </div>
-                  <div>
-                    <dt>Validade da coleta</dt>
-                    <dd>{{ evidence.validUntil }}</dd>
-                  </div>
-                </dl>
-              </article>
-            </li>
-          }
-        </ul>
+              </ul>
+              @if (group.total > limitOf(group)) {
+                <div class="more">
+                  <p role="status">
+                    Mostrando {{ count(limitOf(group)) }} de {{ count(group.total) }}.
+                  </p>
+                  <button mat-stroked-button type="button" (click)="showMore(group)">
+                    Mostrar mais
+                  </button>
+                </div>
+              }
+            }
+          </details>
+        }
       } @else {
         <ul class="sources" aria-label="Situação das fontes sem evidências apresentadas">
           @for (source of section.sources; track source.slug) {

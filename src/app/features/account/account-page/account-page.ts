@@ -1,3 +1,4 @@
+import { DOCUMENT } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -11,15 +12,23 @@ import {
   untracked,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { type AbstractControl, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import {
+  type AbstractControl,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  type ValidatorFn,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { Router, RouterLink } from '@angular/router';
 import { OwnAccount } from '../../../core/account/own-account';
-import type { AccountResponse } from '../../../core/api/generated';
+import { BiosApi } from '../../../core/api/bios-api';
+import type { AccountResponse, PostalAddress } from '../../../core/api/generated';
 import { SessionStore } from '../../../core/session/session-store';
 import { roleLabel } from '../../../layout/panel-nav';
 import { confirmAction } from '../../../shared/dialogs/confirm-dialog';
@@ -33,7 +42,9 @@ import {
   BRAZILIAN_STATES,
   formatPostalCode,
   isBlankAddress,
+  postalCodeDigits,
 } from '../../../shared/forms/address-rules';
+import { chosenCityRule, CityField } from '../../../shared/forms/city-field/city-field';
 import { AsyncState } from '../../../shared/states/async-state';
 import { FormErrorSummary } from '../../../shared/states/form-error-summary';
 import { accountChanges, accountFormValue } from '../account-changes';
@@ -57,11 +68,13 @@ export const ACCOUNT_DELETED_PARAM = { conta: 'excluida' } as const;
   selector: 'bios-account-page',
   imports: [
     AsyncState,
+    CityField,
     EmailChange,
     FormErrorSummary,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
+    MatProgressSpinnerModule,
     MatSelectModule,
     ReactiveFormsModule,
     RouterLink,
@@ -71,12 +84,14 @@ export const ACCOUNT_DELETED_PARAM = { conta: 'excluida' } as const;
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AccountPage {
+  private readonly api = inject(BiosApi);
   private readonly own = inject(OwnAccount);
   private readonly session = inject(SessionStore);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
   private readonly injector = inject(Injector);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly document = inject(DOCUMENT);
 
   protected readonly account = this.own.account;
   protected readonly states = BRAZILIAN_STATES;
@@ -108,8 +123,11 @@ export class AccountPage {
       number: this.addressControl('number'),
       complement: this.addressControl('complement'),
       neighborhood: this.addressControl('neighborhood'),
-      city: this.addressControl('city'),
       state: this.addressControl('state'),
+      city: this.addressControl('city', [
+        chosenCityRule(() => (this.account.hasValue() ? this.account.value().address?.city : null)),
+      ]),
+      city_ibge_code: this.addressControl('city_ibge_code'),
     }),
   });
 
@@ -129,6 +147,15 @@ export class AccountPage {
   protected readonly formErrors = signal<string[]>([]);
   /** O aviso depois de gravar, anunciado ao leitor de tela. */
   protected readonly notice = signal('');
+
+  /** Consulta de CEP em andamento. */
+  protected readonly lookingUpCep = signal(false);
+  /** O resultado da consulta, anunciado ao leitor de tela. */
+  protected readonly cepNotice = signal('');
+  /** Endereço do CEP à espera de confirmação: há campos preenchidos com outros valores. */
+  protected readonly pendingAddress = signal<PostalAddress | null>(null);
+  /** O último CEP consultado: a resposta de um CEP já trocado é ignorada. */
+  private lastCep = '';
 
   constructor() {
     // O formulário mostra o que está gravado: ao carregar e depois de cada gravação.
@@ -161,6 +188,98 @@ export class AccountPage {
     const masked = formatPostalCode(control.value);
 
     if (masked !== control.value) control.setValue(masked);
+
+    void this.lookupPostalCode(postalCodeDigits(masked));
+  }
+
+  /**
+   * Com os 8 dígitos, completa o endereço (UC05, RF39). Falhar nunca impede salvar: a mensagem
+   * libera o preenchimento à mão. Só preenche direto o que está em branco ou igual; se houver algo
+   * diferente, pergunta antes de trocar. Número e complemento não vêm do CEP e ficam como estão.
+   */
+  private async lookupPostalCode(cep: string): Promise<void> {
+    if (cep === this.lastCep) return;
+
+    this.lastCep = cep;
+    this.lookingUpCep.set(false);
+    this.pendingAddress.set(null);
+    this.cepNotice.set('');
+    if (cep.length < 8) return;
+
+    this.lookingUpCep.set(true);
+
+    try {
+      const address = await this.api.lookupPostalCode({ path: { cep } });
+
+      if (cep !== this.lastCep) return;
+
+      if (this.wouldReplaceTypedAddress(address)) {
+        this.pendingAddress.set(address);
+        this.cepNotice.set('Este CEP tem outro endereço. Confira abaixo se quer usá-lo.');
+      } else {
+        this.fillFromPostalCode(address);
+      }
+    } catch (error) {
+      if (cep === this.lastCep) this.cepNotice.set(describeError(error).message);
+    } finally {
+      if (cep === this.lastCep) this.lookingUpCep.set(false);
+    }
+  }
+
+  private wouldReplaceTypedAddress(address: PostalAddress): boolean {
+    const { street, neighborhood, state, city } = this.form.controls.address.getRawValue();
+    const differs = (typed: string, found: string | null) =>
+      typed.trim() !== '' && found !== null && typed.trim() !== found;
+
+    return (
+      differs(street, address.street) ||
+      differs(neighborhood, address.neighborhood) ||
+      differs(state, address.state) ||
+      differs(city, address.city)
+    );
+  }
+
+  protected usePendingAddress(): void {
+    const address = this.pendingAddress();
+
+    if (address) this.fillFromPostalCode(address);
+  }
+
+  protected keepTypedAddress(): void {
+    this.pendingAddress.set(null);
+    this.cepNotice.set('');
+  }
+
+  private fillFromPostalCode(address: PostalAddress): void {
+    const {
+      street,
+      neighborhood,
+      state,
+      city,
+      city_ibge_code: code,
+    } = this.form.controls.address.controls;
+
+    if (address.street !== null) street.setValue(address.street);
+    if (address.neighborhood !== null) neighborhood.setValue(address.neighborhood);
+    state.setValue(address.state);
+    city.setValue(address.city);
+    code.setValue(address.city_ibge_code ?? '');
+    city.updateValueAndValidity();
+    this.pendingAddress.set(null);
+    this.cepNotice.set(
+      address.street === null
+        ? 'Cidade preenchida. Este CEP é geral: informe o logradouro e o bairro.'
+        : 'Endereço preenchido pelo CEP. Confira os campos.',
+    );
+
+    // Quem ainda está no CEP segue para o número; quem já saiu do campo não perde o lugar.
+    if (this.document.activeElement === this.fieldOf('postal_code')) {
+      this.fieldOf(address.street === null ? 'street' : 'number')?.focus();
+    }
+  }
+
+  private fieldOf(name: 'postal_code' | 'street' | 'number'): HTMLElement | null {
+    return this.host.nativeElement.querySelector(`[formcontrolname="${name}"]`);
   }
 
   protected async save(): Promise<void> {
@@ -227,16 +346,30 @@ export class AccountPage {
     await this.router.navigate(['/'], { queryParams: ACCOUNT_DELETED_PARAM });
   }
 
-  private addressControl(field: AddressField): FormControl<string> {
+  private addressControl(field: AddressField, validators: ValidatorFn[] = []): FormControl<string> {
     return new FormControl('', {
       nonNullable: true,
-      validators: [addressFieldRules(field, (control) => this.addressRequired(control))],
+      validators: [
+        addressFieldRules(field, (control) => this.addressRequired(control)),
+        ...validators,
+      ],
     });
+  }
+
+  /** Trocar a UF desfaz o município escolhido, que era de outra lista (RF38). */
+  protected clearCity(): void {
+    const { city, city_ibge_code: code } = this.form.controls.address.controls;
+
+    city.setValue('');
+    code.setValue('');
   }
 
   private resetTo(account: AccountResponse): void {
     this.shown = account;
     this.form.reset(accountFormValue(account));
+    this.lastCep = postalCodeDigits(this.form.controls.address.controls.postal_code.value);
+    this.pendingAddress.set(null);
+    this.cepNotice.set('');
   }
 
   private focusFirstInvalid(): void {

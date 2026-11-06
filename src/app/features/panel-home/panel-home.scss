@@ -3,6 +3,11 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+// A lista conta as colunas pela própria largura, com ou sem o menu lateral.
+.movements {
+  container: movements / inline-size;
+}
+
 h1 {
   margin: 0 0 0.5rem;
   font: var(--mat-sys-headline-medium);
@@ -12,6 +17,11 @@ h1 {
 h2 {
   margin: 0 0 0.75rem;
   font: var(--mat-sys-title-medium);
+
+  // O foco vem do paginador, e nunca do teclado direto no título.
+  &:focus {
+    outline: none;
+  }
 }
 
 .lead {
@@ -46,21 +56,101 @@ h2 {
   }
 }
 
+// Doze colunas para 1, 2, 3 ou 4 cards por fileira: a última se estica e nunca deixa buraco.
+// Cada card ocupa quatro linhas (nome, fantasia, local, ODS), compartilhadas pela fileira.
 .movement-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(20rem, 100%), 1fr));
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 1rem;
   margin: 0;
   padding: 0;
   list-style: none;
+
+  > li {
+    display: grid;
+    grid-column: span 12;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    row-gap: 0.25rem;
+  }
 }
 
+@container movements (min-width: 41rem) and (max-width: 61.99rem) {
+  .movement-list > li {
+    grid-column: span 6;
+
+    &:last-child:nth-child(odd) {
+      grid-column: span 12;
+    }
+  }
+}
+
+@container movements (min-width: 62rem) and (max-width: 83.99rem) {
+  .movement-list > li {
+    grid-column: span 4;
+
+    &:last-child:nth-child(3n + 1) {
+      grid-column: span 12;
+    }
+
+    &:last-child:nth-child(3n + 2),
+    &:nth-last-child(2):nth-child(3n + 1) {
+      grid-column: span 6;
+    }
+  }
+}
+
+@container movements (min-width: 84rem) {
+  .movement-list > li {
+    grid-column: span 3;
+
+    &:last-child:nth-child(4n + 1) {
+      grid-column: span 12;
+    }
+
+    &:last-child:nth-child(4n + 2),
+    &:nth-last-child(2):nth-child(4n + 1) {
+      grid-column: span 6;
+    }
+
+    &:last-child:nth-child(4n + 3),
+    &:nth-last-child(2):nth-child(4n + 2),
+    &:nth-last-child(3):nth-child(4n + 1) {
+      grid-column: span 4;
+    }
+  }
+}
+
+// Das bordas da lista para dentro; sem lugar para os três lado a lado, a página vai para cima.
 .pager {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 0.75rem;
   margin-top: 1rem;
+
+  button:first-of-type {
+    justify-self: start;
+  }
+
+  button:last-of-type {
+    justify-self: end;
+  }
+
+  @media (max-width: 479.98px) {
+    grid-template-columns: 1fr 1fr;
+
+    span {
+      grid-row: 1;
+      grid-column: 1 / -1;
+      text-align: center;
+    }
+
+    button:first-of-type,
+    button:last-of-type {
+      justify-self: stretch;
+    }
+  }
 }
 
 .shortcuts {

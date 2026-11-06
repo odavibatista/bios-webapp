@@ -175,8 +175,8 @@ describe('profileCards', () => {
       const card = cardOf(profile([evidence(null, { biomes: 'Amazonia, Cerrado' })]), 'bioma');
 
       expect(card?.chart?.table.rows).toEqual([
-        ['Amazônia', '1'],
-        ['Cerrado', '1'],
+        ['Amazônia', '1', '50,0%'],
+        ['Cerrado', '1', '50,0%'],
       ]);
     });
 
@@ -195,6 +195,21 @@ describe('profileCards', () => {
 });
 
 describe('sourceResults', () => {
+  it('o GHG sem inventário usa o mesmo termo do resto do perfil', () => {
+    const base = profile([]);
+    const results = sourceResults({
+      ...base,
+      provenance: {
+        ...base.provenance,
+        sources: [
+          { source_slug: 'GHG_PROTOCOL', origin: 'UNAVAILABLE', evidence_state: 'UNKNOWN' },
+        ],
+      },
+    });
+
+    expect(results[0].label).toBe('Inventário não localizado no registro voluntário');
+  });
+
   it('diz o que cada fonte respondeu, sem tratar ausência como resultado bom ou ruim', () => {
     const results = sourceResults(profile([evidence(null)]));
 

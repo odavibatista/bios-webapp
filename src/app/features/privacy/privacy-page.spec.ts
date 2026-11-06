@@ -21,6 +21,11 @@ describe('PrivacyPage', () => {
     expect(screen.getByText(/continuam sendo dados pessoais/)).toBeTruthy();
   });
 
+  it('avisa o que vai ao ViaCEP na consulta de CEP', () => {
+    expect(screen.getByRole('heading', { name: 'Consulta de CEP' })).toBeTruthy();
+    expect(screen.getByText(/Só o CEP é enviado/)).toBeTruthy();
+  });
+
   it('limita o uso: sem decisão automática sobre uma pessoa', () => {
     expect(
       screen.getByText('Não use o índice como decisão automática sobre uma pessoa.'),

@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/angular';
+import { render, screen, waitFor, within } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import type { CompanyFullProfileResponse } from '../../../core/api/generated';
 import acoCearense from '../../../core/mocks/fixtures/getCompanyProfile/aco-cearense';
@@ -73,7 +73,8 @@ describe('OdsScores', () => {
 
     await user.click(within(card).getByText('Como o índice foi calculado para o ODS 15'));
 
-    expect(within(card).getAllByText('Pontos: -40')).toHaveLength(2);
+    await waitFor(() => expect(within(card).getAllByText('Pontos: -40')).toHaveLength(2));
+
     expect(within(card).getByText('Soma dos pontos:').textContent).toContain('-80');
     expect(within(card).getAllByRole('button', { name: 'Ver evidência no perfil' })).toHaveLength(
       2,
@@ -83,13 +84,58 @@ describe('OdsScores', () => {
     );
   });
 
+  it('só cria 20 contribuições ao abrir e conserva o trecho ao reabrir', async () => {
+    const user = userEvent.setup();
+    const score = PROFILE.ods_scores.find((item) => item.ods_number === 15)!;
+    const contributions = Array.from({ length: 2535 }, (_, index) => ({
+      ...score.contributions[0],
+      evidence: { ...score.contributions[0].evidence, id: `teste-${index}` },
+    }));
+    const evidence = PROFILE.evidences[0].evidences[0];
+    const profile = {
+      ...PROFILE,
+      ods_scores: [{ ...score, contributions }],
+      evidences: [
+        {
+          ...PROFILE.evidences[0],
+          evidences: contributions.map((item) => ({ ...evidence, id: item.evidence.id })),
+        },
+      ],
+    } satisfies CompanyFullProfileResponse;
+    const { container, fixture } = await render(OdsScores, { inputs: { profile } });
+    const detail = container.querySelector<HTMLDetailsElement>('.explanation')!;
+    const entries = () => detail.querySelectorAll('.contributions li');
+
+    expect(entries()).toHaveLength(0);
+    await user.click(within(detail).getByText('Como o índice foi calculado para o ODS 15'));
+    await waitFor(() => expect(entries()).toHaveLength(20));
+    expect(detail.textContent).toContain('Mostrando 20 de 2.535 contribuições');
+    expect(detail.textContent).toContain('Soma dos pontos: -101.400');
+
+    await user.click(within(detail).getByRole('button', { name: 'Mostrar mais' }));
+    await waitFor(() => expect(entries()).toHaveLength(40));
+    const requested = vi.fn();
+    fixture.componentInstance.evidenceRequested.subscribe(requested);
+    await user.click(
+      within(entries()[20] as HTMLElement).getByRole('button', { name: 'Ver evidência no perfil' }),
+    );
+    expect(requested).toHaveBeenCalledWith('evidencia-teste-20');
+    await user.click(within(detail).getByText('Como o índice foi calculado para o ODS 15'));
+    await waitFor(() => expect(entries()).toHaveLength(0));
+    await user.click(within(detail).getByText('Como o índice foi calculado para o ODS 15'));
+    await waitFor(() => expect(entries()).toHaveLength(40));
+  });
+
   it('explica ODS sem contribuição e exibe os centésimos do índice calculado', async () => {
+    const user = userEvent.setup();
     await render(OdsScores, { inputs: { profile: FOX } });
     const unavailable = screen.getByRole('article', { name: 'ODS 13' });
     const calculated = screen.getByRole('article', { name: 'ODS 15' });
 
+    await user.click(within(unavailable).getByText('Como o índice foi calculado para o ODS 13'));
+    await user.click(within(calculated).getByText('Como o índice foi calculado para o ODS 15'));
+    await waitFor(() => expect(calculated.textContent).toContain('Peso reduzido'));
     expect(unavailable.textContent).toContain('Não houve evidência conclusiva');
     expect(calculated.textContent).toContain('-6,25');
-    expect(calculated.textContent).toContain('Peso reduzido');
   });
 });

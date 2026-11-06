@@ -4,6 +4,7 @@ import {
   capturedExportFile,
   capturedSearch,
   companyProfile,
+  exportFilename,
   isValidCnpj,
   normalizeCnpj,
   pathWithQuery,
@@ -31,6 +32,12 @@ function queryOf(raw: Record<string, string> | undefined): Query {
 }
 
 describe('regras de empresas do mock', () => {
+  it('o nome da exportação usa o dia de quem baixa', () => {
+    expect(exportFilename(new Date(2026, 10, 5, 23, 30).getTime())).toBe(
+      'empresas-bios-2026-11-05.xlsx',
+    );
+  });
+
   describe('CNPJ', () => {
     it('aceita CNPJ numérico válido, com ou sem máscara', () => {
       expect(isValidCnpj('60894730000105')).toBe(true);

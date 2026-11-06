@@ -21,7 +21,14 @@
   </div>
 </mat-toolbar>
 
-<main #main id="conteudo" class="content" tabindex="-1">
+@if (failedUrl(); as url) {
+  <div class="navigation-failure" role="alert">
+    <span>Não foi possível abrir a tela. Confira a conexão.</span>
+    <button type="button" (click)="retryNavigation(url)">Tentar de novo</button>
+  </div>
+}
+
+<main #main id="conteudo" class="content" [class.signed-in]="signedIn()" tabindex="-1">
   <router-outlet />
 </main>
 
@@ -41,7 +48,8 @@
     <p class="presentation">
       <strong>Versão de apresentação:</strong> os dados são respostas reais da API do BIOS,
       processadas em novembro de 2026. Nada é consultado nas fontes oficiais, e o que você fizer
-      aqui fica só no seu navegador, até fechar a aba.
+      aqui fica só no seu navegador, até fechar a aba. A exceção é o CEP digitado na sua conta, que
+      vai ao ViaCEP para completar o endereço.
     </p>
   }
 </footer>

@@ -79,27 +79,9 @@ describe('PanelLayout', () => {
     ).toBeNull();
   });
 
-  it('tela larga: menu fixo, sem botão de abrir', async () => {
-    await renderPanel('USER');
+  it('tela estreita: o conteúdo começa direto, sem um segundo botão de menu', async () => {
+    await renderPanel('USER', true);
 
-    expect(screen.queryByRole('button', { name: /Menu do painel/ })).toBeNull();
-  });
-
-  it('tela estreita: o menu abre como gaveta pelo botão, que diz se está aberto', async () => {
-    const { fixture } = await renderPanel('USER', true);
-    const toggle = screen.getByRole('button', { name: /Menu do painel/ });
-
-    expect(toggle.getAttribute('aria-expanded')).toBe('false');
-    expect(toggle.getAttribute('aria-controls')).toBe('menu-do-painel');
-
-    toggle.click();
-    await fixture.whenStable();
-    expect(toggle.getAttribute('aria-expanded')).toBe('true');
-
-    within(menu())
-      .getByRole('link', { name: /Setores/ })
-      .click();
-    await fixture.whenStable();
-    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('button')).toBeNull();
   });
 });

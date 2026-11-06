@@ -2,9 +2,11 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  ElementRef,
   inject,
   input,
   resource,
+  viewChild,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -26,7 +28,7 @@ interface Shortcut {
 }
 
 /** Empresas por página da lista (UC18, regra 3). */
-export const MOVEMENTS_PAGE_SIZE = 20;
+export const MOVEMENTS_PAGE_SIZE = 24;
 
 export const NO_MOVEMENTS_MESSAGE =
   'Ainda não há movimentações registradas. Elas aparecem aqui quando o índice de uma empresa mudar.';
@@ -97,6 +99,8 @@ export class PanelHome {
   private readonly presentation = inject(PRESENTATION_MODE);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly movementsHeading =
+    viewChild.required<ElementRef<HTMLElement>>('movementsHeading');
 
   /** A página da URL (`?pagina=2`), já que o app liga parâmetros de rota aos inputs. */
   readonly pagina = input<string>();
@@ -151,6 +155,9 @@ export class PanelHome {
         ...(this.categorySlug() ? { categoria: this.categorySlug() } : {}),
       },
     });
+
+    // O paginador fica no fim da lista: a página nova começa lida de cima.
+    this.movementsHeading().nativeElement.focus();
   }
 
   protected async chooseCategory(event: Event): Promise<void> {

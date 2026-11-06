@@ -1,5 +1,6 @@
 import type { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { RULES_ERROR_KEY } from '../../shared/forms/account-rules';
+import { FOREIGN_UF } from '../../shared/forms/address-rules';
 import { BRAZILIAN_UFS, cnaeDigits } from './search-criteria';
 
 /** Tamanho máximo do nome e do município, como na API. */
@@ -48,7 +49,9 @@ export const cityRule = rule((value) => [
 
 /** UF: opcional; uma das 27 siglas. */
 export const ufRule = rule((value) =>
-  value === '' || (BRAZILIAN_UFS as readonly string[]).includes(value.toUpperCase())
+  value === '' ||
+  value.toUpperCase() === FOREIGN_UF ||
+  (BRAZILIAN_UFS as readonly string[]).includes(value.toUpperCase())
     ? []
     : ['Escolha uma das 27 unidades da federação.'],
 );

@@ -94,6 +94,18 @@ describe('CompanySearch', () => {
     vi.unstubAllGlobals();
   });
 
+  it('a dica some ao preencher um critério, e o botão deixa de citá-la', async () => {
+    const { user } = await openSearch();
+    const button = screen.getByRole('button', { name: 'Pesquisar' });
+
+    expect(button.getAttribute('aria-describedby')).toBe('dica-criterio');
+
+    await user.type(screen.getByLabelText('Nome da empresa'), 'aço');
+
+    expect(screen.queryByText('Informe ao menos um critério.')).toBeNull();
+    expect(button.getAttribute('aria-describedby')).toBeNull();
+  });
+
   it('sem critério, não pesquisa e explica que é preciso ao menos um', async () => {
     const { search, user, router } = await openSearch();
 

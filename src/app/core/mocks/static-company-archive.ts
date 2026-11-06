@@ -7,6 +7,7 @@ import type {
   SectorEvolution,
 } from '../api/generated';
 import type { CompanyFacts } from './company-analytics';
+import type { LocationRows } from './location-catalog';
 import {
   CompanyArchive,
   type ArchivedCompany,
@@ -74,10 +75,24 @@ function unavailable(path: string): ApiError {
   });
 }
 
+/** 426, e não 5xx: repetir não adianta, e a tela não oferece "Tentar de novo". */
+function outdatedBrowser(path: string): ApiError {
+  return new ApiError(426, {
+    statusCode: 426,
+    code: 'BROWSER_NOT_SUPPORTED',
+    message:
+      'Este navegador não abre a versão de apresentação. Atualize-o e abra a página de novo.',
+    timestamp: new Date().toISOString(),
+    path,
+  });
+}
+
 /** Lê um arquivo da base: JSON comprimido, aberto pelo próprio navegador. */
 async function readArchive<T>(file: string): Promise<T | null> {
   const path = `${BASE}/${file}.json.gz`;
   let response: Response;
+
+  if (typeof DecompressionStream === 'undefined') throw outdatedBrowser(path);
 
   try {
     response = await fetch(path);
@@ -181,6 +196,7 @@ export class StaticCompanyArchive extends CompanyArchive {
   private movementList?: Promise<CompanyMovementItem[]>;
   private factList?: Promise<Map<string, CompanyFacts>>;
   private baseSummary?: Promise<CompanyAnalytics>;
+  private locationRows?: Promise<LocationRows>;
   private readonly shards = new Map<string, Promise<Shard>>();
 
   entries(): Promise<readonly CompanyEntry[]> {
@@ -203,6 +219,15 @@ export class StaticCompanyArchive extends CompanyArchive {
     );
 
     return this.baseSummary;
+  }
+
+  locations(): Promise<LocationRows> {
+    this.locationRows ??= this.required<LocationRows>('locations').catch((error: unknown) => {
+      this.locationRows = undefined;
+      throw error;
+    });
+
+    return this.locationRows;
   }
 
   facts(): Promise<ReadonlyMap<string, CompanyFacts>> {

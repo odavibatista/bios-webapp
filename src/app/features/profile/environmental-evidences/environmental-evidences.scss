@@ -50,6 +50,31 @@ p {
 .sources li {
   margin: 0.25rem 0;
 }
+.source-group {
+  margin-top: 0.75rem;
+
+  > summary {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    font: var(--mat-sys-title-small);
+    cursor: pointer;
+    list-style-position: inside;
+  }
+}
+
+.more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+
+  p {
+    margin: 0;
+  }
+}
+
 .entries {
   display: grid;
   gap: 0.75rem;
@@ -96,4 +121,23 @@ dd {
 }
 a {
   overflow-wrap: anywhere;
+}
+
+.refresh-notice {
+  margin: 0.5rem 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+
+  &:empty {
+    margin: 0;
+  }
+}
+
+// O link leva à fonte original: é o controle central da evidência rastreável (#264).
+@media (max-width: 599.98px) {
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
 }

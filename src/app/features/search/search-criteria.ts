@@ -4,6 +4,7 @@ import type {
   GetCompanyAnalyticsData,
   SearchCompaniesData,
 } from '../../core/api/generated';
+import { FOREIGN_UF } from '../../shared/forms/address-rules';
 
 /** Siglas das 27 unidades da federação, na ordem da API (UC08, regra 4). */
 export const BRAZILIAN_UFS = [
@@ -47,7 +48,10 @@ export type SearchOrder = 'asc' | 'desc';
 export interface SearchCriteria {
   name: string | null;
   uf: string | null;
+  /** Nome do município: o que aparece no campo, e o critério dos links antigos. */
   city: string | null;
+  /** Código IBGE do município escolhido na lista (RF38). */
+  cityCode: string | null;
   /** Só os dígitos (2 a 7). */
   cnae: string | null;
   ods: number | null;
@@ -69,6 +73,7 @@ export const QUERY_KEYS = {
   name: 'nome',
   uf: 'uf',
   city: 'municipio',
+  cityCode: 'municipio_ibge',
   cnae: 'cnae',
   ods: 'ods',
   minScore: 'indice_min',
@@ -96,6 +101,17 @@ function number(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function isKnownUf(uf: string): boolean {
+  return uf === FOREIGN_UF || (BRAZILIAN_UFS as readonly string[]).includes(uf);
+}
+
+/** A UF da URL que não existe, para a tela avisar por que a ignorou. */
+export function ignoredUf(params: Params): string | null {
+  const uf = text(params[QUERY_KEYS.uf])?.toUpperCase() ?? null;
+
+  return uf === null || isKnownUf(uf) ? null : uf;
+}
+
 function positiveInteger(value: unknown, fallback: number, max = Infinity): number {
   const parsed = number(value);
 
@@ -114,11 +130,14 @@ export function criteriaFromParams(params: Params): SearchCriteria {
   const withOds = ods !== null && Number.isInteger(ods);
   const order = text(params[QUERY_KEYS.order])?.toLowerCase();
   const cnae = text(params[QUERY_KEYS.cnae]);
+  const cityCode = text(params[QUERY_KEYS.cityCode]);
+  const uf = text(params[QUERY_KEYS.uf])?.toUpperCase() ?? null;
 
   return {
     name: text(params[QUERY_KEYS.name]),
-    uf: text(params[QUERY_KEYS.uf])?.toUpperCase() ?? null,
+    uf: uf !== null && isKnownUf(uf) ? uf : null,
     city: text(params[QUERY_KEYS.city]),
+    cityCode: /^\d{7}$/.test(cityCode ?? '') ? cityCode : null,
     cnae: cnae === null ? null : cnaeDigits(cnae),
     ods: withOds ? ods : null,
     minScore: withOds ? number(params[QUERY_KEYS.minScore]) : null,
@@ -139,6 +158,7 @@ export function criteriaToParams(criteria: SearchCriteria): Params {
   set('name', criteria.name);
   set('uf', criteria.uf);
   set('city', criteria.city);
+  set('cityCode', criteria.cityCode);
   set('cnae', criteria.cnae);
   set('ods', criteria.ods);
   if (criteria.ods !== null) {
@@ -154,9 +174,14 @@ export function criteriaToParams(criteria: SearchCriteria): Params {
 
 /** Ao menos um critério (nome, UF, município, CNAE ou ODS) é exigido (UC08, regra 3). */
 export function hasCriterion(criteria: SearchCriteria): boolean {
-  return [criteria.name, criteria.uf, criteria.city, criteria.cnae, criteria.ods].some(
-    (value) => value !== null,
-  );
+  return [
+    criteria.name,
+    criteria.uf,
+    criteria.city,
+    criteria.cityCode,
+    criteria.cnae,
+    criteria.ods,
+  ].some((value) => value !== null);
 }
 
 /** A consulta de `searchCompanies`, com os nomes da API e só o que foi informado. */
@@ -168,7 +193,8 @@ export function toApiQuery(criteria: SearchCriteria): NonNullable<SearchCompanie
 
   if (criteria.name !== null) query.name = criteria.name;
   if (criteria.uf !== null) query.uf = criteria.uf;
-  if (criteria.city !== null) query.city = criteria.city;
+  if (criteria.cityCode !== null) query.city_ibge_code = criteria.cityCode;
+  else if (criteria.city !== null) query.city = criteria.city;
   if (criteria.cnae !== null) query.cnae = criteria.cnae;
   if (criteria.ods !== null) {
     query.ods = criteria.ods;

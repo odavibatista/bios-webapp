@@ -21,7 +21,7 @@
             {{
               results.value().pagination.total === 1
                 ? '1 empresa encontrada'
-                : results.value().pagination.total + ' empresas encontradas'
+                : count(results.value().pagination.total) + ' empresas encontradas'
             }}
           </p>
           <bios-search-results
@@ -38,8 +38,8 @@
               Página anterior
             </button>
             <span
-              >Página {{ results.value().pagination.page }} de
-              {{ results.value().pagination.total_pages }}</span
+              >Página {{ count(results.value().pagination.page) }} de
+              {{ count(results.value().pagination.total_pages) }}</span
             >
             <button
               mat-stroked-button

@@ -1,16 +1,11 @@
 import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
-
-const PASSWORD = 'Apresentacao2026';
 
 /** Entra e abre "Minha conta" pelo menu da barra, sem recarregar. */
 async function openAccount(page: Page, email: string, name: RegExp) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill(email);
-  await page.getByLabel('Senha', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
+  await signIn(page, '/painel', email);
 
   await page.getByRole('banner').getByRole('button', { name }).click();
   await page.getByRole('menuitem', { name: 'Minha conta' }).click();
@@ -103,9 +98,11 @@ test.describe('conta (#23)', () => {
     await expect(page.getByLabel('CEP')).toHaveValue('20040-020');
     await page.getByLabel('Número').fill('1');
     await page.getByLabel('Bairro').fill('Centro');
-    await page.getByLabel('Cidade').fill('Rio de Janeiro');
+    await expect(page.getByLabel('Cidade')).toBeDisabled();
     await page.getByLabel('UF').click();
     await page.getByRole('option', { name: 'RJ', exact: true }).click();
+    await page.getByLabel('Cidade').fill('rio');
+    await page.getByRole('option', { name: 'Rio de Janeiro' }).click();
     await save.click();
 
     await expect(page.getByRole('status').filter({ hasText: 'Dados salvos.' })).toBeVisible();
@@ -117,6 +114,37 @@ test.describe('conta (#23)', () => {
     // Inspecione a tela inteira no estado estável, com o início do formulário visível.
     await page.evaluate(() => window.scrollTo(0, 0));
   });
+
+  for (const width of [320, 768, 1280, 1920]) {
+    test(`campos do endereço com a mesma altura em ${width} px (#269)`, async ({ page }) => {
+      test.skip(test.info().project.name === 'celular', 'Largura definida pelo teste.');
+      await page.setViewportSize({ width, height: 900 });
+      await openAccount(page, 'apresentacao@example.com', /Conta de Demonstração/);
+
+      const fields = page.locator('fieldset.address .mdc-text-field');
+      const heights = await fields.evaluateAll((boxes) =>
+        boxes.map((box) => Math.round(box.getBoundingClientRect().height)),
+      );
+
+      expect(new Set(heights).size).toBe(1);
+
+      const hintTop = (text: string) =>
+        page
+          .locator('fieldset.address')
+          .getByText(text, { exact: true })
+          .evaluate((hint) => Math.round(hint.getBoundingClientRect().top));
+
+      if (width > 600) {
+        expect(await hintTop('8 dígitos')).toBe(await hintTop('Ex.: Rua, Avenida, Travessa'));
+        expect(await hintTop('Ou "s/n"')).toBe(await hintTop('Opcional'));
+      }
+
+      await expect(page.getByLabel('Logradouro')).toHaveAccessibleDescription(
+        'Ex.: Rua, Avenida, Travessa',
+      );
+      await expect(page.getByLabel('Complemento')).toHaveAccessibleDescription('Opcional');
+    });
+  }
 
   test('leva à troca de senha', async ({ page }) => {
     await openAccount(page, 'apresentacao@example.com', /Conta de Demonstração/);

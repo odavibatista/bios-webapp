@@ -62,7 +62,11 @@ export class OverviewTotals {
       { label: 'Evidências confirmadas', value: formatCount(totals.confirmed_evidences) },
       { label: 'Autos com multa', value: formatCount(totals.fine_notices) },
       { label: 'Valor lançado em multas', value: MONEY.format(totals.fine_amount) },
-      { label: 'Hectares nos autos', value: AREA.format(totals.area_hectares) },
+      {
+        label: 'Hectares nos autos',
+        // Zero aqui é falta de informação nos autos, e não área zero (IND02).
+        value: totals.area_hectares > 0 ? AREA.format(totals.area_hectares) : 'Sem dado',
+      },
       ...analytics.ods.map(({ ods_number, companies_with_index }) => ({
         label: `Com índice no ODS ${ods_number}`,
         value: formatCount(companies_with_index),

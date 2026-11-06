@@ -1,22 +1,14 @@
-import type { Page, TestInfo } from '@playwright/test';
+import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
+import { openPanelArea } from './support/panel-menu';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 /** Entra e abre as chaves pelo menu do painel, sem recarregar. */
-async function openApiKeys(page: Page, testInfo: TestInfo) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
+async function openApiKeys(page: Page) {
+  await signIn(page);
 
-  if (testInfo.project.name === 'celular') {
-    await page.getByRole('button', { name: 'Menu do painel' }).click();
-  }
-  await page
-    .getByRole('navigation', { name: 'Áreas do painel' })
-    .getByRole('link', { name: /Chaves de API/ })
-    .click();
+  await openPanelArea(page, /Chaves de API/);
   await expect(page).toHaveURL('/conta/chaves');
   await expect(page.getByText(/de 10 chaves ativas\./)).toBeVisible();
 }
@@ -27,10 +19,8 @@ async function generate(page: Page, name: string) {
 }
 
 test.describe('chaves de API (#27)', () => {
-  test('lista a chave da conta só com nome, prefixo, criação e último uso', async ({
-    page,
-  }, testInfo) => {
-    await openApiKeys(page, testInfo);
+  test('lista a chave da conta só com nome, prefixo, criação e último uso', async ({ page }) => {
+    await openApiKeys(page);
 
     await expect(page).toHaveTitle('Chaves de API — BIOS');
     const row = page.getByRole('row', { name: /Planilha de fornecedores/ });
@@ -47,7 +37,7 @@ test.describe('chaves de API (#27)', () => {
     baseURL,
   }, testInfo) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseURL });
-    await openApiKeys(page, testInfo);
+    await openApiKeys(page);
 
     await generate(page, 'Integração com o CRM');
 
@@ -75,7 +65,7 @@ test.describe('chaves de API (#27)', () => {
   test('revogar pede confirmação, com o foco em "Cancelar", e tira a chave da lista', async ({
     page,
   }, testInfo) => {
-    await openApiKeys(page, testInfo);
+    await openApiKeys(page);
 
     await page.getByRole('button', { name: 'Revogar a chave Planilha de fornecedores' }).click();
     const confirm = page.getByRole('alertdialog', {
@@ -93,11 +83,9 @@ test.describe('chaves de API (#27)', () => {
     ).toBeVisible();
   });
 
-  test('com 10 chaves ativas, a 11ª é recusada com a explicação do limite', async ({
-    page,
-  }, testInfo) => {
+  test('com 10 chaves ativas, a 11ª é recusada com a explicação do limite', async ({ page }) => {
     test.slow();
-    await openApiKeys(page, testInfo);
+    await openApiKeys(page);
 
     // A conta de demonstração já tem 1 chave.
     for (let index = 2; index <= 10; index++) {

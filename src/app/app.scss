@@ -36,19 +36,26 @@
   // dentro dela (menu da conta). Um `color` no botão empata em especificidade com o do Material e
   // perde quando os estilos são reinseridos (ao sair e entrar de novo): texto escuro sobre o verde.
   --mat-toolbar-container-text-color: #fff;
+
+  // Paisagem do celular: fixo, tomaria quase um terço da altura (#263).
+  @media (max-height: 480px) {
+    position: static;
+  }
 }
 
 .topbar-inner {
   display: flex;
   align-items: center;
   gap: 1rem;
+  position: relative;
   width: min(1500px, 100%);
   min-width: 0;
   margin-inline: auto;
 
   @media (max-width: 959.98px) {
     flex-wrap: wrap;
-    padding-block: 0.35rem;
+    gap: 0.25rem 1rem;
+    padding-block: 0.25rem;
   }
 }
 
@@ -77,6 +84,10 @@
 
 .user-menu {
   margin-left: auto;
+
+  @media (max-width: 959.98px) {
+    margin-left: 0;
+  }
 }
 
 .nav-trigger {
@@ -96,20 +107,58 @@
   flex: 0 1 auto;
   min-width: 0;
 
+  // O campo, e não o conjunto campo + botão, ocupa o centro da página.
+  @media (min-width: 1100px) {
+    position: absolute;
+    left: calc(50% + 1.375rem);
+    transform: translateX(-50%);
+  }
+
   @media (max-width: 959.98px) {
     order: 4;
     flex: 1 0 100%;
   }
 }
 
+// Ocupa a tela inteira mesmo vazio: o rodapé não aparece antes do conteúdo e depois foge (#260).
 .content {
   flex: 1;
+  box-sizing: border-box;
+  min-height: 100dvh;
   width: min(1500px, 100% - 2rem);
   margin: 0 auto;
   padding: 2rem 0;
 
   &:focus {
     outline: none;
+  }
+}
+
+// Sem Material nem overlay: o aviso precisa funcionar quando os outros arquivos não chegam.
+.navigation-failure {
+  position: fixed;
+  inset: auto 1rem 1rem;
+  z-index: 1001;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+
+  button {
+    min-height: 2.75rem;
+    padding-inline: 1rem;
+    border: 1px solid currentColor;
+    border-radius: var(--mat-sys-corner-full);
+    background: transparent;
+    color: inherit;
+    font: var(--mat-sys-label-large);
+    cursor: pointer;
   }
 }
 

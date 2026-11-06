@@ -62,6 +62,78 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
+// Botões principais com 44 px no celular (#264).
+@media (max-width: 599.98px) {
+  html {
+    --mat-button-filled-container-height: 2.75rem;
+    --mat-button-outlined-container-height: 2.75rem;
+    --mat-button-protected-container-height: 2.75rem;
+    --mat-button-text-container-height: 2.75rem;
+  }
+}
+
+// Os avisos do Material ficam abaixo do cabeçalho e usam as cores do tema em todas as telas.
+.cdk-overlay-pane:has(.mat-mdc-snack-bar-container) {
+  // A faixa vazia criada pelo deslocamento do aviso não pode interceptar o cabeçalho.
+  pointer-events: none;
+}
+
+.cdk-overlay-container .mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-color: var(--mat-sys-secondary-container);
+  --mdc-snackbar-supporting-text-color: var(--mat-sys-on-secondary-container);
+
+  margin-top: 4.5rem;
+  pointer-events: auto;
+
+  .mdc-snackbar__surface {
+    background-color: var(--mat-sys-secondary-container);
+    border: 1px solid var(--mat-sys-outline-variant);
+    border-radius: var(--mat-sys-corner-medium);
+  }
+
+  .mdc-snackbar__label {
+    color: var(--mat-sys-on-secondary-container);
+  }
+
+  @media (max-width: 959.98px) {
+    margin-top: 11rem;
+  }
+}
+
+// A página pública de privacidade alinha com as telas do painel quando há sessão.
+@media (min-width: 960px) {
+  .content.signed-in > bios-privacy-page {
+    width: calc(100% - 17.5rem);
+    margin-inline-start: 17.5rem;
+  }
+}
+
+// O desktop usa o verde da marca também nas barras da página e das tabelas.
+@media (hover: hover) and (pointer: fine) {
+  html,
+  bios-table-scroll .frame {
+    scrollbar-color: var(--bios-brand-green) var(--mat-sys-surface-container);
+  }
+
+  html::-webkit-scrollbar,
+  bios-table-scroll .frame::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  html::-webkit-scrollbar-track,
+  bios-table-scroll .frame::-webkit-scrollbar-track {
+    background: var(--mat-sys-surface-container);
+  }
+
+  html::-webkit-scrollbar-thumb,
+  bios-table-scroll .frame::-webkit-scrollbar-thumb {
+    border: 2px solid var(--mat-sys-surface-container);
+    border-radius: 6px;
+    background: var(--bios-brand-green);
+  }
+}
+
 // O ODS escolhido quebra a linha em vez de cortar o nome no celular (#198).
 .mat-mdc-select .mat-mdc-select-value,
 .mat-mdc-select .mat-mdc-select-value-text,

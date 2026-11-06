@@ -49,14 +49,18 @@
         class="indices"
         [profile]="profile.value()"
         [sectorAverages]="sectorAverages.hasValue() ? sectorAverages.value() : {}"
+        (evidenceRequested)="evidences.reveal($event)"
       />
       <bios-index-evolution class="section" [cnpj]="profile.value().cnpj" />
       <bios-company-charts class="section" [profile]="profile.value()" />
       <bios-registration-data class="section" [profile]="profile.value()" />
       <bios-environmental-evidences
+        #evidences
         class="environmental"
         [profile]="profile.value()"
-        (refresh)="profile.reload()"
+        [refreshing]="refreshing()"
+        [refreshNotice]="refreshNotice()"
+        (refresh)="refresh()"
       />
     } @else {
       <h1>Empresa</h1>

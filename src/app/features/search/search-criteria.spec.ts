@@ -1,5 +1,6 @@
 import {
   criteriaFromParams,
+  ignoredUf,
   criteriaToParams,
   DEFAULT_PAGE_SIZE,
   hasCriterion,
@@ -14,6 +15,7 @@ const EMPTY: SearchCriteria = {
   name: null,
   uf: null,
   city: null,
+  cityCode: null,
   cnae: null,
   ods: null,
   minScore: null,
@@ -22,6 +24,23 @@ const EMPTY: SearchCriteria = {
   page: 1,
   pageSize: DEFAULT_PAGE_SIZE,
 };
+
+describe('UF da URL', () => {
+  it('UF que não existe fica fora da pesquisa, e a tela sabe qual foi', () => {
+    expect(criteriaFromParams({ uf: 'xx' }).uf).toBeNull();
+    expect(ignoredUf({ uf: 'xx' })).toBe('XX');
+  });
+
+  it('o exterior é uma opção válida', () => {
+    expect(criteriaFromParams({ uf: 'ex' }).uf).toBe('EX');
+    expect(ignoredUf({ uf: 'ex' })).toBeNull();
+  });
+
+  it('UF válida ou ausente não gera aviso', () => {
+    expect(ignoredUf({ uf: 'SP' })).toBeNull();
+    expect(ignoredUf({})).toBeNull();
+  });
+});
 
 describe('critérios da pesquisa', () => {
   it('lê a URL com nomes em português, sem os espaços das bordas', () => {
@@ -42,6 +61,7 @@ describe('critérios da pesquisa', () => {
       name: 'gerdau',
       uf: 'MG',
       city: 'Belo Horizonte',
+      cityCode: null,
       cnae: '2451200',
       ods: 13,
       minScore: -10.5,
@@ -121,6 +141,44 @@ describe('critérios da pesquisa', () => {
       pagina: '2',
       por_pagina: '50',
     });
+  });
+
+  it('guarda o código do município junto do nome', () => {
+    const criteria = criteriaFromParams({
+      uf: 'RJ',
+      municipio: 'Paraty',
+      municipio_ibge: '3303807',
+    });
+
+    expect(criteria).toMatchObject({ city: 'Paraty', cityCode: '3303807' });
+    expect(criteriaToParams(criteria)).toEqual({
+      uf: 'RJ',
+      municipio: 'Paraty',
+      municipio_ibge: '3303807',
+    });
+    expect(toApiQuery(criteria)).toEqual({
+      page: 1,
+      page_size: 20,
+      uf: 'RJ',
+      city_ibge_code: '3303807',
+    });
+  });
+
+  it('link antigo, só com o nome, continua pesquisando pelo nome', () => {
+    expect(toApiQuery(criteriaFromParams({ uf: 'RJ', municipio: 'PARATI' }))).toEqual({
+      page: 1,
+      page_size: 20,
+      uf: 'RJ',
+      city: 'PARATI',
+    });
+  });
+
+  it('código fora do formato vale como não informado', () => {
+    expect(criteriaFromParams({ municipio_ibge: '123' }).cityCode).toBeNull();
+  });
+
+  it('o código sozinho conta como critério', () => {
+    expect(hasCriterion({ ...EMPTY, cityCode: '3303807' })).toBe(true);
   });
 
   it('URL e critérios vão e voltam sem perda', () => {

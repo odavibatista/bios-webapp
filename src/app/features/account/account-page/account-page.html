@@ -65,15 +65,37 @@
               maxlength="9"
               (input)="maskPostalCode()"
             />
-            <mat-hint>8 dígitos</mat-hint>
+            @if (lookingUpCep()) {
+              <mat-spinner matSuffix diameter="20" aria-hidden="true" />
+            }
+            <mat-hint>{{ lookingUpCep() ? 'Buscando o endereço…' : '8 dígitos' }}</mat-hint>
             <mat-error>{{ messageOf(form.controls.address.controls.postal_code) }}</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="street">
             <mat-label>Logradouro</mat-label>
             <input matInput formControlName="street" autocomplete="address-line1" />
+            <mat-hint>Ex.: Rua, Avenida, Travessa</mat-hint>
             <mat-error>{{ messageOf(form.controls.address.controls.street) }}</mat-error>
           </mat-form-field>
+
+          <div class="cep-result" [class.idle]="!cepNotice()">
+            <p class="cep-notice" role="status">{{ cepNotice() }}</p>
+            @if (pendingAddress(); as found) {
+              <p class="cep-found">
+                {{ found.street ?? 'Sem logradouro' }}, {{ found.neighborhood ?? 'sem bairro' }},
+                {{ found.city }} – {{ found.state }}
+              </p>
+              <div class="cep-actions">
+                <button mat-stroked-button type="button" (click)="usePendingAddress()">
+                  Usar este endereço
+                </button>
+                <button mat-button type="button" (click)="keepTypedAddress()">
+                  Manter o que digitei
+                </button>
+              </div>
+            }
+          </div>
 
           <mat-form-field appearance="outline" class="number">
             <mat-label>Número</mat-label>
@@ -83,8 +105,9 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="complement">
-            <mat-label>Complemento (opcional)</mat-label>
+            <mat-label>Complemento</mat-label>
             <input matInput formControlName="complement" autocomplete="address-line2" />
+            <mat-hint>Opcional</mat-hint>
             <mat-error>{{ messageOf(form.controls.address.controls.complement) }}</mat-error>
           </mat-form-field>
 
@@ -94,15 +117,9 @@
             <mat-error>{{ messageOf(form.controls.address.controls.neighborhood) }}</mat-error>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="city">
-            <mat-label>Cidade</mat-label>
-            <input matInput formControlName="city" autocomplete="address-level2" />
-            <mat-error>{{ messageOf(form.controls.address.controls.city) }}</mat-error>
-          </mat-form-field>
-
           <mat-form-field appearance="outline" class="state">
             <mat-label>UF</mat-label>
-            <mat-select formControlName="state">
+            <mat-select formControlName="state" (selectionChange)="clearCity()">
               <mat-option value="">—</mat-option>
               @for (state of states; track state) {
                 <mat-option [value]="state">{{ state }}</mat-option>
@@ -110,6 +127,14 @@
             </mat-select>
             <mat-error>{{ messageOf(form.controls.address.controls.state) }}</mat-error>
           </mat-form-field>
+
+          <bios-city-field
+            class="city"
+            label="Cidade"
+            [ufControl]="form.controls.address.controls.state"
+            [text]="form.controls.address.controls.city"
+            [code]="form.controls.address.controls.city_ibge_code"
+          />
         </fieldset>
 
         <div class="actions">

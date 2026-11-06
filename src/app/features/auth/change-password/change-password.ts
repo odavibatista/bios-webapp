@@ -28,7 +28,7 @@ import { FormErrorSummary } from '../../../shared/states/form-error-summary';
   selector: 'bios-change-password',
   imports: [FormErrorSummary, MatButtonModule, PasswordField, ReactiveFormsModule],
   templateUrl: './change-password.html',
-  styleUrl: '../auth-page.scss',
+  styleUrls: ['../auth-page.scss', './change-password.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ChangePassword {
