@@ -62,6 +62,16 @@ a:focus-visible {
   outline-offset: 2px;
 }
 
+// Botões principais com 44 px no celular (#264).
+@media (max-width: 599.98px) {
+  html {
+    --mat-button-filled-container-height: 2.75rem;
+    --mat-button-outlined-container-height: 2.75rem;
+    --mat-button-protected-container-height: 2.75rem;
+    --mat-button-text-container-height: 2.75rem;
+  }
+}
+
 // Os avisos do Material ficam abaixo do cabeçalho e usam as cores do tema em todas as telas.
 .cdk-overlay-container .mat-mdc-snack-bar-container {
   --mdc-snackbar-container-color: var(--mat-sys-secondary-container);

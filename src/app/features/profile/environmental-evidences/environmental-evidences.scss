@@ -122,3 +122,22 @@ dd {
 a {
   overflow-wrap: anywhere;
 }
+
+.refresh-notice {
+  margin: 0.5rem 0 0;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+
+  &:empty {
+    margin: 0;
+  }
+}
+
+// O link leva à fonte original: é o controle central da evidência rastreável (#264).
+@media (max-width: 599.98px) {
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+}

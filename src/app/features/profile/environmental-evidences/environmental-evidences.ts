@@ -11,6 +11,7 @@ import {
   signal,
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import type {
   CompanyEvidence,
   CompanyFullProfileResponse,
@@ -130,13 +131,15 @@ function emptySourceStatus(source: CompanySourceProvenance): {
 /** Evidências do mesmo retrato do cadastro, sem nova consulta à API. */
 @Component({
   selector: 'bios-environmental-evidences',
-  imports: [MatButtonModule],
+  imports: [MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './environmental-evidences.html',
   styleUrl: './environmental-evidences.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EnvironmentalEvidences {
   readonly profile = input.required<CompanyFullProfileResponse>();
+  readonly refreshing = input(false);
+  readonly refreshNotice = input('');
   readonly refresh = output<void>();
   private readonly document = inject(DOCUMENT);
   private readonly injector = inject(Injector);

@@ -58,7 +58,9 @@
         #evidences
         class="environmental"
         [profile]="profile.value()"
-        (refresh)="profile.reload()"
+        [refreshing]="refreshing()"
+        [refreshNotice]="refreshNotice()"
+        (refresh)="refresh()"
       />
     } @else {
       <h1>Empresa</h1>

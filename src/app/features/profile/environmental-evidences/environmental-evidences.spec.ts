@@ -238,4 +238,16 @@ describe('EnvironmentalEvidences', () => {
     await user.click(screen.getByRole('button', { name: 'Atualizar perfil' }));
     expect(refreshed).toHaveBeenCalledOnce();
   });
+
+  it('durante a atualização, o botão diz o que faz, e o resultado fica na região de status', async () => {
+    const { rerender } = await render(EnvironmentalEvidences, {
+      inputs: { profile: ACO, refreshing: true },
+    });
+
+    expect(screen.getByRole('button', { name: 'Atualizando…' }).ariaDisabled).toBe('true');
+
+    await rerender({ inputs: { profile: ACO, refreshing: false, refreshNotice: 'Pronto.' } });
+
+    expect(screen.getByRole('status').textContent).toBe('Pronto.');
+  });
 });

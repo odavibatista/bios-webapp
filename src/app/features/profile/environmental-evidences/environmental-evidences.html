@@ -7,8 +7,22 @@
         um índice.
       </p>
     </div>
-    <button mat-stroked-button type="button" (click)="refresh.emit()">Atualizar perfil</button>
+    <button
+      mat-stroked-button
+      type="button"
+      disabledInteractive
+      [disabled]="refreshing()"
+      (click)="refresh.emit()"
+    >
+      @if (refreshing()) {
+        <mat-spinner diameter="18" aria-hidden="true" />
+        Atualizando…
+      } @else {
+        Atualizar perfil
+      }
+    </button>
   </div>
+  <p class="refresh-notice" role="status">{{ refreshNotice() }}</p>
 
   @for (section of sections(); track section.category) {
     <section class="category" [attr.aria-labelledby]="'categoria-' + section.category">
