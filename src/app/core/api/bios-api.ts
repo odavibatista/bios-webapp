@@ -106,6 +106,9 @@ export abstract class BiosApi {
   // Localidades (UC05, UC08).
   abstract listStates(input?: ApiInput<Api.ListStatesData>): Promise<Api.ListStatesResponse>;
   abstract listCities(input: ApiInput<Api.ListCitiesData>): Promise<Api.ListCitiesResponse>;
+  abstract lookupPostalCode(
+    input: ApiInput<Api.LookupPostalCodeData>,
+  ): Promise<Api.LookupPostalCodeResponse>;
 
   // ODS e setores (UC07, UC10).
   abstract listOds(input?: ApiInput<Api.ListOdsData>): Promise<Api.ListOdsResponse>;

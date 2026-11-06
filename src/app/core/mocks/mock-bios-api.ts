@@ -11,6 +11,7 @@ import { MOCK_API_CONFIG } from './mock-config';
 import { CompanyArchive, type ArchivedCompany } from './company-archive';
 import { LocationCatalog } from './location-catalog';
 import { LOCATION_FIXTURE } from './location-fixture';
+import { lookupViaCep } from './via-cep';
 import type * as MockData from './mock-data';
 import { MockFiles } from './mock-files';
 import { MockMailbox, type MockEmail } from './mock-mailbox';
@@ -132,6 +133,16 @@ function apiKeyLimitReached(path: string, now: number): ApiError {
     path,
   });
 }
+
+/** Erros da consulta de CEP: código e texto copiados das exceções da API. */
+const CEP_NOT_FOUND = {
+  code: 'POSTAL_CODE_NOT_FOUND',
+  message: 'CEP não encontrado. Confira os dígitos ou preencha o endereço à mão.',
+};
+const CEP_UNAVAILABLE = {
+  code: 'POSTAL_CODE_LOOKUP_UNAVAILABLE',
+  message: 'Não foi possível consultar o CEP agora. Preencha o endereço à mão.',
+};
 
 /**
  * Implementação mockada do contrato (#14), usada na versão de apresentação.
@@ -875,6 +886,40 @@ export class MockBiosApi extends BiosApi {
           total: cities.length,
           total_pages: Math.ceil(cities.length / pageSize),
         },
+      };
+    });
+  }
+
+  lookupPostalCode({ path: { cep } }: ApiInput<Api.LookupPostalCodeData>) {
+    return this.run('lookupPostalCode', async () => {
+      const path = `/locations/postal-codes/${cep}`;
+      this.authenticated(path);
+
+      const digits = cep.replace('-', '');
+      const result = await lookupViaCep(digits);
+
+      if (result.kind !== 'FOUND') {
+        throw new ApiError(result.kind === 'NOT_FOUND' ? 404 : 503, {
+          statusCode: result.kind === 'NOT_FOUND' ? 404 : 503,
+          ...(result.kind === 'NOT_FOUND' ? CEP_NOT_FOUND : CEP_UNAVAILABLE),
+          timestamp: new Date(this.now()).toISOString(),
+          path,
+        });
+      }
+
+      const { address } = result;
+      const city =
+        address.ibgeCode === null
+          ? null
+          : (await this.locationCatalog()).find(address.ibgeCode, address.state);
+
+      return {
+        postal_code: digits,
+        street: address.street,
+        neighborhood: address.neighborhood,
+        city: city?.name ?? address.city,
+        city_ibge_code: city?.code ?? null,
+        state: address.state,
       };
     });
   }
