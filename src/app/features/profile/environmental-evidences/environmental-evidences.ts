@@ -8,6 +8,8 @@ import type {
 import { formatDateTime } from '../../../shared/format/date-time';
 import {
   CATEGORY_LABELS,
+  GHG_NO_INVENTORY_LABEL,
+  ghgWithoutLocatedInventory,
   presentEvidence,
   retryHint,
   SOURCE_LABELS,
@@ -32,14 +34,6 @@ const ORIGIN_LABELS: Record<Origin, string> = {
 
 const GHG_NO_INVENTORY_MESSAGE =
   'Não há inventário localizado para esta empresa no registro voluntário. Isso não confirma ausência de inventário.';
-
-function ghgWithoutLocatedInventory(source: CompanySourceProvenance): boolean {
-  return (
-    source.source_slug === 'GHG_PROTOCOL' &&
-    source.origin === 'UNAVAILABLE' &&
-    source.evidence_state === 'UNKNOWN'
-  );
-}
 
 interface EvidenceSection {
   category: Category;
@@ -101,6 +95,7 @@ function emptySourceStatus(source: CompanySourceProvenance): {
 export class EnvironmentalEvidences {
   readonly profile = input.required<CompanyFullProfileResponse>();
   readonly refresh = output<void>();
+  protected readonly ghgNoInventoryLabel = GHG_NO_INVENTORY_LABEL;
   protected readonly ghgNoInventoryMessage = GHG_NO_INVENTORY_MESSAGE;
 
   protected readonly retry = computed(() =>

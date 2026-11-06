@@ -5,6 +5,17 @@ import type {
 } from '../../../core/api/generated';
 import { formatDateTime } from '../../../shared/format/date-time';
 
+/** O GHG respondeu, só não há inventário: nunca "sem resposta", nem bom ou ruim (IND02). */
+export const GHG_NO_INVENTORY_LABEL = 'Inventário não localizado no registro voluntário';
+
+export function ghgWithoutLocatedInventory(source: CompanySourceProvenance): boolean {
+  return (
+    source.source_slug === 'GHG_PROTOCOL' &&
+    source.origin === 'UNAVAILABLE' &&
+    source.evidence_state === 'UNKNOWN'
+  );
+}
+
 type EvidenceState = CompanyEvidence['state'];
 type EvidenceCategory = EvidenceCategoryGroup['category'];
 

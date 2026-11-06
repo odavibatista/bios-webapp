@@ -33,7 +33,7 @@
                   <h4>{{ evidence.source }}</h4>
                   <span class="state">{{
                     section.ghgNoInventory && evidence.state === 'UNKNOWN'
-                      ? 'Inventário não localizado no registro voluntário'
+                      ? ghgNoInventoryLabel
                       : evidence.stateLabel
                   }}</span>
                 </div>
