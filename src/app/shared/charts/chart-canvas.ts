@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import { BarChart, LineChart, PieChart, TreemapChart } from 'echarts/charts';
 import { GridComponent, LegendComponent, TooltipComponent } from 'echarts/components';
 import * as echarts from 'echarts/core';
+import brazilianPortuguese from 'echarts/lib/i18n/langPT-br.js';
 import { SVGRenderer } from 'echarts/renderers';
 import { NgxEchartsDirective, provideEchartsCore } from 'ngx-echarts';
 import type { ChartSpec, ChartTheme } from './chart-spec';
@@ -18,6 +19,8 @@ echarts.use([
   TooltipComponent,
   SVGRenderer,
 ]);
+// Só o eixo de tempo traz texto do ECharts; o idioma vem com ele, sob demanda (#258).
+echarts.registerLocale('PT-BR', brazilianPortuguese);
 
 /** Cores de reserva, as da apresentação, caso o tema ainda não tenha carregado. */
 const FALLBACK_THEME = { text: '#1a1a1a', grid: '#c4c8bb', surface: '#ffffff' };
@@ -36,7 +39,7 @@ const NARROW = '(max-width: 599.98px)';
       class="chart"
       echarts
       [options]="options()"
-      [initOpts]="{ renderer: 'svg' }"
+      [initOpts]="{ renderer: 'svg', locale: 'PT-BR' }"
       role="img"
       [attr.aria-label]="spec().label"
       [style.height.rem]="spec().height"
