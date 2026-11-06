@@ -17,6 +17,11 @@ test.describe('conteúdo sem saltos ao carregar (#260)', () => {
   for (const path of SCREENS) {
     test(`CLS abaixo de 0,1 em ${path}`, async ({ page }) => {
       await page.addInitScript(MEASURE_SHIFTS);
+      // Fonte atrasada, como num primeiro acesso em rede lenta: a tela não pode depender dela.
+      await page.route('**/*.woff2', async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        await route.continue();
+      });
       await signIn(page, path);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       await page.waitForTimeout(1500);

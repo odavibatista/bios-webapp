@@ -54,8 +54,14 @@
 
   @media (max-width: 959.98px) {
     flex-wrap: wrap;
+    align-content: flex-start;
     gap: 0.25rem 1rem;
     padding-block: 0.25rem;
+
+    // Reserva as duas linhas antes de a busca chegar: o conteúdo não anda quando ela aparece (#260).
+    &.signed-in {
+      min-height: 5.75rem;
+    }
   }
 }
 

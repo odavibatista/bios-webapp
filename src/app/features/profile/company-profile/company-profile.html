@@ -69,4 +69,7 @@
   }
 }
 
-<p class="back"><a [routerLink]="companiesPath">Consultar outro CNPJ</a></p>
+<!-- Só com a tela pronta: durante a consulta, o link apareceria e fugiria para baixo (#260). -->
+@if (problem() || profile.hasValue()) {
+  <p class="back"><a [routerLink]="companiesPath">Consultar outro CNPJ</a></p>
+}
