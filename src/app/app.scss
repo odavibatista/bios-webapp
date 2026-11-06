@@ -110,8 +110,11 @@
   }
 }
 
+// Ocupa a tela inteira mesmo vazio: o rodapé não aparece antes do conteúdo e depois foge (#260).
 .content {
   flex: 1;
+  box-sizing: border-box;
+  min-height: 100dvh;
   width: min(1500px, 100% - 2rem);
   margin: 0 auto;
   padding: 2rem 0;

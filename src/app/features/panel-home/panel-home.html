@@ -1,9 +1,9 @@
 <h1>{{ greeting() }}</h1>
 
-@if (summary.hasValue()) {
+@if (summary.status() !== 'error') {
   <section class="summary" aria-labelledby="titulo-resumo">
     <h2 id="titulo-resumo">A base em números</h2>
-    <bios-overview-totals [analytics]="summary.value()" />
+    <bios-overview-totals [analytics]="summary.hasValue() ? summary.value() : null" />
     <p>
       <a routerLink="/pesquisa" [queryParams]="{ visao: 'panorama' }">Ver o panorama completo</a>
     </p>
