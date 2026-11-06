@@ -14,6 +14,7 @@ const EMPTY: SearchCriteria = {
   name: null,
   uf: null,
   city: null,
+  cityCode: null,
   cnae: null,
   ods: null,
   minScore: null,
@@ -42,6 +43,7 @@ describe('critérios da pesquisa', () => {
       name: 'gerdau',
       uf: 'MG',
       city: 'Belo Horizonte',
+      cityCode: null,
       cnae: '2451200',
       ods: 13,
       minScore: -10.5,
@@ -121,6 +123,44 @@ describe('critérios da pesquisa', () => {
       pagina: '2',
       por_pagina: '50',
     });
+  });
+
+  it('guarda o código do município junto do nome', () => {
+    const criteria = criteriaFromParams({
+      uf: 'RJ',
+      municipio: 'Paraty',
+      municipio_ibge: '3303807',
+    });
+
+    expect(criteria).toMatchObject({ city: 'Paraty', cityCode: '3303807' });
+    expect(criteriaToParams(criteria)).toEqual({
+      uf: 'RJ',
+      municipio: 'Paraty',
+      municipio_ibge: '3303807',
+    });
+    expect(toApiQuery(criteria)).toEqual({
+      page: 1,
+      page_size: 20,
+      uf: 'RJ',
+      city_ibge_code: '3303807',
+    });
+  });
+
+  it('link antigo, só com o nome, continua pesquisando pelo nome', () => {
+    expect(toApiQuery(criteriaFromParams({ uf: 'RJ', municipio: 'PARATI' }))).toEqual({
+      page: 1,
+      page_size: 20,
+      uf: 'RJ',
+      city: 'PARATI',
+    });
+  });
+
+  it('código fora do formato vale como não informado', () => {
+    expect(criteriaFromParams({ municipio_ibge: '123' }).cityCode).toBeNull();
+  });
+
+  it('o código sozinho conta como critério', () => {
+    expect(hasCriterion({ ...EMPTY, cityCode: '3303807' })).toBe(true);
   });
 
   it('URL e critérios vão e voltam sem perda', () => {

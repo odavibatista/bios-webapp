@@ -450,6 +450,79 @@ describe('MockBiosApi', () => {
     });
   });
 
+  describe('consulta de CEP (RF39)', () => {
+    const VIACEP = {
+      logradouro: 'Avenida Paulista',
+      bairro: 'Bela Vista',
+      localidade: 'Sao Paulo',
+      uf: 'SP',
+      ibge: '3550308',
+    };
+    const answer = (body: unknown, status = 200) =>
+      vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValue(new Response(JSON.stringify(body), { status }));
+
+    it('exige sessão e não chama o ViaCEP sem ela', async () => {
+      const fetchSpy = answer(VIACEP);
+
+      await expectError(
+        api.lookupPostalCode({ path: { cep: '01310200' } }),
+        401,
+        'NOT_AUTHENTICATED',
+      );
+      expect(fetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('confere a cidade no catálogo e devolve o nome oficial com o código', async () => {
+      await signIn();
+      answer(VIACEP);
+
+      await expect(api.lookupPostalCode({ path: { cep: '01310-200' } })).resolves.toEqual({
+        postal_code: '01310200',
+        street: 'Avenida Paulista',
+        neighborhood: 'Bela Vista',
+        city: 'São Paulo',
+        city_ibge_code: '3550308',
+        state: 'SP',
+      });
+    });
+
+    it('cidade fora do catálogo volta como veio, sem código', async () => {
+      await signIn();
+      answer({ ...VIACEP, localidade: 'Cidade Nova', ibge: '9999999' });
+
+      await expect(api.lookupPostalCode({ path: { cep: '01310200' } })).resolves.toMatchObject({
+        city: 'Cidade Nova',
+        city_ibge_code: null,
+      });
+    });
+
+    it('CEP inexistente responde 404, com a mensagem da API', async () => {
+      await signIn();
+      answer({ erro: 'true' });
+
+      const error = await expectError(
+        api.lookupPostalCode({ path: { cep: '00000000' } }),
+        404,
+        'POSTAL_CODE_NOT_FOUND',
+      );
+
+      expect(error.message).toContain('CEP não encontrado.');
+    });
+
+    it('serviço fora do ar responde 503', async () => {
+      await signIn();
+      vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('fora do ar'));
+
+      await expectError(
+        api.lookupPostalCode({ path: { cep: '01310200' } }),
+        503,
+        'POSTAL_CODE_LOOKUP_UNAVAILABLE',
+      );
+    });
+  });
+
   describe('chaves de API (UC11)', () => {
     beforeEach(async () => {
       await signIn();

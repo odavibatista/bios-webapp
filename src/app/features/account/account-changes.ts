@@ -24,8 +24,9 @@ export function accountFormValue(account: AccountResponse): AccountFormValue {
       number: address?.number ?? '',
       complement: address?.complement ?? '',
       neighborhood: address?.neighborhood ?? '',
-      city: address?.city ?? '',
       state: address?.state ?? '',
+      city: address?.city ?? '',
+      city_ibge_code: address?.city_ibge_code ?? '',
     },
   };
 }
@@ -35,6 +36,7 @@ function addressFrom(value: AddressValue): Address | null {
   if (isBlankAddress(value)) return null;
 
   const complement = value.complement.trim();
+  const cityCode = value.city_ibge_code.trim();
 
   return {
     postal_code: postalCodeDigits(value.postal_code),
@@ -43,6 +45,7 @@ function addressFrom(value: AddressValue): Address | null {
     ...(complement ? { complement } : {}),
     neighborhood: value.neighborhood.trim(),
     city: value.city.trim(),
+    ...(cityCode ? { city_ibge_code: cityCode } : {}),
     state: value.state as Address['state'],
   };
 }
@@ -56,6 +59,7 @@ function sameAddress(a: Address, b: Address | null): boolean {
     (a.complement ?? '') === (b.complement ?? '') &&
     a.neighborhood === b.neighborhood &&
     a.city === b.city &&
+    (a.city_ibge_code ?? '') === (b.city_ibge_code ?? '') &&
     a.state === b.state
   );
 }

@@ -8,6 +8,7 @@ import type {
   SectorEvolution,
 } from '../api/generated';
 import type { CompanyFacts } from './company-analytics';
+import type { LocationRows } from './location-catalog';
 
 /** Índice e confiança de uma empresa num ODS, como a pesquisa os mostra. */
 export interface CompanyEntryScore {
@@ -55,4 +56,6 @@ export abstract class CompanyArchive {
   abstract facts(): Promise<ReadonlyMap<string, CompanyFacts>>;
   /** O panorama da base inteira, pronto, sem baixar o índice da pesquisa. */
   abstract baseAnalytics(): Promise<CompanyAnalytics>;
+  /** UFs e municípios do IBGE: arquivo próprio, baixado quando o seletor é usado. */
+  abstract locations(): Promise<LocationRows>;
 }

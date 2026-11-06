@@ -103,9 +103,11 @@ test.describe('conta (#23)', () => {
     await expect(page.getByLabel('CEP')).toHaveValue('20040-020');
     await page.getByLabel('Número').fill('1');
     await page.getByLabel('Bairro').fill('Centro');
-    await page.getByLabel('Cidade').fill('Rio de Janeiro');
+    await expect(page.getByLabel('Cidade')).toBeDisabled();
     await page.getByLabel('UF').click();
     await page.getByRole('option', { name: 'RJ', exact: true }).click();
+    await page.getByLabel('Cidade').fill('rio');
+    await page.getByRole('option', { name: 'Rio de Janeiro' }).click();
     await save.click();
 
     await expect(page.getByRole('status').filter({ hasText: 'Dados salvos.' })).toBeVisible();
