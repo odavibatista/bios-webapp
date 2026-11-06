@@ -1,7 +1,6 @@
 import { BreakpointObserver } from '@angular/cdk/layout';
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatSidenavModule } from '@angular/material/sidenav';
@@ -10,17 +9,16 @@ import { map } from 'rxjs';
 import { SessionStore } from '../../core/session/session-store';
 import { navItemsFor } from '../panel-nav';
 
-/** Abaixo desta largura, o menu vira gaveta (NFIN02). */
+/** Abaixo desta largura, as áreas do painel ficam só no menu do cabeçalho (NFIN02). */
 export const NARROW_LAYOUT = '(max-width: 959.98px)';
 
 /**
  * Casca do painel autenticado (#18): menu das áreas que o papel permite, fixo ao lado em telas
- * largas e em gaveta nas estreitas, e as páginas do painel ao lado dele.
+ * largas, e as páginas do painel ao lado dele. Nas estreitas, o menu é o do cabeçalho (#249).
  */
 @Component({
   selector: 'bios-panel-layout',
   imports: [
-    MatButtonModule,
     MatIconModule,
     MatListModule,
     MatSidenavModule,
@@ -42,14 +40,4 @@ export class PanelLayout {
       .pipe(map((state) => state.matches)),
     { initialValue: false },
   );
-  protected readonly drawerOpen = signal(false);
-
-  protected toggleDrawer(): void {
-    this.drawerOpen.update((open) => !open);
-  }
-
-  /** Na gaveta, escolher um item fecha o menu e mostra a página. */
-  protected closeDrawer(): void {
-    this.drawerOpen.set(false);
-  }
 }

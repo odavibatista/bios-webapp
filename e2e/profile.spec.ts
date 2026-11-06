@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
+import { openPanelArea } from './support/panel-menu';
 import { expect, test } from './support/test';
 
 /** Entra com a conta de demonstração e chega ao painel. */
@@ -108,16 +109,10 @@ test.describe('perfil da empresa (#24)', () => {
     await expect(page.getByRole('button', { name: 'Tentar de novo' })).toHaveCount(0);
   });
 
-  test('o menu "Empresas" leva à consulta, que abre o perfil', async ({ page }, testInfo) => {
+  test('o menu "Empresas" leva à consulta, que abre o perfil', async ({ page }) => {
     await signIn(page);
 
-    if (testInfo.project.name === 'celular') {
-      await page.getByRole('button', { name: 'Menu do painel' }).click();
-    }
-    await page
-      .getByRole('navigation', { name: 'Áreas do painel' })
-      .getByRole('link', { name: /Empresas/ })
-      .click();
+    await openPanelArea(page, /Empresas/);
 
     await expect(page).toHaveURL('/empresas');
     await expect(page).toHaveTitle('Empresas — BIOS');
