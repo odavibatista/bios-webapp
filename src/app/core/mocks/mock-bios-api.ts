@@ -746,6 +746,45 @@ export class MockBiosApi extends BiosApi {
     });
   }
 
+  getCompanyIndexEvolution({ path: params }: ApiInput<Api.GetCompanyIndexEvolutionData>) {
+    return this.run('getCompanyIndexEvolution', async () => {
+      const path = `/companies/${params.cnpj}/index-evolution`;
+      this.authenticated(path);
+
+      if (this.archive) return (await this.archivedCompany(params.cnpj, path)).evolution;
+
+      return this.d.companyEvolution(params.cnpj, this.now());
+    });
+  }
+
+  getCompanyAnalytics(input?: ApiInput<Api.GetCompanyAnalyticsData>) {
+    return this.run('getCompanyAnalytics', async () => {
+      const path = this.d.pathWithQuery('/companies/analytics', input?.query);
+      this.authenticated(path);
+      const error = this.d.searchCriteriaError(input?.query, path, this.now(), {
+        criterionRequired: false,
+      });
+
+      if (error) throw error;
+
+      if (!this.archive) return this.d.capturedAnalytics(input?.query);
+
+      const criteria = Object.values(input?.query ?? {}).some(
+        (value) => value !== undefined && value !== '',
+      );
+
+      if (!criteria) return this.archive.baseAnalytics();
+
+      const [entries, facts, sectors] = await Promise.all([
+        this.archive.entries(),
+        this.archive.facts(),
+        this.archive.sectors(),
+      ]);
+
+      return this.d.analyticsOf(this.d.matchEntries(entries, input?.query), facts, sectors);
+    });
+  }
+
   searchCompanies(input?: ApiInput<Api.SearchCompaniesData>) {
     return this.run('searchCompanies', async () => {
       const path = this.d.pathWithQuery('/companies', input?.query);

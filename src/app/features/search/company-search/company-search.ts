@@ -9,6 +9,7 @@ import {
   ElementRef,
   inject,
   Injector,
+  linkedSignal,
   resource,
   signal,
   untracked,
@@ -19,10 +20,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { ActivatedRoute, Router } from '@angular/router';
+import { MatTabsModule } from '@angular/material/tabs';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { map } from 'rxjs';
 import { isApiError } from '../../../core/api/api-error';
 import { BiosApi } from '../../../core/api/bios-api';
+import type { CompanyAnalytics } from '../../../core/api/generated';
 import { describeError } from '../../../shared/errors/describe-error';
 import { fieldMessage } from '../../../shared/forms/account-rules';
 import { AsyncState } from '../../../shared/states/async-state';
@@ -35,8 +38,10 @@ import {
   criteriaToParams,
   hasCriterion,
   PAGE_SIZE_OPTIONS,
+  sameQuery,
   type SearchCriteria,
   type SearchOrder,
+  toAnalyticsQuery,
   toApiQuery,
   toExportQuery,
 } from '../search-criteria';
@@ -48,6 +53,8 @@ import {
   nameRule,
   ufRule,
 } from '../search-rules';
+import { DataOverview } from '../../overview/data-overview/data-overview';
+import { OverviewTotals } from '../../overview/overview-totals/overview-totals';
 import { SearchResults } from '../search-results/search-results';
 import { downloadFile } from '../download-file';
 
@@ -57,6 +64,8 @@ export const CARDS_LAYOUT = '(max-width: 719.98px)';
 /** Sem nenhum critério, a pesquisa devolveria a base inteira (UC08, regra 3). */
 export const NO_CRITERION_MESSAGE =
   'Informe ao menos um critério para pesquisar: nome, UF, município, CNAE ou ODS.';
+
+type SearchView = 'panorama' | 'resultados';
 
 /** O formulário usa os nomes da API, para os erros de campo dela caírem no lugar certo. */
 type CriteriaForm = FormGroup<{
@@ -92,14 +101,18 @@ function blank(value: string): string | null {
   selector: 'bios-company-search',
   imports: [
     AsyncState,
+    DataOverview,
     ErrorState,
     FormErrorSummary,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    MatTabsModule,
     NgTemplateOutlet,
+    OverviewTotals,
     ReactiveFormsModule,
+    RouterLink,
     SearchResults,
   ],
   templateUrl: './company-search.html',
@@ -123,13 +136,49 @@ export class CompanySearch {
   );
   protected readonly searched = computed(() => hasCriterion(this.criteria()));
 
+  /** Aba escolhida na URL (`?visao=`). Sem escolha, quem pesquisou vê a lista; os demais, a base. */
+  private readonly chosenView = toSignal(
+    this.route.queryParams.pipe(map((params) => params['visao'] as unknown)),
+    { initialValue: this.route.snapshot.queryParams['visao'] as unknown },
+  );
+  protected readonly view = computed<SearchView>(() => {
+    const chosen = this.chosenView();
+
+    if (chosen === 'panorama' || chosen === 'resultados') return chosen;
+
+    return this.searched() ? 'resultados' : 'panorama';
+  });
+
   /** Os ODS que o BIOS calcula, para o seletor (UC08, regra 8). */
   protected readonly odsList = resource({ loader: () => this.api.listOds() });
 
+  private readonly searchQuery = computed(() => toApiQuery(this.criteria()), { equal: sameQuery });
+  private readonly analyticsQuery = computed(() => toAnalyticsQuery(this.criteria()), {
+    equal: sameQuery,
+  });
+
   protected readonly results = resource({
-    params: () => (this.searched() ? toApiQuery(this.criteria()) : undefined),
+    params: () => (this.searched() ? this.searchQuery() : undefined),
     loader: ({ params: query }) => this.api.searchCompanies({ query }),
   });
+
+  /** Totais e gráficos do recorte, à parte da lista: um não espera pelo outro (UC19). */
+  protected readonly analytics = resource({
+    params: () => this.analyticsQuery(),
+    loader: ({ params: query }) => this.api.getCompanyAnalytics({ query }),
+  });
+
+  /** O último panorama fica na tela enquanto o novo não chega; depois de um erro, nada fica. */
+  protected readonly overview = linkedSignal<CompanyAnalytics | undefined, CompanyAnalytics | null>(
+    {
+      source: () => (this.analytics.hasValue() ? this.analytics.value() : undefined),
+      computation: (next, previous) => {
+        if (next) return next;
+
+        return this.analytics.error() ? null : (previous?.value ?? null);
+      },
+    },
+  );
 
   protected readonly form: CriteriaForm = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: [nameRule] }),
@@ -311,9 +360,11 @@ export class CompanySearch {
   }
 
   private go(criteria: SearchCriteria): Promise<boolean> {
+    const view = this.chosenView();
+
     return this.router.navigate([], {
       relativeTo: this.route,
-      queryParams: criteriaToParams(criteria),
+      queryParams: { ...criteriaToParams(criteria), ...(view ? { visao: view } : {}) },
     });
   }
 

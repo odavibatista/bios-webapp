@@ -727,6 +727,122 @@ export type CompanySearchOdsScore = {
 };
 
 /**
+ * Totais e distribuições do conjunto de empresas
+ */
+export type CompanyAnalytics = {
+    /**
+     * Empresas no conjunto
+     */
+    companies: number;
+    /**
+     * Abaixo disso, médias e faixas ficam omitidas
+     */
+    minimum_sample: number;
+    totals: {
+        confirmed_evidences: number;
+        fine_notices: number;
+        /**
+         * Valor lançado nos autos, e não o valor pago
+         */
+        fine_amount: number;
+        area_hectares: number;
+    };
+    registration: {
+        /**
+         * Categorias da maior para a menor, com as pequenas em "Outros"
+         */
+        status: Array<AnalyticsDistributionItem>;
+        /**
+         * Categorias da maior para a menor, com as pequenas em "Outros"
+         */
+        size: Array<AnalyticsDistributionItem>;
+        /**
+         * Categorias da maior para a menor, com as pequenas em "Outros"
+         */
+        legal_nature: Array<AnalyticsDistributionItem>;
+        /**
+         * Categorias da maior para a menor, com as pequenas em "Outros"
+         */
+        uf: Array<AnalyticsDistributionItem>;
+        /**
+         * Categorias da maior para a menor, com as pequenas em "Outros"
+         */
+        sector: Array<AnalyticsDistributionItem>;
+    };
+    evidence: {
+        /**
+         * Categorias da maior para a menor, com as pequenas em "Outros"
+         */
+        biome: Array<AnalyticsDistributionItem>;
+        /**
+         * Categorias da maior para a menor, com as pequenas em "Outros"
+         */
+        infraction_type: Array<AnalyticsDistributionItem>;
+        /**
+         * Categorias da maior para a menor, com as pequenas em "Outros"
+         */
+        sanction: Array<AnalyticsDistributionItem>;
+        /**
+         * Anos com evidência, em ordem; ano sem evidência não vem
+         */
+        year: Array<{
+            year: number;
+            count: number;
+        }>;
+    };
+    ods: Array<OdsAnalytics>;
+};
+
+export type AnalyticsDistributionItem = {
+    /**
+     * Código ou valor da categoria
+     */
+    key: string;
+    /**
+     * Texto da categoria
+     */
+    label: string;
+    count: number;
+};
+
+export type OdsAnalytics = {
+    ods_number: number;
+    /**
+     * Empresas avaliadas
+     */
+    companies: number;
+    companies_with_index: number;
+    /**
+     * Média do índice; omitida abaixo da amostra mínima
+     */
+    average_score: number | null;
+    /**
+     * Média da confiança, sempre separada do índice
+     */
+    average_confidence: number | null;
+    /**
+     * Faixas de índice; vazias abaixo da amostra mínima
+     */
+    score_ranges: Array<AnalyticsRange>;
+    /**
+     * Faixas de confiança; vazias abaixo da amostra mínima
+     */
+    confidence_ranges: Array<AnalyticsRange>;
+};
+
+export type AnalyticsRange = {
+    /**
+     * Início da faixa, inclusive
+     */
+    from: number;
+    /**
+     * Fim da faixa
+     */
+    to: number;
+    count: number;
+};
+
+/**
  * Página de empresas com movimentação recente
  */
 export type CompanyMovementsResponse = {
@@ -861,6 +977,57 @@ export type CompanyEvidence = {
  */
 export type JsonValue = string | number | boolean | null | Array<JsonValue> | {
     [key: string]: JsonValue;
+};
+
+/**
+ * Evolução do índice da empresa, por ODS
+ */
+export type CompanyIndexEvolution = {
+    cnpj: string;
+    /**
+     * A série é reconstruída com as regras vigentes, a partir das evidências atuais
+     */
+    reconstructed: true;
+    ods: Array<OdsIndexEvolution>;
+};
+
+export type OdsIndexEvolution = {
+    ods_number: number;
+    /**
+     * Por que a evolução aparece ou não
+     */
+    status: 'AVAILABLE' | 'INDIVIDUAL_ENTREPRENEUR' | 'LEGAL_NATURE_PENDING' | 'SHORT_HISTORY' | 'NO_DATED_EVIDENCE' | 'NOT_REPRODUCIBLE';
+    /**
+     * Degraus em ordem cronológica; vazio fora de AVAILABLE
+     */
+    steps: Array<IndexEvolutionStep>;
+};
+
+export type IndexEvolutionStep = {
+    /**
+     * Fim do dia em que o índice passou a valer
+     */
+    date: string;
+    score_value: number;
+    cause: 'EVIDENCE_ADDED' | 'EVIDENCE_REMOVED' | 'WEIGHT_CHANGED';
+    evidence: IndexEvolutionEvidence;
+    /**
+     * Quantas evidências mudaram o índice nessa data
+     */
+    evidence_count: number;
+};
+
+/**
+ * A evidência que causou o degrau
+ */
+export type IndexEvolutionEvidence = {
+    id: string;
+    category: 'INFRACAO_AMBIENTAL' | 'CONDUTA_ADMINISTRATIVA' | 'EMISSAO_GEE';
+    source_slug: string;
+    source: string;
+    summary: string | null;
+    source_reference: string | null;
+    source_url: string | null;
 };
 
 /**
@@ -2252,6 +2419,72 @@ export type ExportCompaniesXlsxResponses = {
 
 export type ExportCompaniesXlsxResponse = ExportCompaniesXlsxResponses[keyof ExportCompaniesXlsxResponses];
 
+export type GetCompanyAnalyticsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Razão social ou nome fantasia, inteiro ou em parte; acentos e caixa são ignorados. Exige ao menos uma palavra com 3 letras ou mais
+         */
+        name?: string;
+        /**
+         * Sigla da unidade da federação (ex.: SP)
+         */
+        uf?: string;
+        /**
+         * Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado
+         */
+        city?: string;
+        /**
+         * Código CNAE de 2 a 7 dígitos (divisão, grupo, classe ou subclasse), pontuação opcional. Casa o CNAE principal ou algum secundário
+         */
+        cnae?: string;
+        /**
+         * Número do ODS selecionado; devolve o índice e a confiança dele em cada empresa
+         */
+        ods?: number;
+        /**
+         * Índice mínimo no ODS selecionado (de -100 a 100); exige `ods`
+         */
+        min_score?: number;
+        /**
+         * Confiança mínima no ODS selecionado (de 0 a 1); exige `ods`
+         */
+        min_confidence?: number;
+        /**
+         * Ordena pelo índice do ODS selecionado, do menor para o maior (`asc`) ou do maior para o menor (`desc`); exige `ods`. Empresa sem índice calculado vem sempre ao fim, nos dois sentidos
+         */
+        order?: string;
+    };
+    url: '/companies/analytics';
+};
+
+export type GetCompanyAnalyticsErrors = {
+    /**
+     * UNAUTHORIZED
+     */
+    401: ErrorResponse;
+    /**
+     * UNPROCESSABLE_ENTITY
+     */
+    422: ErrorResponse;
+    /**
+     * TOO_MANY_REQUESTS
+     */
+    429: ErrorResponse;
+};
+
+export type GetCompanyAnalyticsError = GetCompanyAnalyticsErrors[keyof GetCompanyAnalyticsErrors];
+
+export type GetCompanyAnalyticsResponses = {
+    /**
+     * Panorama do conjunto de empresas
+     */
+    200: CompanyAnalytics;
+};
+
+export type GetCompanyAnalyticsResponse = GetCompanyAnalyticsResponses[keyof GetCompanyAnalyticsResponses];
+
 export type ListCompanyMovementsData = {
     body?: never;
     path?: never;
@@ -2347,6 +2580,48 @@ export type GetCompanyEvidencesResponses = {
 };
 
 export type GetCompanyEvidencesResponse = GetCompanyEvidencesResponses[keyof GetCompanyEvidencesResponses];
+
+export type GetCompanyIndexEvolutionData = {
+    body?: never;
+    path: {
+        /**
+         * CNPJ válido da empresa
+         */
+        cnpj: string;
+    };
+    query?: never;
+    url: '/companies/{cnpj}/index-evolution';
+};
+
+export type GetCompanyIndexEvolutionErrors = {
+    /**
+     * UNAUTHORIZED
+     */
+    401: ErrorResponse;
+    /**
+     * NOT_FOUND
+     */
+    404: ErrorResponse;
+    /**
+     * UNPROCESSABLE_ENTITY
+     */
+    422: ErrorResponse;
+    /**
+     * TOO_MANY_REQUESTS
+     */
+    429: ErrorResponse;
+};
+
+export type GetCompanyIndexEvolutionError = GetCompanyIndexEvolutionErrors[keyof GetCompanyIndexEvolutionErrors];
+
+export type GetCompanyIndexEvolutionResponses = {
+    /**
+     * Evolução do índice, por ODS
+     */
+    200: CompanyIndexEvolution;
+};
+
+export type GetCompanyIndexEvolutionResponse = GetCompanyIndexEvolutionResponses[keyof GetCompanyIndexEvolutionResponses];
 
 export type GetCompanyProfileData = {
     body?: never;

@@ -1,5 +1,9 @@
 import type { Params } from '@angular/router';
-import type { ExportCompaniesXlsxData, SearchCompaniesData } from '../../core/api/generated';
+import type {
+  ExportCompaniesXlsxData,
+  GetCompanyAnalyticsData,
+  SearchCompaniesData,
+} from '../../core/api/generated';
 
 /** Siglas das 27 unidades da federação, na ordem da API (UC08, regra 4). */
 export const BRAZILIAN_UFS = [
@@ -175,6 +179,19 @@ export function toApiQuery(criteria: SearchCriteria): NonNullable<SearchCompanie
 
   return query;
 }
+
+/** Os mesmos filtros da lista: página e ordem não mudam os totais do recorte (UC19). */
+export function toAnalyticsQuery(
+  criteria: SearchCriteria,
+): NonNullable<GetCompanyAnalyticsData['query']> {
+  const query = { ...toExportQuery(criteria) };
+  delete query.order;
+  return query;
+}
+
+/** Duas consultas iguais não refazem a requisição: mudar de aba também muda a URL. */
+export const sameQuery = (first: object, second: object): boolean =>
+  JSON.stringify(first) === JSON.stringify(second);
 
 /** A exportação usa os mesmos filtros e ordem, sem paginação (UC09, regra 4). */
 export function toExportQuery(

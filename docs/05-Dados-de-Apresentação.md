@@ -9,7 +9,7 @@
 As respostas vêm de uma API local com empresas reais, capturadas por `scripts/capture-api.mjs`, e não
 de dados inventados: a demonstração mostra o comportamento verdadeiro da API, inclusive os erros.
 
-A versão publicada lê `public/presentation/v4`, com respostas da API real para 110.372 empresas,
+A versão publicada lê `public/presentation/v5`, com respostas da API real para 110.372 empresas,
 580.166 evidências e 86 setores, geradas por `scripts/build-presentation-data.mjs`. O cadastro veio
 do dump oficial da Receita e as sanções, dos arquivos oficiais da CGU, processados pela API real.
 A natureza jurídica vem do arquivo `Empresas` da Receita, em `legal-nature.json` no dump. Um cadastro retirado a pedido do titular entra em `removed-cnpjs.json`, também no dump, e fica fora de uma nova versão da base. Essa lista nunca vai ao repositório. Os testes e2e continuam usando as capturas de fixtures. A evolução setorial traz 24 meses:
@@ -19,8 +19,13 @@ o índice atual de todas as empresas, e a geração falha se não bater. A tela 
 reconstruída. A lista da tela principal
 (`movements.json.gz`) traz as 5.000 empresas de movimentação mais recente e todas as empresas com
 movimentação de emissões, reconstruídas pela regra da API (UC15, regra 8), com a data do fato
-registrado. O gerador roda com
-`node --experimental-strip-types`, porque reaproveita essa regra do código do app.
+registrado. O arquivo de cada empresa traz também a evolução do índice (UC07, RF36), calculada com as
+regras do próprio bios-core-api: a geração falha se um último degrau não reproduzir o índice atual.
+`analytics.json.gz` guarda só os fatos de cada empresa para o panorama (UC19, RF37), sem nome nem
+CNPJ, na ordem do índice da pesquisa, e `analytics-base.json.gz`, o panorama da base inteira, para a
+tela principal abrir sem baixar o índice. O gerador roda com
+`node --experimental-strip-types`, porque reaproveita essas regras do código do app, e recebe o dump
+e a pasta do bios-core-api.
 
 - **Uma captura por arquivo:** `src/app/core/mocks/fixtures/<operationId>/<cenário>.ts`, com
   `satisfies CapturedResponse<...>` sobre o tipo gerado da operação e do status. Se a API mudar a forma

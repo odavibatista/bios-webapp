@@ -3,7 +3,9 @@ import {
   criteriaToParams,
   DEFAULT_PAGE_SIZE,
   hasCriterion,
+  sameQuery,
   type SearchCriteria,
+  toAnalyticsQuery,
   toApiQuery,
   toExportQuery,
 } from './search-criteria';
@@ -180,5 +182,26 @@ describe('critérios da pesquisa', () => {
         pageSize: 5,
       }),
     ).toEqual({ cnae: '24', ods: 13, min_score: -20, order: 'desc' });
+  });
+});
+
+describe('toAnalyticsQuery', () => {
+  const criteria = {
+    ...criteriaFromParams({}),
+    uf: 'SP',
+    ods: 15,
+    order: 'desc',
+    page: 3,
+  } as const;
+
+  it('mantém os filtros e deixa de fora página e ordem, que não mudam os totais', () => {
+    expect(toAnalyticsQuery(criteria)).toEqual({ uf: 'SP', ods: 15 });
+  });
+
+  it('consultas com o mesmo conteúdo são a mesma consulta', () => {
+    expect(sameQuery(toAnalyticsQuery(criteria), toAnalyticsQuery({ ...criteria, page: 9 }))).toBe(
+      true,
+    );
+    expect(sameQuery({ uf: 'SP' }, { uf: 'MG' })).toBe(false);
   });
 });
