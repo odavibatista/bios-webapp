@@ -31,6 +31,10 @@ and the bios-core-api folder.
 is downloaded when the field is used. It comes from the bios-core-api catalog:
 `node scripts/build-locations-data.mjs <bios-core-api>`.
 
+The postal code lookup (RF39) is the only call that leaves the site: with no API, the browser talks directly to
+ViaCEP, sending only the postal code. The footer and the privacy page say so, and the `postal-code.spec.ts` e2e
+checks that it is the only destination.
+
 - **One capture per file:** `src/app/core/mocks/fixtures/<operationId>/<scenario>.ts`, with
   `satisfies CapturedResponse<...>` over the generated type of the operation and status. If the API
   changes the shape of a response, `typecheck` rejects the old capture. The XLSX spreadsheet sits next
