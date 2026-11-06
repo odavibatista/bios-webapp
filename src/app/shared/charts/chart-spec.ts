@@ -25,6 +25,8 @@ export interface ChartSpec {
   label: string;
   /** Altura em rem, com os eixos e a legenda do gráfico dentro dela. */
   height: number;
+  /** Altura em tela estreita, onde os nomes longos quebram em mais linhas. */
+  narrowHeight?: number;
   options: (theme: ChartTheme) => Record<string, unknown>;
   /** Legenda fora do desenho, para nomes longos quebrarem a linha em vez de serem cortados. */
   legend?: readonly ChartLegendEntry[];

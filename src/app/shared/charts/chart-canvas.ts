@@ -42,7 +42,7 @@ const NARROW = '(max-width: 599.98px)';
       [initOpts]="{ renderer: 'svg', locale: 'PT-BR' }"
       role="img"
       [attr.aria-label]="spec().label"
-      [style.height.rem]="spec().height"
+      [style.height.rem]="height()"
     ></div>
     @if (spec().legend; as legend) {
       <ul class="legend">
@@ -100,6 +100,11 @@ export class ChartCanvas {
   readonly spec = input.required<ChartSpec>();
 
   protected readonly options = computed(() => this.spec().options(this.theme()));
+  protected readonly height = computed(() => {
+    const { height, narrowHeight } = this.spec();
+
+    return this.theme().narrow ? (narrowHeight ?? height) : height;
+  });
 
   /** As cores do tema (`--mat-sys-*`), lidas do documento. */
   private theme(): ChartTheme {
