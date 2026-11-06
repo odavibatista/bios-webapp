@@ -28,6 +28,7 @@ import { BiosApi } from '../../../core/api/bios-api';
 import type { CompanyAnalytics } from '../../../core/api/generated';
 import { describeError } from '../../../shared/errors/describe-error';
 import { fieldMessage } from '../../../shared/forms/account-rules';
+import { chosenCityRule, CityField } from '../../../shared/forms/city-field/city-field';
 import { AsyncState } from '../../../shared/states/async-state';
 import { ErrorState } from '../../../shared/states/error-state';
 import { FormErrorSummary } from '../../../shared/states/form-error-summary';
@@ -72,6 +73,7 @@ type CriteriaForm = FormGroup<{
   name: FormControl<string>;
   uf: FormControl<string>;
   city: FormControl<string>;
+  city_ibge_code: FormControl<string>;
   cnae: FormControl<string>;
   ods: FormControl<number | null>;
   order: FormControl<SearchOrder | null>;
@@ -101,6 +103,7 @@ function blank(value: string): string | null {
   selector: 'bios-company-search',
   imports: [
     AsyncState,
+    CityField,
     DataOverview,
     ErrorState,
     FormErrorSummary,
@@ -183,7 +186,11 @@ export class CompanySearch {
   protected readonly form: CriteriaForm = new FormGroup({
     name: new FormControl('', { nonNullable: true, validators: [nameRule] }),
     uf: new FormControl('', { nonNullable: true, validators: [ufRule] }),
-    city: new FormControl('', { nonNullable: true, validators: [cityRule] }),
+    city: new FormControl('', {
+      nonNullable: true,
+      validators: [cityRule, chosenCityRule(() => this.criteria().city)],
+    }),
+    city_ibge_code: new FormControl('', { nonNullable: true }),
     cnae: new FormControl('', { nonNullable: true, validators: [cnaeRule] }),
     ods: new FormControl<number | null>(null),
     order: new FormControl<SearchOrder | null>(null),
@@ -319,6 +326,12 @@ export class CompanySearch {
     this.revealResults.set(this.cards());
   }
 
+  /** Trocar a UF desfaz o município escolhido, que era de outra lista (RF38). */
+  protected clearCity(): void {
+    this.form.controls.city.reset();
+    this.form.controls.city_ibge_code.reset();
+  }
+
   protected async clear(): Promise<void> {
     this.formErrors.set([]);
     await this.router.navigate([], { relativeTo: this.route, queryParams: {} });
@@ -377,6 +390,7 @@ export class CompanySearch {
       name: blank(raw.name),
       uf: blank(raw.uf)?.toUpperCase() ?? null,
       city: blank(raw.city),
+      cityCode: blank(raw.city_ibge_code),
       cnae: cnae === null ? null : cnaeDigits(cnae),
       ods,
       minScore: ods === null ? null : decimal(raw.min_score),
@@ -392,6 +406,7 @@ export class CompanySearch {
       name: criteria.name ?? '',
       uf: criteria.uf ?? '',
       city: criteria.city ?? '',
+      city_ibge_code: criteria.cityCode ?? '',
       cnae: criteria.cnae ?? '',
       ods: criteria.ods,
       order: criteria.order,
