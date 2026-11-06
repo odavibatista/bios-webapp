@@ -35,7 +35,8 @@
                 score.ods_number +
                 ': ' +
                 score.scoreLabel +
-                ' numa escala de −100 a 100, com zero no centro'
+                ' numa escala de −100 a 100, com zero no centro' +
+                (score.sector ? '. Média do setor: ' + score.sector.label : '')
               "
             >
               <div class="track" aria-hidden="true">
@@ -45,11 +46,20 @@
                   [style.width.%]="score.fillWidth"
                 ></span>
                 <span class="zero"></span>
+                @if (score.sector; as sector) {
+                  <span class="sector-mark" [style.left.%]="sector.position"></span>
+                }
                 <span class="marker" [style.left.%]="score.position"></span>
               </div>
               <div class="ticks" aria-hidden="true">
                 <span>−100</span><span>0</span><span>100</span>
               </div>
+              @if (score.sector; as sector) {
+                <p class="sector-note">
+                  <span class="sector-key" aria-hidden="true"></span>
+                  Média do setor: {{ sector.label }}
+                </p>
+              }
             </div>
           }
 

@@ -16,6 +16,13 @@ const COVERAGE: Record<NonNullable<CompanyOdsScore['coverage_status']>, string> 
   NO_DATA: 'Ainda não há dados suficientes das fontes para avaliar este ODS.',
 };
 
+/** A marca da média do setor no medidor; sem média publicada, não há marca. */
+export function presentSectorAverage(average: number | undefined) {
+  return average === undefined
+    ? null
+    : { label: formatScorePoints(average), position: (average + 100) / 2 };
+}
+
 /** Texto e posição da escala derivam do estado, sem transformar ausência em zero. */
 export function presentScore(score: CompanyOdsScore) {
   const pending = score.calculation_status === 'PENDING';
