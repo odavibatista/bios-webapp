@@ -20,28 +20,32 @@ test.describe('cabeçalho (#252 e #253)', () => {
       await field.press('Enter');
 
       const header = await page.getByRole('banner').boundingBox();
-      const toast = await page.locator('.mat-mdc-snack-bar-container').boundingBox();
+      const toast = await page
+        .locator('.mat-mdc-snack-bar-container:not([mat-exit])')
+        .boundingBox();
       expect(header).not.toBeNull();
       expect(toast).not.toBeNull();
       expect(toast!.y).toBeGreaterThanOrEqual(header!.y + header!.height);
       await expect(page.getByText('Informe um CNPJ ou nome válido para pesquisar')).toBeVisible();
-      const contrast = await page.locator('.mat-mdc-snack-bar-container').evaluate((element) => {
-        const surface = element.querySelector('.mdc-snackbar__surface')!;
-        const label = element.querySelector('.mdc-snackbar__label')!;
-        const luminance = (color: string) => {
-          const channels = color
-            .match(/\d+/g)!
-            .slice(0, 3)
-            .map((part) => {
-              const value = Number(part) / 255;
-              return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-            });
-          return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
-        };
-        const background = luminance(getComputedStyle(surface).backgroundColor);
-        const text = luminance(getComputedStyle(label).color);
-        return (Math.max(background, text) + 0.05) / (Math.min(background, text) + 0.05);
-      });
+      const contrast = await page
+        .locator('.mat-mdc-snack-bar-container:not([mat-exit])')
+        .evaluate((element) => {
+          const surface = element.querySelector('.mdc-snackbar__surface')!;
+          const label = element.querySelector('.mdc-snackbar__label')!;
+          const luminance = (color: string) => {
+            const channels = color
+              .match(/\d+/g)!
+              .slice(0, 3)
+              .map((part) => {
+                const value = Number(part) / 255;
+                return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+              });
+            return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+          };
+          const background = luminance(getComputedStyle(surface).backgroundColor);
+          const text = luminance(getComputedStyle(label).color);
+          return (Math.max(background, text) + 0.05) / (Math.min(background, text) + 0.05);
+        });
       expect(contrast).toBeGreaterThanOrEqual(4.5);
     }
   });
