@@ -1,17 +1,10 @@
 import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
 import { openPanelArea } from './support/panel-menu';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 /** Entra com a conta de demonstração e chega ao painel. */
-async function signIn(page: Page) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
-}
-
 /** Campo completo da página de consulta. */
 function cnpjField(page: Page) {
   return page.getByRole('main').getByLabel('CNPJ ou nome da empresa', { exact: true });
@@ -25,6 +18,7 @@ test.describe('perfil da empresa (#24)', () => {
   test('em 1280 por 800, o índice aparece antes dos dados completos sem rolagem horizontal', async ({
     page,
   }) => {
+    test.skip(test.info().project.name === 'celular', 'Largura desktop definida pelo teste.');
     await page.setViewportSize({ width: 1280, height: 800 });
     await signIn(page);
     await toolbarField(page).fill('00.990.842/0001-38');

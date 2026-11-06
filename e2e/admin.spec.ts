@@ -1,15 +1,12 @@
 import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
 import { openPanelArea } from './support/panel-menu';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 /** Entra como administrador e abre a blacklist pelo menu do painel, sem recarregar a página. */
 async function openBlacklist(page: Page) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('administracao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
+  await signIn(page, '/painel', 'administracao@example.com');
 
   await openPanelArea(page, /Administração/);
   await expect(page).toHaveURL('/admin/dominios-bloqueados');

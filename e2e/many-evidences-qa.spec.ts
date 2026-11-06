@@ -1,14 +1,10 @@
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 test('o perfil abre os grupos de evidência e leva à evidência citada no índice (#267)', async ({
   page,
 }) => {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
-  await page.goto('/empresas/00990842000138');
+  await signIn(page, '/empresas/00990842000138');
 
   const scores = page.getByRole('region', { name: 'Índices por ODS' });
   const ods15 = scores.getByRole('article', { name: 'ODS 15' });

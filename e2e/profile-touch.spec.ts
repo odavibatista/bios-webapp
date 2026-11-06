@@ -1,12 +1,9 @@
 import type { Locator, Page } from '@playwright/test';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 async function openProfile(page: Page, cnpj: string) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
+  await signIn(page);
   const field = page.getByRole('banner').getByLabel('Buscar empresa por CNPJ ou nome');
 
   await field.fill(cnpj);
@@ -19,6 +16,10 @@ const height = async (control: Locator) => (await control.boundingBox())?.height
 
 test.describe('perfil no toque (#264)', () => {
   test('links de evidência e botões com 44 px no celular', async ({ page }) => {
+    test.skip(
+      test.info().project.name === 'desktop',
+      'Alvos de toque são medidos no projeto celular.',
+    );
     await page.setViewportSize({ width: 390, height: 844 });
     await openProfile(page, '00990842000138');
 
@@ -36,6 +37,10 @@ test.describe('perfil no toque (#264)', () => {
   });
 
   test('"Ver evidência no perfil" com 44 px no celular', async ({ page }) => {
+    test.skip(
+      test.info().project.name === 'desktop',
+      'Alvos de toque são medidos no projeto celular.',
+    );
     await page.setViewportSize({ width: 390, height: 844 });
     await openProfile(page, '00990842000138');
 
@@ -49,6 +54,10 @@ test.describe('perfil no toque (#264)', () => {
 
   for (const width of [320, 1280]) {
     test(`nenhum link isolado abaixo de 24 px em ${width} px`, async ({ page }) => {
+      test.skip(
+        test.info().project.name === 'desktop',
+        'Alvos de toque são medidos no projeto celular.',
+      );
       await page.setViewportSize({ width, height: 900 });
       await openProfile(page, '00990842000138');
 

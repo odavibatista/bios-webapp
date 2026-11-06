@@ -1,13 +1,5 @@
-import type { Page } from '@playwright/test';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
-
-async function signIn(page: Page) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
-}
 
 test.describe('cabeçalho (#252 e #253)', () => {
   test('o aviso fica abaixo do cabeçalho em desktop e celular', async ({ page }) => {

@@ -1,21 +1,13 @@
-import type { Page } from '@playwright/test';
 import { expectNoHorizontalScroll } from './support/accessibility';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
-
-async function signIn(page: Page) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
-}
 
 test.describe('alinhamento da conta e privacidade (#254)', () => {
   for (const width of [1024, 1280, 1440, 1920, 2560]) {
     test(`as telas seguem as colunas das chaves em ${width} px`, async ({ page }) => {
       test.skip(
         test.info().project.name === 'celular',
-        'A largura e definida pelo caso; o projeto desktop cobre todas as larguras.',
+        'A largura é definida pelo caso, e o projeto desktop cobre todas elas.',
       );
       await page.setViewportSize({ width, height: 900 });
       await signIn(page);

@@ -112,6 +112,7 @@ jobs:
           key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
 
       - name: Dependências de sistema do Chromium
+        timeout-minutes: 5
         run: npx playwright install-deps chromium
 
       - name: Navegador dos testes e2e

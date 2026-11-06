@@ -1,15 +1,12 @@
 import type { Page } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { expectAccessible, expectNoHorizontalScroll } from './support/accessibility';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 /** Entra pela tela de login e cai na pesquisa. */
 async function signInToSearch(page: Page, query = '') {
-  await page.goto(`/entrar?voltar=${encodeURIComponent(`/pesquisa${query}`)}`);
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL(`/pesquisa${query}`);
+  await signIn(page, `/pesquisa${query}`);
 }
 
 test.describe('município ligado à UF (#270)', () => {

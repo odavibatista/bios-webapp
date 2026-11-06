@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 const PAULISTA = {
@@ -26,10 +27,7 @@ async function stubViaCep(page: Page, body: unknown, status = 200) {
 
 /** A conta começa em branco (ADMIN) ou com endereço na Avenida Paulista (USER). */
 async function openAccount(page: Page, email: string) {
-  await page.goto('/entrar?voltar=%2Fconta');
-  await page.getByLabel('E-mail').fill(email);
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
+  await signIn(page, '/conta', email);
   await expect(page.getByRole('heading', { name: 'Editar dados' })).toBeVisible();
 }
 

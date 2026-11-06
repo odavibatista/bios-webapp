@@ -1,15 +1,8 @@
 import type { Locator, Page } from '@playwright/test';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 const WIDTHS = [320, 390, 768, 1024, 1280, 1366, 1440, 1920, 2560];
-
-async function signIn(page: Page) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
-}
 
 /** O que falta para a última peça de cada fileira chegar à borda direita do contêiner. */
 async function gaps(items: Locator, container: Locator) {
@@ -47,7 +40,7 @@ test.describe('grades do painel e da pesquisa (#256, #257)', () => {
     test(`nenhuma fileira fica com buraco em ${width} px`, async ({ page }) => {
       test.skip(
         test.info().project.name === 'celular',
-        'A largura e definida pelo caso; o projeto desktop cobre todas as larguras.',
+        'A largura é definida pelo caso, e o projeto desktop cobre todas elas.',
       );
       await page.setViewportSize({ width, height: 900 });
       await signIn(page);
@@ -77,7 +70,7 @@ test.describe('grades do painel e da pesquisa (#256, #257)', () => {
     test(`divisórias dos cards alinhadas em ${width} px`, async ({ page }) => {
       test.skip(
         test.info().project.name === 'celular',
-        'A largura e definida pelo caso; o projeto desktop cobre todas as larguras.',
+        'A largura é definida pelo caso, e o projeto desktop cobre todas elas.',
       );
       await page.setViewportSize({ width, height: 900 });
       await signIn(page);

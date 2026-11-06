@@ -1,14 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
-
-async function signIn(page: Page) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
-}
 
 /** Navega dentro do app, sem recarregar a página. */
 async function navigateInApp(page: Page, path: string) {
