@@ -175,8 +175,8 @@ describe('profileCards', () => {
       const card = cardOf(profile([evidence(null, { biomes: 'Amazonia, Cerrado' })]), 'bioma');
 
       expect(card?.chart?.table.rows).toEqual([
-        ['Amazônia', '1'],
-        ['Cerrado', '1'],
+        ['Amazônia', '1', '50,0%'],
+        ['Cerrado', '1', '50,0%'],
       ]);
     });
 

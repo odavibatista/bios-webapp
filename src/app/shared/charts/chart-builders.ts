@@ -59,6 +59,7 @@ const BAR_THICKNESS = 18;
 const NARROW_LABEL = 120;
 const WIDE_LABEL = 168;
 const COMMON = { aria: { enabled: false }, animation: false };
+const PERCENT_DIGITS = { minimumFractionDigits: 1, maximumFractionDigits: 1 };
 
 function itemTable(
   items: readonly ChartItem[],
@@ -81,32 +82,60 @@ function itemTooltip(items: readonly ChartItem[], sentence: ItemsChart['sentence
   };
 }
 
+/**
+ * O percentual de cada fatia, com uma casa (NFIN04). Os décimos que sobram do arredondamento vão
+ * para as maiores frações, para a soma fechar em 100%; fatia abaixo de 0,1% nunca aparece como zero.
+ */
+function slicePercentages(items: readonly ChartItem[]): string[] {
+  const total = items.reduce((sum, { value }) => sum + value, 0);
+  const tenths = items.map(({ value }) => (total > 0 ? (value / total) * 1000 : 0));
+  const rounded = tenths.map((value) => Math.floor(value));
+  const remainder = total > 0 ? 1000 - rounded.reduce((sum, value) => sum + value, 0) : 0;
+
+  tenths
+    .map((value, index) => ({ index, value, fraction: value - rounded[index] }))
+    .filter(({ value }) => value >= 1)
+    .sort((a, b) => b.fraction - a.fraction || a.index - b.index)
+    .slice(0, remainder)
+    .forEach(({ index }) => rounded[index]++);
+
+  return tenths.map((value, index) =>
+    value > 0 && value < 1
+      ? 'menos de 0,1%'
+      : `${(rounded[index] / 10).toLocaleString('pt-BR', PERCENT_DIGITS)}%`,
+  );
+}
+
 /** Parte de um todo, até seis fatias. Duas fatias ou menos pedem texto, e não gráfico. */
 export function donutChart(chart: DonutChart): ChartSpec {
   const items = foldColoredCategories(chart.items);
   const colors = sliceColors(items, chart.order);
+  const shares = slicePercentages(items);
+  const format = chart.format ?? formatCount;
 
   return {
     label: chart.label,
-    height: 18,
-    table: itemTable(items, chart.headers, chart.format ?? formatCount),
-    options: ({ text, surface }) => ({
+    height: 14,
+    legend: items.map(({ label }, index) => ({
+      label,
+      share: shares[index],
+      color: colors[index],
+    })),
+    table: {
+      headers: [...chart.headers, 'Percentual'],
+      rows: items.map(({ label, value }, index) => [label, format(value), shares[index]]),
+    },
+    options: ({ surface }) => ({
       ...COMMON,
       color: colors,
-      tooltip: itemTooltip(items, chart.sentence),
-      legend: {
-        bottom: 0,
-        left: 'center',
-        itemWidth: 12,
-        itemHeight: 12,
-        textStyle: { color: text },
-        formatter: (name: string) => name,
-      },
+      tooltip: itemTooltip(
+        items,
+        (item) => `${chart.sentence(item)}, ${shares[items.indexOf(item)]}`,
+      ),
       series: [
         {
           type: 'pie',
-          radius: ['48%', '74%'],
-          center: ['50%', '42%'],
+          radius: ['62%', '95%'],
           label: { show: false },
           itemStyle: { borderColor: surface, borderWidth: 2 },
           data: items.map(({ label, value }) => ({ name: label, value })),
