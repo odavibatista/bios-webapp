@@ -7,10 +7,9 @@ import {
   OTHER_COLOR,
   OTHERS_KEY,
   escapeHtml,
-  foldCategories,
+  foldColoredCategories,
   formatCompact,
   formatCount,
-  MAX_SLICES,
   SERIES_COLOR,
   sliceColors,
 } from './chart-spec';
@@ -84,7 +83,7 @@ function itemTooltip(items: readonly ChartItem[], sentence: ItemsChart['sentence
 
 /** Parte de um todo, até seis fatias. Duas fatias ou menos pedem texto, e não gráfico. */
 export function donutChart(chart: DonutChart): ChartSpec {
-  const items = foldCategories(chart.items, MAX_SLICES);
+  const items = foldColoredCategories(chart.items);
   const colors = sliceColors(items, chart.order);
 
   return {

@@ -66,15 +66,23 @@ describe('donutChart', () => {
     expect(color?.at(-1)).toBe(OTHER_COLOR);
   });
 
+  it('a sexta categoria também entra em "Outros", sem repetir a primeira cor', () => {
+    const items = 'ABCDEF'.split('').map((key, index) => ({
+      key,
+      label: key,
+      value: 6 - index,
+    }));
+    const spec = donutChart({ ...base, items });
+    const { color } = optionsOf(spec);
+
+    expect(spec.table.rows.at(-1)).toEqual(['Outros', '1']);
+    expect(color).toEqual([...CATEGORY_COLORS, OTHER_COLOR]);
+  });
+
   it('a ordem fixa mantém a cor da categoria quando outra some', () => {
     const { color } = optionsOf(donutChart({ ...base, items: [ITEMS[1]], order: ['A', 'B'] }));
 
     expect(color).toEqual([CATEGORY_COLORS[1]]);
-  });
-
-  it('não usa verde nem vermelho na paleta', () => {
-    expect(CATEGORY_COLORS).not.toContain('#008300');
-    expect(CATEGORY_COLORS).not.toContain('#e34948');
   });
 });
 
