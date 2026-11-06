@@ -94,15 +94,9 @@
             <mat-error>{{ messageOf(form.controls.address.controls.neighborhood) }}</mat-error>
           </mat-form-field>
 
-          <mat-form-field appearance="outline" class="city">
-            <mat-label>Cidade</mat-label>
-            <input matInput formControlName="city" autocomplete="address-level2" />
-            <mat-error>{{ messageOf(form.controls.address.controls.city) }}</mat-error>
-          </mat-form-field>
-
           <mat-form-field appearance="outline" class="state">
             <mat-label>UF</mat-label>
-            <mat-select formControlName="state">
+            <mat-select formControlName="state" (selectionChange)="clearCity()">
               <mat-option value="">—</mat-option>
               @for (state of states; track state) {
                 <mat-option [value]="state">{{ state }}</mat-option>
@@ -110,6 +104,14 @@
             </mat-select>
             <mat-error>{{ messageOf(form.controls.address.controls.state) }}</mat-error>
           </mat-form-field>
+
+          <bios-city-field
+            class="city"
+            label="Cidade"
+            [ufControl]="form.controls.address.controls.state"
+            [text]="form.controls.address.controls.city"
+            [code]="form.controls.address.controls.city_ibge_code"
+          />
         </fieldset>
 
         <div class="actions">

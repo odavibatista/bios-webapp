@@ -11,7 +11,13 @@ import {
   untracked,
 } from '@angular/core';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { type AbstractControl, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import {
+  type AbstractControl,
+  FormControl,
+  FormGroup,
+  ReactiveFormsModule,
+  type ValidatorFn,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -34,6 +40,7 @@ import {
   formatPostalCode,
   isBlankAddress,
 } from '../../../shared/forms/address-rules';
+import { chosenCityRule, CityField } from '../../../shared/forms/city-field/city-field';
 import { AsyncState } from '../../../shared/states/async-state';
 import { FormErrorSummary } from '../../../shared/states/form-error-summary';
 import { accountChanges, accountFormValue } from '../account-changes';
@@ -57,6 +64,7 @@ export const ACCOUNT_DELETED_PARAM = { conta: 'excluida' } as const;
   selector: 'bios-account-page',
   imports: [
     AsyncState,
+    CityField,
     EmailChange,
     FormErrorSummary,
     MatButtonModule,
@@ -108,8 +116,11 @@ export class AccountPage {
       number: this.addressControl('number'),
       complement: this.addressControl('complement'),
       neighborhood: this.addressControl('neighborhood'),
-      city: this.addressControl('city'),
       state: this.addressControl('state'),
+      city: this.addressControl('city', [
+        chosenCityRule(() => (this.account.hasValue() ? this.account.value().address?.city : null)),
+      ]),
+      city_ibge_code: this.addressControl('city_ibge_code'),
     }),
   });
 
@@ -227,11 +238,22 @@ export class AccountPage {
     await this.router.navigate(['/'], { queryParams: ACCOUNT_DELETED_PARAM });
   }
 
-  private addressControl(field: AddressField): FormControl<string> {
+  private addressControl(field: AddressField, validators: ValidatorFn[] = []): FormControl<string> {
     return new FormControl('', {
       nonNullable: true,
-      validators: [addressFieldRules(field, (control) => this.addressRequired(control))],
+      validators: [
+        addressFieldRules(field, (control) => this.addressRequired(control)),
+        ...validators,
+      ],
     });
+  }
+
+  /** Trocar a UF desfaz o município escolhido, que era de outra lista (RF38). */
+  protected clearCity(): void {
+    const { city, city_ibge_code: code } = this.form.controls.address.controls;
+
+    city.setValue('');
+    code.setValue('');
   }
 
   private resetTo(account: AccountResponse): void {

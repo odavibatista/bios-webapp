@@ -148,19 +148,69 @@ describe('AccountPage', () => {
         statusCode: 422,
         code: 'VALIDATION_FAILED',
         message: 'Os dados enviados são inválidos.',
-        details: [{ path: 'address.city', message: 'Mensagem da API para a cidade.' }],
+        details: [{ path: 'address.neighborhood', message: 'Mensagem da API para o bairro.' }],
         timestamp: '2026-11-02T12:00:00.000Z',
         path: '/accounts/me',
       }),
     );
 
-    await user.type(screen.getByLabelText('Cidade'), ' Capital');
+    await user.type(screen.getByLabelText('Bairro'), ' Central');
     await user.click(saveButton());
     await fixture.whenStable();
 
+    const neighborhood = screen.getByLabelText('Bairro');
+    expect(await screen.findByText('Mensagem da API para o bairro.')).toBeTruthy();
+    expect(neighborhood.getAttribute('aria-invalid')).toBe('true');
+  });
+
+  it('sem UF, o município fica desabilitado', async () => {
+    await renderAccount(ADMIN);
+
+    expect(screen.getByLabelText<HTMLInputElement>('Cidade').disabled).toBe(true);
+  });
+
+  it('endereço gravado sem código continua salvando sem escolher da lista', async () => {
+    const { user } = await renderAccount();
+    const update = vi.spyOn(TestBed.inject(BiosApi), 'updateOwnAccount');
+
+    await user.type(screen.getByLabelText('Bairro'), ' Central');
+    await user.click(saveButton());
+
+    expect(update).toHaveBeenCalledWith({
+      body: { address: expect.objectContaining({ city: 'São Paulo' }) as unknown },
+    });
+  });
+
+  it('município digitado e não escolhido da lista não salva', async () => {
+    const { user, fixture } = await renderAccount();
+    const update = vi.spyOn(TestBed.inject(BiosApi), 'updateOwnAccount');
+
+    await user.type(screen.getByLabelText('Cidade'), ' Velho');
+    await user.click(saveButton());
+    await fixture.whenStable();
+
+    expect(update).not.toHaveBeenCalled();
+    expect(screen.getByText('Escolha um município da lista.')).toBeTruthy();
+  });
+
+  it('escolhe o município da lista da UF e envia o código', async () => {
+    const { user } = await renderAccount();
+    const update = vi.spyOn(TestBed.inject(BiosApi), 'updateOwnAccount');
     const city = screen.getByLabelText('Cidade');
-    expect(await screen.findByText('Mensagem da API para a cidade.')).toBeTruthy();
-    expect(city.getAttribute('aria-invalid')).toBe('true');
+
+    await user.clear(city);
+    await user.type(city, 'camp');
+    await user.click(await screen.findByRole('option', { name: 'Campinas' }));
+    await user.click(saveButton());
+
+    expect(update).toHaveBeenCalledWith({
+      body: {
+        address: expect.objectContaining({
+          city: 'Campinas',
+          city_ibge_code: '3509502',
+        }) as unknown,
+      },
+    });
   });
 
   it('"Remover endereço" pede confirmação e envia `address: null`', async () => {
