@@ -45,6 +45,10 @@ function dividers(page: Page) {
 test.describe('grades do painel e da pesquisa (#256, #257)', () => {
   for (const width of WIDTHS) {
     test(`nenhuma fileira fica com buraco em ${width} px`, async ({ page }) => {
+      test.skip(
+        test.info().project.name === 'celular',
+        'A largura e definida pelo caso; o projeto desktop cobre todas as larguras.',
+      );
       await page.setViewportSize({ width, height: 900 });
       await signIn(page);
 
@@ -71,6 +75,10 @@ test.describe('grades do painel e da pesquisa (#256, #257)', () => {
     });
 
     test(`divisórias dos cards alinhadas em ${width} px`, async ({ page }) => {
+      test.skip(
+        test.info().project.name === 'celular',
+        'A largura e definida pelo caso; o projeto desktop cobre todas as larguras.',
+      );
       await page.setViewportSize({ width, height: 900 });
       await signIn(page);
       await expect(page.locator('.movement-list > li').first()).toBeVisible();
