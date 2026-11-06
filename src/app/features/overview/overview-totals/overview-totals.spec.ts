@@ -16,6 +16,16 @@ const ANALYTICS = {
 const valueOf = (label: string) => screen.getByText(label).nextElementSibling?.textContent;
 
 describe('OverviewTotals', () => {
+  it('sem área nos autos, diz que falta o dado, e não que é zero', async () => {
+    await render(OverviewTotals, {
+      inputs: {
+        analytics: { ...ANALYTICS, totals: { ...ANALYTICS.totals, area_hectares: 0 } },
+      },
+    });
+
+    expect(screen.getByText('Hectares nos autos').parentElement?.textContent).toContain('Sem dado');
+  });
+
   it('mostra os totais, com a multa como valor lançado', async () => {
     await render(OverviewTotals, { inputs: { analytics: ANALYTICS } });
 
