@@ -6,10 +6,13 @@ import {
   inject,
   input,
   resource,
+  signal,
 } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
 import { BiosApi } from '../../../core/api/bios-api';
+import type { CompanyFullProfileResponse } from '../../../core/api/generated';
+import { PRESENTATION_MODE } from '../../../core/presentation-mode';
 import { formatCnpj, INVALID_CNPJ_MESSAGE, parseCnpj } from '../../../shared/cnpj/cnpj';
 import { describeError } from '../../../shared/errors/describe-error';
 import { ErrorState } from '../../../shared/states/error-state';
@@ -25,6 +28,13 @@ import {
   formatCnae,
   registrationStatusLabel,
 } from '../registration-data/registration-labels';
+
+/** Sem API, atualizar não tem de onde buscar: a tela diz isso em vez de esconder o botão (#265). */
+const PRESENTATION_REFRESH_NOTICE =
+  'Versão de apresentação: os dados são capturados, e nenhuma fonte foi consultada agora.';
+const PENDING_REFRESH_NOTICE = 'Perfil atualizado. Algumas fontes ainda estão em consulta.';
+
+const REFRESH_TIME = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
 /** O que a tela mostra quando não há perfil. */
 type Problem = 'invalid' | 'not-found' | 'failure';
@@ -59,6 +69,12 @@ export class CompanyProfile {
   private readonly api = inject(BiosApi);
   private readonly router = inject(Router);
   private readonly title = inject(Title);
+  private readonly presentation = inject(PRESENTATION_MODE);
+
+  /** "Atualizar perfil" em andamento. */
+  protected readonly refreshing = signal(false);
+  /** O resultado de "Atualizar perfil", anunciado ao leitor de tela. */
+  protected readonly refreshNotice = signal('');
 
   /** O CNPJ da URL, como veio. */
   readonly cnpj = input.required<string>();
@@ -113,6 +129,35 @@ export class CompanyProfile {
   protected readonly sizeLabel = companySizeLabel;
   protected readonly cnaeLabel = formatCnae;
   protected readonly statusLabel = registrationStatusLabel;
+
+  /** Consulta por fora do `resource`: uma falha aqui avisa, sem tirar o perfil da tela. */
+  protected async refresh(): Promise<void> {
+    if (this.refreshing() || !this.profile.hasValue()) return;
+
+    this.refreshing.set(true);
+    this.refreshNotice.set('');
+
+    try {
+      const { cnpj } = this.profile.value();
+      const profile = await this.api.getCompanyProfile({ path: { cnpj } });
+
+      this.profile.set(profile);
+      this.refreshNotice.set(this.refreshResult(profile));
+    } catch (error) {
+      this.refreshNotice.set(describeError(error).message);
+    } finally {
+      this.refreshing.set(false);
+    }
+  }
+
+  private refreshResult({ provenance }: CompanyFullProfileResponse): string {
+    if (this.presentation) return PRESENTATION_REFRESH_NOTICE;
+    if (provenance.sources.some(({ origin }) => origin === 'PENDING')) {
+      return PENDING_REFRESH_NOTICE;
+    }
+
+    return `Perfil atualizado às ${REFRESH_TIME.format(new Date())}.`;
+  }
 
   private async sectorAverage(cnae: string, ods: number): Promise<number | null> {
     try {

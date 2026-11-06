@@ -27,6 +27,12 @@ tela principal abrir sem baixar o índice. O gerador roda com
 `node --experimental-strip-types`, porque reaproveita essas regras do código do app, e recebe o dump
 e a pasta do bios-core-api.
 
+`locations.json.gz` traz as 27 UFs e os 5.571 municípios do IBGE, para o seletor de município (RF38), e é baixado
+quando o campo é usado. Vem do catálogo do bios-core-api: `node scripts/build-locations-data.mjs <bios-core-api>`.
+
+A consulta de CEP (RF39) é a única chamada que sai do site: sem API, o navegador fala direto com o ViaCEP, enviando só
+o CEP. O rodapé e a página de privacidade avisam disso, e o e2e `postal-code.spec.ts` confere que é o único destino.
+
 - **Uma captura por arquivo:** `src/app/core/mocks/fixtures/<operationId>/<cenário>.ts`, com
   `satisfies CapturedResponse<...>` sobre o tipo gerado da operação e do status. Se a API mudar a forma
   de uma resposta, o `typecheck` recusa a captura antiga. A planilha XLSX fica ao lado, como arquivo.

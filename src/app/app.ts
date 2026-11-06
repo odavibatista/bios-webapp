@@ -11,6 +11,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter, skip } from 'rxjs';
 import { PRESENTATION_MODE } from './core/presentation-mode';
+import { NavigationFailureNotice } from './core/navigation/navigation-failure';
 import { SessionStore } from './core/session/session-store';
 import { CnpjSearch } from './features/profile/cnpj-search/cnpj-search';
 import { PRIVACY_CONTACT } from './features/privacy/privacy-contact';
@@ -47,6 +48,15 @@ export class App {
   private readonly main = viewChild.required<ElementRef<HTMLElement>>('main');
   private readonly router = inject(Router);
 
+  /** A tela que não abriu (#262): o aviso oferece tentar de novo. */
+  private readonly navigationFailure = inject(NavigationFailureNotice);
+  protected readonly failedUrl = this.navigationFailure.url;
+
+  protected retryNavigation(url: string): void {
+    this.navigationFailure.url.set(null);
+    void this.router.navigateByUrl(url);
+  }
+
   constructor() {
     // A cada troca de tela, o foco vai para o conteúdo, como numa página nova: o leitor de tela
     // anuncia a tela que chegou, e o Tab segue dali, sem voltar ao topo (NFIN01). A primeira
@@ -58,7 +68,7 @@ export class App {
         takeUntilDestroyed(),
       )
       .subscribe(() => {
-        this.main().nativeElement.focus();
+        this.main().nativeElement.focus({ preventScroll: true });
       });
   }
 }

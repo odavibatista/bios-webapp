@@ -79,8 +79,13 @@ import { roleLabel } from '../panel-nav';
       white-space: nowrap;
       line-height: 1.25rem;
 
-      @media (max-width: 600px) {
-        max-width: 7rem;
+      // No celular, só o ícone: o nome segue no nome acessível do botão (#263).
+      @media (max-width: 599.98px) {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
       }
     }
 

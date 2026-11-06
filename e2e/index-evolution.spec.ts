@@ -1,15 +1,12 @@
 import type { Page } from '@playwright/test';
 import { expectAccessible, expectNoHorizontalScroll } from './support/accessibility';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 async function openProfile(page: Page, cnpj: string) {
   const path = `/empresas/${cnpj}`;
 
-  await page.goto(`/entrar?voltar=${encodeURIComponent(path)}`);
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL(path);
+  await signIn(page, path);
   await expect(
     page.getByRole('heading', { name: 'Evolução do índice', exact: true }),
   ).toBeVisible();
@@ -52,11 +49,7 @@ test.describe('evolução do índice no perfil (#233)', () => {
   });
 
   test('a lista da tela principal segue sem série', async ({ page }) => {
-    await page.goto('/entrar');
-    await page.getByLabel('E-mail').fill('apresentacao@example.com');
-    await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-    await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-    await expect(page).toHaveURL('/painel');
+    await signIn(page);
 
     await expect(page.getByRole('heading', { name: 'Movimentações recentes' })).toBeVisible();
     await expect(page.locator('bios-movement-card bios-chart-canvas')).toHaveCount(0);

@@ -4,13 +4,14 @@ const PORT = 4300;
 const isCI = !!process.env['CI'];
 
 /**
- * Testes e2e: o app sobe sozinho (`ng serve`) e roda no Chromium, em duas larguras (NFIN02):
+ * Testes e2e: o app é compilado, sobe sozinho (`scripts/serve-e2e.mjs`) e roda no Chromium, em duas larguras (NFIN02):
  * 1280 px (desktop) e 390 px (celular). Todo teste termina com a análise de acessibilidade e a
  * checagem de rolagem horizontal (`e2e/support/test.ts`).
  */
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
+  workers: isCI ? 4 : undefined,
   forbidOnly: isCI,
   retries: isCI ? 1 : 0,
   reporter: isCI ? [['github'], ['html', { open: 'never' }]] : 'list',
@@ -38,7 +39,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `npx ng serve --configuration e2e --port ${PORT}`,
+    command: `npm run build:e2e && node scripts/serve-e2e.mjs ${PORT}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !isCI,
     timeout: 120_000,

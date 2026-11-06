@@ -1,14 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expectAccessible, expectNoHorizontalScroll } from './support/accessibility';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
-
-async function signIn(page: Page, path: string) {
-  await page.goto(`/entrar?voltar=${encodeURIComponent(path)}`);
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL(path);
-}
 
 const totals = (page: Page) => page.locator('bios-overview-totals');
 
@@ -81,6 +74,31 @@ test.describe('panorama de dados (#234)', () => {
     await expect(card.locator('bios-chart-canvas')).toHaveCount(0);
   });
 
+  for (const width of [320, 1920]) {
+    test(`a rosca mostra percentuais em ${width} px e repete os valores na tabela (#251)`, async ({
+      page,
+    }) => {
+      test.skip(test.info().project.name === 'celular', 'Largura definida pelo teste.');
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, '/pesquisa');
+      const card = page.locator('bios-chart-card', {
+        has: page.getByRole('heading', { name: 'Situação cadastral' }),
+      });
+      await expect(await firstChart(page)).toBeVisible();
+      const entries = card.getByRole('listitem');
+
+      await expect(entries.first()).toContainText(/\d+,\d%/);
+      for (const entry of await entries.all()) {
+        await entry.scrollIntoViewIfNeeded();
+        await expect(entry).toBeInViewport({ ratio: 1 });
+      }
+
+      await card.getByRole('radio', { name: 'Tabela' }).click();
+      await expect(card.getByRole('columnheader', { name: 'Percentual' })).toBeVisible();
+      await expect(card.getByRole('table')).toContainText(/\d+,\d%/);
+    });
+  }
+
   test('cada gráfico tem nome próprio, sem citar empresas', async ({ page }) => {
     await signIn(page, '/pesquisa');
 
@@ -98,6 +116,7 @@ test.describe('panorama de dados (#234)', () => {
     test(`sem rolagem horizontal em ${width} px, com a tela acessível`, async ({
       page,
     }, testInfo) => {
+      test.skip(testInfo.project.name === 'celular', 'Largura definida pelo teste.');
       await page.setViewportSize({ width, height: 900 });
       await signIn(page, '/pesquisa');
 

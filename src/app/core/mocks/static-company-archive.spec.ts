@@ -2,6 +2,7 @@ import { gzipSync } from 'node:zlib';
 import type { Mock } from 'vitest';
 import type { ArchivedCompany } from './company-archive';
 import { StaticCompanyArchive } from './static-company-archive';
+import { describeError } from '../../shared/errors/describe-error';
 
 const INDEX = {
   statuses: ['ATIVA', 'BAIXADA'],
@@ -54,6 +55,16 @@ describe('StaticCompanyArchive', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it('navegador sem descompressão pede atualização, e não nova tentativa', async () => {
+    vi.stubGlobal('DecompressionStream', undefined);
+
+    const error = await archive.entries().catch((reason: unknown) => reason);
+
+    expect(error).toMatchObject({ status: 426, code: 'BROWSER_NOT_SUPPORTED' });
+    expect(describeError(error).canRetry).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('abre o índice comprimido e reconstrói as empresas a partir das tabelas', async () => {

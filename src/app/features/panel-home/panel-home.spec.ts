@@ -208,6 +208,11 @@ describe('PanelHome', () => {
     expect((await screen.findByText('Página 2 de 3')).textContent).toBe('Página 2 de 3');
 
     await user.click(screen.getByRole('button', { name: 'Próxima página' }));
+    await vi.waitFor(() => {
+      expect(document.activeElement).toBe(
+        screen.getByRole('heading', { name: 'Movimentações recentes' }),
+      );
+    });
     expect(navigate).toHaveBeenLastCalledWith(
       [],
       expect.objectContaining({ queryParams: { pagina: 3 } }),

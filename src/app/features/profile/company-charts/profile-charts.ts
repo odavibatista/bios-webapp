@@ -19,7 +19,12 @@ import {
   MAX_SLICES,
 } from '../../../shared/charts/chart-spec';
 import { biomeLabel } from '../../overview/overview-charts';
-import { CATEGORY_LABELS, SOURCE_LABELS } from '../environmental-evidences/evidence-presentation';
+import {
+  CATEGORY_LABELS,
+  GHG_NO_INVENTORY_LABEL,
+  ghgWithoutLocatedInventory,
+  SOURCE_LABELS,
+} from '../environmental-evidences/evidence-presentation';
 import { formatScorePoints } from '../ods-scores/score-presentation';
 
 type Score = CompanyFullProfileResponse['ods_scores'][number];
@@ -251,17 +256,17 @@ const PENDING = { label: 'Consulta pendente', icon: 'hourglass_top' };
  * negativo (IND02): os ícones e o texto não usam cor nem julgamento.
  */
 export function sourceResults(profile: CompanyFullProfileResponse): SourceResult[] {
-  return profile.provenance.sources.map(
-    ({ source_slug, origin, evidence_state }: CompanySourceProvenance) => {
-      const result =
-        origin === 'PENDING' ? PENDING : (RESULT[evidence_state ?? 'UNKNOWN'] ?? RESULT['UNKNOWN']);
+  return profile.provenance.sources.map((source: CompanySourceProvenance) => {
+    const { source_slug, origin, evidence_state } = source;
+    const result =
+      origin === 'PENDING' ? PENDING : (RESULT[evidence_state ?? 'UNKNOWN'] ?? RESULT['UNKNOWN']);
 
-      return {
-        ...result,
-        source: SOURCE_LABELS[source_slug],
-        count: confirmed(profile).filter(({ evidence }) => evidence.source_slug === source_slug)
-          .length,
-      };
-    },
-  );
+    return {
+      ...result,
+      ...(ghgWithoutLocatedInventory(source) ? { label: GHG_NO_INVENTORY_LABEL } : {}),
+      source: SOURCE_LABELS[source_slug],
+      count: confirmed(profile).filter(({ evidence }) => evidence.source_slug === source_slug)
+        .length,
+    };
+  });
 }

@@ -7,10 +7,9 @@ import {
   OTHER_COLOR,
   OTHERS_KEY,
   escapeHtml,
-  foldCategories,
+  foldColoredCategories,
   formatCompact,
   formatCount,
-  MAX_SLICES,
   SERIES_COLOR,
   sliceColors,
 } from './chart-spec';
@@ -43,6 +42,8 @@ interface ColumnsChart {
   series: readonly ChartSeries[];
   headers: readonly [string, string];
   sentence: (category: string, series: ChartSeries, value: number) => string;
+  /** Rótulos curtos do eixo, um por categoria: todos aparecem, sem depender de caber o nome. */
+  ticks?: readonly string[];
 }
 
 interface StepsChart {
@@ -59,7 +60,17 @@ const BAR_ROW = 2;
 const BAR_THICKNESS = 18;
 const NARROW_LABEL = 120;
 const WIDE_LABEL = 168;
+const LABEL_LINE_HEIGHT = 14;
+const LABEL_LINE_REM = LABEL_LINE_HEIGHT / 16;
+const LABEL_CHAR_WIDTH = 6.2;
+/** Caixa alta, no mapa de setores. */
+const TILE_CHAR_WIDTH = 7.5;
+const TILE_PADDING = 8;
+/** Área do mapa em px²: 22 rem de altura, na largura do card. */
+const TREEMAP_AREA = 320_000;
+const TREEMAP_AREA_NARROW = 85_000;
 const COMMON = { aria: { enabled: false }, animation: false };
+const PERCENT_DIGITS = { minimumFractionDigits: 1, maximumFractionDigits: 1 };
 
 function itemTable(
   items: readonly ChartItem[],
@@ -67,6 +78,24 @@ function itemTable(
   format: (value: number) => string,
 ) {
   return { headers, rows: items.map(({ label, value }) => [label, format(value)]) };
+}
+
+/** Altura em rem de uma lista de barras: cada fileira cabe o nome mais longo, já quebrado. */
+function barsHeight(items: readonly ChartItem[], labelWidth: number): number {
+  const lineLength = Math.floor(labelWidth / LABEL_CHAR_WIDTH);
+  const lines = Math.max(...items.map(({ label }) => Math.ceil(label.length / lineLength)));
+
+  return items.length * Math.max(BAR_ROW, lines * LABEL_LINE_REM + 0.25) + 1;
+}
+
+/**
+ * O nome só entra na fatia do mapa se a palavra mais longa couber nela, medida pelo lado de um
+ * quadrado de mesma área. Do contrário, sobraria "A…" ou "AGRICULTU/RA": fica na tabela (#259).
+ */
+function fitsTile(label: string, share: number, area: number): boolean {
+  const longestWord = Math.max(...label.split(' ').map((word) => word.length));
+
+  return Math.sqrt(share * area) >= longestWord * TILE_CHAR_WIDTH + TILE_PADDING;
 }
 
 /** Tooltip por marca: a frase pronta, com o texto da API escapado. */
@@ -82,32 +111,60 @@ function itemTooltip(items: readonly ChartItem[], sentence: ItemsChart['sentence
   };
 }
 
+/**
+ * O percentual de cada fatia, com uma casa (NFIN04). Os décimos que sobram do arredondamento vão
+ * para as maiores frações, para a soma fechar em 100%; fatia abaixo de 0,1% nunca aparece como zero.
+ */
+function slicePercentages(items: readonly ChartItem[]): string[] {
+  const total = items.reduce((sum, { value }) => sum + value, 0);
+  const tenths = items.map(({ value }) => (total > 0 ? (value / total) * 1000 : 0));
+  const rounded = tenths.map((value) => Math.floor(value));
+  const remainder = total > 0 ? 1000 - rounded.reduce((sum, value) => sum + value, 0) : 0;
+
+  tenths
+    .map((value, index) => ({ index, value, fraction: value - rounded[index] }))
+    .filter(({ value }) => value >= 1)
+    .sort((a, b) => b.fraction - a.fraction || a.index - b.index)
+    .slice(0, remainder)
+    .forEach(({ index }) => rounded[index]++);
+
+  return tenths.map((value, index) =>
+    value > 0 && value < 1
+      ? 'menos de 0,1%'
+      : `${(rounded[index] / 10).toLocaleString('pt-BR', PERCENT_DIGITS)}%`,
+  );
+}
+
 /** Parte de um todo, até seis fatias. Duas fatias ou menos pedem texto, e não gráfico. */
 export function donutChart(chart: DonutChart): ChartSpec {
-  const items = foldCategories(chart.items, MAX_SLICES);
+  const items = foldColoredCategories(chart.items);
   const colors = sliceColors(items, chart.order);
+  const shares = slicePercentages(items);
+  const format = chart.format ?? formatCount;
 
   return {
     label: chart.label,
-    height: 18,
-    table: itemTable(items, chart.headers, chart.format ?? formatCount),
-    options: ({ text, surface }) => ({
+    height: 14,
+    legend: items.map(({ label }, index) => ({
+      label,
+      share: shares[index],
+      color: colors[index],
+    })),
+    table: {
+      headers: [...chart.headers, 'Percentual'],
+      rows: items.map(({ label, value }, index) => [label, format(value), shares[index]]),
+    },
+    options: ({ surface }) => ({
       ...COMMON,
       color: colors,
-      tooltip: itemTooltip(items, chart.sentence),
-      legend: {
-        bottom: 0,
-        left: 'center',
-        itemWidth: 12,
-        itemHeight: 12,
-        textStyle: { color: text },
-        formatter: (name: string) => name,
-      },
+      tooltip: itemTooltip(
+        items,
+        (item) => `${chart.sentence(item)}, ${shares[items.indexOf(item)]}`,
+      ),
       series: [
         {
           type: 'pie',
-          radius: ['48%', '74%'],
-          center: ['50%', '42%'],
+          radius: ['62%', '95%'],
           label: { show: false },
           itemStyle: { borderColor: surface, borderWidth: 2 },
           data: items.map(({ label, value }) => ({ name: label, value })),
@@ -124,7 +181,8 @@ export function barChart(chart: BarsChart): ChartSpec {
 
   return {
     label: chart.label,
-    height: items.length * BAR_ROW + 1,
+    height: barsHeight(items, chart.labelWidth ?? WIDE_LABEL),
+    narrowHeight: barsHeight(items, NARROW_LABEL),
     table: itemTable(items, chart.headers, format),
     options: ({ text, grid, narrow }) => ({
       ...COMMON,
@@ -142,7 +200,8 @@ export function barChart(chart: BarsChart): ChartSpec {
           color: text,
           fontSize: AXIS_FONT,
           width: narrow ? NARROW_LABEL : (chart.labelWidth ?? WIDE_LABEL),
-          overflow: 'truncate',
+          overflow: 'break',
+          lineHeight: LABEL_LINE_HEIGHT,
         },
       },
       series: [
@@ -174,7 +233,8 @@ export function pointsChart(chart: ItemsChart): ChartSpec {
 
   return {
     label: chart.label,
-    height: items.length * BAR_ROW + 1,
+    height: barsHeight(items, WIDE_LABEL),
+    narrowHeight: barsHeight(items, NARROW_LABEL),
     table: itemTable(items, chart.headers, format),
     options: ({ text, narrow }) => ({
       ...COMMON,
@@ -193,7 +253,8 @@ export function pointsChart(chart: ItemsChart): ChartSpec {
           color: text,
           fontSize: AXIS_FONT,
           width: narrow ? NARROW_LABEL : WIDE_LABEL,
-          overflow: 'truncate',
+          overflow: 'break',
+          lineHeight: LABEL_LINE_HEIGHT,
         },
         splitLine: { show: false },
       },
@@ -280,7 +341,7 @@ export function stepChart(chart: StepsChart): ChartSpec {
 
 /** Eixo ordenado, com uma medida ou com medidas empilhadas. */
 export function columnChart(chart: ColumnsChart): ChartSpec {
-  const { categories, series } = chart;
+  const { categories, series, ticks } = chart;
   const stacked = series.length > 1;
   const rows = categories.flatMap((category, index) =>
     series.flatMap((item) => {
@@ -299,7 +360,7 @@ export function columnChart(chart: ColumnsChart): ChartSpec {
       headers: stacked ? [chart.headers[0], 'Tipo', chart.headers[1]] : chart.headers,
       rows,
     },
-    options: ({ text, grid, surface }) => ({
+    options: ({ text, grid, surface, narrow }) => ({
       ...COMMON,
       color: CATEGORY_COLORS,
       grid: { left: 4, right: 12, top: 12, bottom: stacked ? 36 : 4, containLabel: true },
@@ -323,7 +384,16 @@ export function columnChart(chart: ColumnsChart): ChartSpec {
         data: categories,
         axisTick: { show: false },
         axisLine: { lineStyle: { color: grid } },
-        axisLabel: { color: text, fontSize: AXIS_FONT, hideOverlap: true },
+        axisLabel: {
+          color: text,
+          fontSize: AXIS_FONT,
+          ...(ticks
+            ? {
+                interval: narrow ? 1 : 0,
+                formatter: (_: string, index: number) => ticks[index],
+              }
+            : { hideOverlap: true }),
+        },
       },
       yAxis: {
         type: 'value',
@@ -352,12 +422,13 @@ export function columnChart(chart: ColumnsChart): ChartSpec {
 export function treemapChart(chart: ItemsChart): ChartSpec {
   const { items } = chart;
   const format = chart.format ?? formatCount;
+  const total = items.reduce((sum, { value }) => sum + value, 0);
 
   return {
     label: chart.label,
     height: 22,
     table: itemTable(items, chart.headers, format),
-    options: ({ surface }) => ({
+    options: ({ surface, narrow }) => ({
       ...COMMON,
       tooltip: itemTooltip(items, chart.sentence),
       series: [
@@ -375,12 +446,16 @@ export function treemapChart(chart: ItemsChart): ChartSpec {
             show: true,
             color: '#ffffff',
             fontSize: AXIS_FONT,
-            overflow: 'truncate',
+            lineHeight: LABEL_LINE_HEIGHT,
+            overflow: 'break',
             formatter: ({ name }: { name: string }) => name,
           },
           data: items.map(({ key, label, value }) => ({
             name: label,
             value,
+            label: {
+              show: fitsTile(label, value / total, narrow ? TREEMAP_AREA_NARROW : TREEMAP_AREA),
+            },
             // A cor por nó: sem ela, o ECharts pinta cada categoria com uma cor da própria paleta.
             itemStyle: { color: key === OTHERS_KEY ? OTHER_COLOR : SERIES_COLOR },
           })),
