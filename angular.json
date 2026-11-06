@@ -96,7 +96,12 @@
         "test": {
           "builder": "@angular/build:unit-test",
           "options": {
-            "coverageExclude": ["src/app/core/api/generated/**", "src/main.ts"],
+            "setupFiles": ["src/test-setup.ts"],
+            "coverageExclude": [
+              "src/app/core/api/generated/**",
+              "src/main.ts",
+              "src/test-setup.ts"
+            ],
             "coverageReporters": ["text-summary", "html", "lcov", "json-summary"],
             "coverageThresholds": {
               "statements": 75,
