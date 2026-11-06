@@ -1,20 +1,17 @@
 <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
 <mat-toolbar class="topbar" role="banner">
-  <div class="topbar-inner">
+  <div class="topbar-inner" [class.signed-in]="signedIn()">
     <a class="brand" routerLink="/" aria-label="BIOS, página inicial">
       <mat-icon fontSet="material-symbols-outlined" aria-hidden="true">eco</mat-icon>
       <span class="brand-name">BIOS</span>
     </a>
     <span class="brand-tagline">Business Intelligence on Sustainability</span>
     @if (signedIn()) {
+      <!-- Um bloco só: chegando em tempos diferentes, os três fazem a barra crescer aos degraus (#260). -->
       @defer {
         <bios-header-nav class="nav-trigger" />
-      }
-      @defer {
         <bios-cnpj-search class="toolbar-search" variant="toolbar" />
-      }
-      @defer {
         <bios-user-menu class="user-menu" />
       }
     }
