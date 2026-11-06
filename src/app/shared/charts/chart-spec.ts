@@ -36,14 +36,11 @@ export interface ChartSeries {
   values: readonly (number | null)[];
 }
 
-/**
- * Azul, laranja, água, amarelo, magenta e violeta, conferidos contra daltonismo nessa ordem. Verde
- * e vermelho ficam de fora: aqui eles seriam lidos como bom e ruim (IND01).
- */
-export const CATEGORY_COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#6250d6'];
+/** Paleta do BIOS; a posição identifica a categoria, sem indicar julgamento (IND01). */
+export const CATEGORY_COLORS = ['#3f7f3f', '#e0a100', '#d9541e', '#9c3d6b', '#6f8f2f'];
 /** Uma única medida: a cor não diz nada além de "isto é o dado". */
 export const SERIES_COLOR = CATEGORY_COLORS[0];
-export const OTHER_COLOR = '#767870';
+export const OTHER_COLOR = '#6b6d65';
 
 export const OTHERS_KEY = 'OUTROS';
 export const UNINFORMED_KEY = 'NAO_INFORMADO';
@@ -72,6 +69,18 @@ export function foldCategories(items: readonly ChartItem[], limit: number): Char
   const others = items.slice(limit - 1).reduce((total, { value }) => total + value, 0);
 
   return [...items.slice(0, limit - 1), { key: OTHERS_KEY, label: 'Outros', value: others }];
+}
+
+/** Cinco categorias recebem cores próprias; as demais compartilham a fatia neutra. */
+export function foldColoredCategories(items: readonly ChartItem[]): ChartItem[] {
+  if (items.length <= CATEGORY_COLORS.length) return [...items];
+
+  const others = items.slice(CATEGORY_COLORS.length).reduce((total, { value }) => total + value, 0);
+
+  return [
+    ...items.slice(0, CATEGORY_COLORS.length),
+    { key: OTHERS_KEY, label: 'Outros', value: others },
+  ];
 }
 
 /**
