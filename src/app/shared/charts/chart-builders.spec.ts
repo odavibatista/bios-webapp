@@ -159,6 +159,59 @@ describe('barChart', () => {
   });
 });
 
+describe('rótulos longos (#259)', () => {
+  const long = 'Impedimento de contratar com a administração por prazo determinado pela autoridade';
+
+  it('a fileira cresce com o nome mais longo, mais ainda em tela estreita', () => {
+    const short = barChart(base);
+    const spec = barChart({ ...base, items: [{ key: 'A', label: long, value: 1 }, ...ITEMS] });
+
+    expect(spec.height).toBeGreaterThan(barChart({ ...base, items: [...ITEMS, ITEMS[0]] }).height);
+    expect(spec.narrowHeight).toBeGreaterThan(spec.height);
+    expect(short.narrowHeight).toBe(short.height);
+  });
+
+  it('o histograma mostra um limite por faixa, um sim, um não em tela estreita', () => {
+    const chart = {
+      label: 'Índice em faixas',
+      headers: ['Faixa', 'Empresas'] as const,
+      sentence: () => '',
+      categories: ['−100 a −80', '−80 a −60', '−60 a −40'],
+      series: [{ name: 'Empresas', values: [1, 2, 3] }],
+      ticks: ['−100', '−80', '−60'],
+    };
+    const axisOf = (narrow: boolean) =>
+      (
+        columnChart(chart).options({ ...THEME, narrow }) as unknown as {
+          xAxis: {
+            axisLabel: { interval: number; formatter: (value: string, index: number) => string };
+          };
+        }
+      ).xAxis.axisLabel;
+
+    expect(axisOf(false).interval).toBe(0);
+    expect(axisOf(true).interval).toBe(1);
+    expect(axisOf(false).formatter('−80 a −60', 1)).toBe('−80');
+  });
+
+  it('o mapa só nomeia a fatia em que a palavra mais longa cabe', () => {
+    const items = [
+      { key: 'A', label: 'COMÉRCIO VAREJISTA', value: 900 },
+      { key: 'B', label: 'AGRICULTURA, PECUÁRIA', value: 15 },
+      { key: 'C', label: 'PESCA', value: 85 },
+    ];
+    const shownIn = (narrow: boolean) =>
+      (
+        treemapChart({ ...base, items }).options({ ...THEME, narrow }) as unknown as {
+          series: { data: { label: { show: boolean } }[] }[];
+        }
+      ).series[0].data.map(({ label }) => label.show);
+
+    expect(shownIn(false)).toEqual([true, false, true]);
+    expect(shownIn(true)).toEqual([true, false, true]);
+  });
+});
+
 describe('pointsChart', () => {
   it('a barra sai do zero para o lado do sinal, com a mesma cor e o valor do lado de fora', () => {
     const spec = pointsChart({
