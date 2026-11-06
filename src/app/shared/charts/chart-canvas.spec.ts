@@ -12,7 +12,22 @@ const SPEC: ChartSpec = {
   table: { headers: [], rows: [] },
 };
 
+/** O jsdom não tem `ResizeObserver`, que o `ngx-echarts` usa. */
+class NoopResizeObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+}
+
 describe('ChartCanvas', () => {
+  beforeEach(() => {
+    vi.stubGlobal('ResizeObserver', NoopResizeObserver);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('desenha com o idioma registrado, em que os meses saem em português', async () => {
     const { fixture } = await render(ChartCanvas, { inputs: { spec: SPEC } });
     const chart = fixture.debugElement.query(By.directive(NgxEchartsDirective));
