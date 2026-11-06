@@ -35,21 +35,45 @@ const optionsOf = (spec: { options: (theme: typeof THEME) => object }) =>
 describe('donutChart', () => {
   it('a tabela traz os mesmos números, com o milhar em português', () => {
     expect(donutChart(base).table).toEqual({
-      headers: HEADERS,
+      headers: [...HEADERS, 'Percentual'],
       rows: [
-        ['Comércio <varejista>', '12.994'],
-        ['Indústria', '300'],
+        ['Comércio <varejista>', '12.994', '97,7%'],
+        ['Indústria', '300', '2,3%'],
       ],
     });
   });
 
-  it('a dica é a frase da categoria, com o texto da API escapado', () => {
-    const { tooltip } = optionsOf(donutChart(base));
+  it('a dica e a legenda mostram quantidade e percentual, com o texto da API escapado', () => {
+    const { tooltip, legend } = optionsOf(donutChart(base));
 
     expect(tooltip.formatter({ dataIndex: 0 })).toBe(
-      '12994 empresas atuam em Comércio &lt;varejista&gt;',
+      'Comércio &lt;varejista&gt;<br>12.994 empresas, 97,7%',
     );
     expect(tooltip.formatter({ dataIndex: 9 })).toBe('');
+    expect((legend as { formatter: (name: string) => string }).formatter('Indústria')).toBe(
+      'Indústria 2,3%',
+    );
+  });
+
+  it('a soma fecha em 100% e fatias inferiores a 0,1% não aparecem como zero', () => {
+    const spec = donutChart({
+      ...base,
+      items: [
+        { key: 'A', label: 'A', value: 1 },
+        { key: 'B', label: 'B', value: 1 },
+        { key: 'C', label: 'C', value: 1 },
+      ],
+    });
+    expect(spec.table.rows.map((row) => row[2])).toEqual(['33,4%', '33,3%', '33,3%']);
+
+    const tiny = donutChart({
+      ...base,
+      items: [
+        { key: 'A', label: 'A', value: 10000 },
+        { key: 'B', label: 'B', value: 1 },
+      ],
+    });
+    expect(tiny.table.rows[1][2]).toBe('menos de 0,1%');
   });
 
   it('acima de seis fatias, as menores viram "Outros", em cinza', () => {
@@ -62,7 +86,7 @@ describe('donutChart', () => {
     const { color, series } = optionsOf(spec);
 
     expect(series[0]['data']).toHaveLength(6);
-    expect(spec.table.rows.at(-1)).toEqual(['Outros', '12']);
+    expect(spec.table.rows.at(-1)).toEqual(['Outros', '12', '23,1%']);
     expect(color?.at(-1)).toBe(OTHER_COLOR);
   });
 
