@@ -134,6 +134,34 @@
   }
 }
 
+// Sem Material nem overlay: o aviso precisa funcionar quando os outros arquivos não chegam.
+.navigation-failure {
+  position: fixed;
+  inset: auto 1rem 1rem;
+  z-index: 1001;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--mat-sys-corner-medium);
+  background: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+
+  button {
+    min-height: 2.75rem;
+    padding-inline: 1rem;
+    border: 1px solid currentColor;
+    border-radius: var(--mat-sys-corner-full);
+    background: transparent;
+    color: inherit;
+    font: var(--mat-sys-label-large);
+    cursor: pointer;
+  }
+}
+
 .footer {
   padding: 1rem;
   background: var(--bios-brand-paper);
