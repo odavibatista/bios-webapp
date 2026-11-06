@@ -120,6 +120,36 @@ test.describe('conta (#23)', () => {
     await page.evaluate(() => window.scrollTo(0, 0));
   });
 
+  for (const width of [320, 768, 1280, 1920]) {
+    test(`campos do endereço com a mesma altura em ${width} px (#269)`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await openAccount(page, 'apresentacao@example.com', /Conta de Demonstração/);
+
+      const fields = page.locator('fieldset.address .mdc-text-field');
+      const heights = await fields.evaluateAll((boxes) =>
+        boxes.map((box) => Math.round(box.getBoundingClientRect().height)),
+      );
+
+      expect(new Set(heights).size).toBe(1);
+
+      const hintTop = (text: string) =>
+        page
+          .locator('fieldset.address')
+          .getByText(text, { exact: true })
+          .evaluate((hint) => Math.round(hint.getBoundingClientRect().top));
+
+      if (width > 600) {
+        expect(await hintTop('8 dígitos')).toBe(await hintTop('Ex.: Rua, Avenida, Travessa'));
+        expect(await hintTop('Ou "s/n"')).toBe(await hintTop('Opcional'));
+      }
+
+      await expect(page.getByLabel('Logradouro')).toHaveAccessibleDescription(
+        'Ex.: Rua, Avenida, Travessa',
+      );
+      await expect(page.getByLabel('Complemento')).toHaveAccessibleDescription('Opcional');
+    });
+  }
+
   test('leva à troca de senha', async ({ page }) => {
     await openAccount(page, 'apresentacao@example.com', /Conta de Demonstração/);
 
