@@ -73,11 +73,17 @@ a:focus-visible {
 }
 
 // Os avisos do Material ficam abaixo do cabeçalho e usam as cores do tema em todas as telas.
+.cdk-overlay-pane:has(.mat-mdc-snack-bar-container) {
+  // A faixa vazia criada pelo deslocamento do aviso não pode interceptar o cabeçalho.
+  pointer-events: none;
+}
+
 .cdk-overlay-container .mat-mdc-snack-bar-container {
   --mdc-snackbar-container-color: var(--mat-sys-secondary-container);
   --mdc-snackbar-supporting-text-color: var(--mat-sys-on-secondary-container);
 
   margin-top: 4.5rem;
+  pointer-events: auto;
 
   .mdc-snackbar__surface {
     background-color: var(--mat-sys-secondary-container);
