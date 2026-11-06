@@ -790,6 +790,12 @@ describe('MockBiosApi', () => {
 
       expect(file.blob).toBeInstanceOf(Blob);
       expect(file.filename).toBe('empresas-bios-2026-10-30.xlsx');
+
+      clock = new Date(2026, 10, 5, 23, 30).getTime();
+      await signIn();
+      await expect(
+        api.exportCompaniesXlsx({ query: { cnae: '24', ods: 13, order: 'desc' } }),
+      ).resolves.toMatchObject({ filename: 'empresas-bios-2026-11-05.xlsx' });
       expect(files.load).toHaveBeenCalledWith(
         'exportCompaniesXlsx',
         'setor-ods-13-desc.xlsx',

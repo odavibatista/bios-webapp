@@ -1036,7 +1036,8 @@ export class MockBiosApi extends BiosApi {
 
     return {
       blob: await companiesWorkbook(matches, this.d.activeOds()),
-      filename: `empresas-bios-${new Date(this.now()).toISOString().slice(0, 10)}.xlsx`,
+      // O dia de quem baixa, e não o do UTC: às 23h daqui, já seria amanhã.
+      filename: `empresas-bios-${new Date(this.now()).toLocaleDateString('sv-SE')}.xlsx`,
     };
   }
 
