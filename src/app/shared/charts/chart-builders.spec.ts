@@ -35,21 +35,75 @@ const optionsOf = (spec: { options: (theme: typeof THEME) => object }) =>
 describe('donutChart', () => {
   it('a tabela traz os mesmos números, com o milhar em português', () => {
     expect(donutChart(base).table).toEqual({
-      headers: HEADERS,
+      headers: [...HEADERS, 'Percentual'],
       rows: [
-        ['Comércio <varejista>', '12.994'],
-        ['Indústria', '300'],
+        ['Comércio <varejista>', '12.994', '97,7%'],
+        ['Indústria', '300', '2,3%'],
       ],
     });
   });
 
-  it('a dica é a frase da categoria, com o texto da API escapado', () => {
-    const { tooltip } = optionsOf(donutChart(base));
+  it('a dica e a legenda mostram quantidade e percentual, com o texto da API escapado', () => {
+    const spec = donutChart(base);
+    const { tooltip } = optionsOf(spec);
 
     expect(tooltip.formatter({ dataIndex: 0 })).toBe(
-      '12994 empresas atuam em Comércio &lt;varejista&gt;',
+      '12994 empresas atuam em Comércio &lt;varejista&gt;, 97,7%',
     );
     expect(tooltip.formatter({ dataIndex: 9 })).toBe('');
+    expect(spec.legend?.[1]).toEqual({
+      label: 'Indústria',
+      share: '2,3%',
+      color: CATEGORY_COLORS[1],
+    });
+  });
+
+  it('a dica e a tabela respeitam a frase e o formato de quem pede o gráfico', () => {
+    const spec = donutChart({
+      ...base,
+      sentence: ({ value }) => (value === 1 ? '1 evidência' : `${value} evidências`),
+      format: (value) => `R$ ${value}`,
+      items: [
+        { key: 'A', label: 'A', value: 1 },
+        { key: 'B', label: 'B', value: 3 },
+      ],
+    });
+
+    expect(optionsOf(spec).tooltip.formatter({ dataIndex: 0 })).toBe('1 evidência, 25,0%');
+    expect(spec.table.rows[1]).toEqual(['B', 'R$ 3', '75,0%']);
+  });
+
+  it('sem nada a somar, o percentual fica em zero', () => {
+    const spec = donutChart({
+      ...base,
+      items: [
+        { key: 'A', label: 'A', value: 0 },
+        { key: 'B', label: 'B', value: 0 },
+      ],
+    });
+
+    expect(spec.table.rows.map((row) => row[2])).toEqual(['0,0%', '0,0%']);
+  });
+
+  it('a soma fecha em 100% e fatias inferiores a 0,1% não aparecem como zero', () => {
+    const spec = donutChart({
+      ...base,
+      items: [
+        { key: 'A', label: 'A', value: 1 },
+        { key: 'B', label: 'B', value: 1 },
+        { key: 'C', label: 'C', value: 1 },
+      ],
+    });
+    expect(spec.table.rows.map((row) => row[2])).toEqual(['33,4%', '33,3%', '33,3%']);
+
+    const tiny = donutChart({
+      ...base,
+      items: [
+        { key: 'A', label: 'A', value: 10000 },
+        { key: 'B', label: 'B', value: 1 },
+      ],
+    });
+    expect(tiny.table.rows[1][2]).toBe('menos de 0,1%');
   });
 
   it('acima de seis fatias, as menores viram "Outros", em cinza', () => {
@@ -62,7 +116,7 @@ describe('donutChart', () => {
     const { color, series } = optionsOf(spec);
 
     expect(series[0]['data']).toHaveLength(6);
-    expect(spec.table.rows.at(-1)).toEqual(['Outros', '12']);
+    expect(spec.table.rows.at(-1)).toEqual(['Outros', '12', '23,1%']);
     expect(color?.at(-1)).toBe(OTHER_COLOR);
   });
 
@@ -75,7 +129,7 @@ describe('donutChart', () => {
     const spec = donutChart({ ...base, items });
     const { color } = optionsOf(spec);
 
-    expect(spec.table.rows.at(-1)).toEqual(['Outros', '1']);
+    expect(spec.table.rows.at(-1)).toEqual(['Outros', '1', '4,8%']);
     expect(color).toEqual([...CATEGORY_COLORS, OTHER_COLOR]);
   });
 

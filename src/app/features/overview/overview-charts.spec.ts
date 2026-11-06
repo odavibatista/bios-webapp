@@ -65,10 +65,10 @@ describe('overviewCards', () => {
   });
 
   it('usa os rótulos da tela, com acento e sem o código da API', () => {
-    expect(cardOf('situacao').chart?.table.rows[0]).toEqual(['Ativa', '100']);
+    expect(cardOf('situacao').chart?.table.rows[0]).toEqual(['Ativa', '100', '83,3%']);
     expect(cardOf('porte').chart?.table.rows).toEqual([
-      ['Microempresa (ME)', '80'],
-      ['Não informado', '40'],
+      ['Microempresa (ME)', '80', '66,7%'],
+      ['Não informado', '40', '33,3%'],
     ]);
     expect(cardOf('bioma').chart?.table.rows[0]).toEqual(['Amazônia', '12']);
   });
