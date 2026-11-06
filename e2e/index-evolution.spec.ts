@@ -32,6 +32,9 @@ test.describe('evolução do índice no perfil (#233)', () => {
     ).toBeVisible();
     await card.scrollIntoViewIfNeeded();
     await expect(card.locator('bios-chart-canvas [role="img"]')).toBeVisible();
+    await expect(card.locator('bios-chart-canvas svg')).not.toContainText(
+      /(Feb|Apr|May|Aug|Sep|Oct|Dec)/,
+    );
     await expectNoHorizontalScroll(page);
     await expectAccessible(page, testInfo, 'evolução do índice');
 
