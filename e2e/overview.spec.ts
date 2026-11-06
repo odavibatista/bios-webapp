@@ -81,6 +81,23 @@ test.describe('panorama de dados (#234)', () => {
     await expect(card.locator('bios-chart-canvas')).toHaveCount(0);
   });
 
+  for (const width of [320, 1920]) {
+    test(`a rosca mostra percentuais em ${width} px e repete os valores na tabela (#251)`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signIn(page, '/pesquisa');
+      const card = page.locator('bios-chart-card', {
+        has: page.getByRole('heading', { name: 'Situação cadastral' }),
+      });
+      await expect(await firstChart(page)).toBeVisible();
+      await expect(card.locator('bios-chart-canvas svg')).toContainText(/\d+,\d%/);
+      await card.getByRole('radio', { name: 'Tabela' }).click();
+      await expect(card.getByRole('columnheader', { name: 'Percentual' })).toBeVisible();
+      await expect(card.getByRole('table')).toContainText(/\d+,\d%/);
+    });
+  }
+
   test('cada gráfico tem nome próprio, sem citar empresas', async ({ page }) => {
     await signIn(page, '/pesquisa');
 
