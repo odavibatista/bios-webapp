@@ -92,6 +92,32 @@ a:focus-visible {
   }
 }
 
+// O desktop usa o verde da marca também nas barras da página e das tabelas.
+@media (hover: hover) and (pointer: fine) {
+  html,
+  bios-table-scroll .frame {
+    scrollbar-color: var(--bios-brand-green) var(--mat-sys-surface-container);
+  }
+
+  html::-webkit-scrollbar,
+  bios-table-scroll .frame::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  html::-webkit-scrollbar-track,
+  bios-table-scroll .frame::-webkit-scrollbar-track {
+    background: var(--mat-sys-surface-container);
+  }
+
+  html::-webkit-scrollbar-thumb,
+  bios-table-scroll .frame::-webkit-scrollbar-thumb {
+    border: 2px solid var(--mat-sys-surface-container);
+    border-radius: 6px;
+    background: var(--bios-brand-green);
+  }
+}
+
 // O ODS escolhido quebra a linha em vez de cortar o nome no celular (#198).
 .mat-mdc-select .mat-mdc-select-value,
 .mat-mdc-select .mat-mdc-select-value-text,
