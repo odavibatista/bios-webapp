@@ -1,6 +1,9 @@
 import type { AbstractControl, ValidatorFn } from '@angular/forms';
 import { rules } from './account-rules';
 
+/** Empresas sediadas fora do Brasil, que a base guarda com esta sigla. */
+export const FOREIGN_UF = 'EX';
+
 /** Unidades da federação, em sigla, na ordem da API (`BRAZILIAN_STATES`). */
 export const BRAZILIAN_STATES = [
   'AC',

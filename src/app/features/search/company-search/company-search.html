@@ -25,6 +25,7 @@
           @for (uf of ufs; track uf) {
             <mat-option [value]="uf">{{ uf }}</mat-option>
           }
+          <mat-option [value]="foreignUf">Exterior</mat-option>
         </mat-select>
         <mat-hint>Todas as UFs ou uma específica.</mat-hint>
         <mat-error>{{ messageOf(form.controls.uf) }}</mat-error>
@@ -96,12 +97,26 @@
     </div>
 
     <div class="actions">
-      <button mat-flat-button type="submit" aria-describedby="dica-criterio">Pesquisar</button>
+      <button
+        mat-flat-button
+        type="submit"
+        [attr.aria-describedby]="criterionFilled() ? null : 'dica-criterio'"
+      >
+        Pesquisar
+      </button>
       <button mat-button type="button" (click)="clear()">Limpar</button>
-      <p id="dica-criterio" class="hint">Informe ao menos um critério.</p>
+      @if (!criterionFilled()) {
+        <p id="dica-criterio" class="hint">Informe ao menos um critério.</p>
+      }
     </div>
   </form>
 </section>
+
+@if (ignoredUf(); as uf) {
+  <p class="uf-notice" role="status">
+    A UF {{ uf }} não existe. A pesquisa vale para todas as UFs.
+  </p>
+}
 
 <bios-overview-totals class="totals" [analytics]="overview()" [loading]="analytics.isLoading()" />
 
@@ -164,7 +179,7 @@
         }
       } @else {
         <bios-async-state
-          [loading]="results.isLoading()"
+          [loading]="results.isLoading() || pastLastPage()"
           [empty]="results.hasValue() && results.value().data.length === 0"
           emptyMessage="Nenhuma empresa atende aos filtros. Tente afrouxá-los: retire um critério ou diminua os mínimos."
           loadingLabel="Pesquisando…"
@@ -173,7 +188,9 @@
             <div class="summary">
               <p role="status">
                 {{
-                  page.total === 1 ? '1 empresa encontrada' : page.total + ' empresas encontradas'
+                  page.total === 1
+                    ? '1 empresa encontrada'
+                    : count(page.total) + ' empresas encontradas'
                 }}
               </p>
               <button
@@ -189,8 +206,8 @@
 
             @if (exportLimit(); as limit) {
               <p class="export-limit" role="alert">
-                A pesquisa tem {{ limit.total }} empresas e a exportação aceita até {{ limit.max }}.
-                Refine os critérios para exportar.
+                A pesquisa tem {{ count(limit.total) }} empresas e a exportação aceita até
+                {{ count(limit.max) }}. Refine os critérios para exportar.
               </p>
             } @else if (exportError(); as error) {
               <bios-error-state [error]="error" (retry)="exportResults()" />
@@ -218,7 +235,7 @@
               >
                 Página anterior
               </button>
-              <span>Página {{ page.page }} de {{ page.total_pages }}</span>
+              <span>Página {{ count(page.page) }} de {{ count(page.total_pages) }}</span>
               <button
                 mat-stroked-button
                 type="button"

@@ -24,6 +24,7 @@ import { MatInputModule } from '@angular/material/input';
 import { debounceTime, startWith, Subject, switchMap } from 'rxjs';
 import { BiosApi } from '../../../core/api/bios-api';
 import { fieldMessage, RULES_ERROR_KEY } from '../account-rules';
+import { FOREIGN_UF } from '../address-rules';
 
 /** Espera depois da última tecla, para não consultar a cada letra. */
 const SEARCH_DELAY_MS = 200;
@@ -88,7 +89,7 @@ export function chosenCityRule(keptName: () => string | null | undefined): Valid
           }
         }
       </mat-autocomplete>
-      <mat-hint>{{ uf() ? hint() : 'Escolha a UF primeiro.' }}</mat-hint>
+      <mat-hint>{{ fieldHint() }}</mat-hint>
       <mat-error>{{ messageOf(text()) }}</mat-error>
     </mat-form-field>
   `,
@@ -138,7 +139,7 @@ export class CityField {
     params: () => {
       const uf = this.uf();
 
-      return this.active() && uf ? { uf, search: this.term() } : undefined;
+      return this.active() && this.hasCities(uf) ? { uf, search: this.term() } : undefined;
     },
     loader: ({ params: { uf, search } }) =>
       this.api.listCities({ path: { uf }, query: { search, page: 1, page_size: OPTIONS_LIMIT } }),
@@ -148,13 +149,26 @@ export class CityField {
     this.cities.hasValue() ? this.cities.value().data : [],
   );
 
+  /** Sem UF, não há lista; no exterior, a lista do IBGE não se aplica. */
+  private hasCities(uf: string): boolean {
+    return uf !== '' && uf !== FOREIGN_UF;
+  }
+
+  protected readonly fieldHint = computed(() => {
+    const uf = this.uf();
+
+    if (uf === FOREIGN_UF) return 'Sem município no exterior.';
+
+    return uf ? this.hint() : 'Escolha a UF primeiro.';
+  });
+
   constructor() {
     effect(() => {
       const uf = this.uf();
       const text = this.text();
 
       untracked(() => {
-        if (uf) text.enable({ emitEvent: false });
+        if (this.hasCities(uf)) text.enable({ emitEvent: false });
         else text.disable({ emitEvent: false });
       });
     });
