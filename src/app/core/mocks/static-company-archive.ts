@@ -75,10 +75,24 @@ function unavailable(path: string): ApiError {
   });
 }
 
+/** 426, e não 5xx: repetir não adianta, e a tela não oferece "Tentar de novo". */
+function outdatedBrowser(path: string): ApiError {
+  return new ApiError(426, {
+    statusCode: 426,
+    code: 'BROWSER_NOT_SUPPORTED',
+    message:
+      'Este navegador não abre a versão de apresentação. Atualize-o e abra a página de novo.',
+    timestamp: new Date().toISOString(),
+    path,
+  });
+}
+
 /** Lê um arquivo da base: JSON comprimido, aberto pelo próprio navegador. */
 async function readArchive<T>(file: string): Promise<T | null> {
   const path = `${BASE}/${file}.json.gz`;
   let response: Response;
+
+  if (typeof DecompressionStream === 'undefined') throw outdatedBrowser(path);
 
   try {
     response = await fetch(path);

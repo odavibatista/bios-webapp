@@ -36,6 +36,11 @@ export function normalizeCnpj(value: string): string {
   return value.replace(/[.\-/\s]/g, '').toUpperCase();
 }
 
+/** O dia de quem baixa, e não o do UTC: às 23h daqui, já seria amanhã. */
+export function exportFilename(now: number): string {
+  return `empresas-bios-${new Date(now).toLocaleDateString('sv-SE')}.xlsx`;
+}
+
 /**
  * Dígitos verificadores do CNPJ, numérico ou alfanumérico (formato da Receita a partir de
  * julho de 2026): cada caractere vale o código ASCII menos 48.

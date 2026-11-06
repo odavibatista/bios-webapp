@@ -1036,7 +1036,7 @@ export class MockBiosApi extends BiosApi {
 
     return {
       blob: await companiesWorkbook(matches, this.d.activeOds()),
-      filename: `empresas-bios-${new Date(this.now()).toISOString().slice(0, 10)}.xlsx`,
+      filename: this.d.exportFilename(this.now()),
     };
   }
 
