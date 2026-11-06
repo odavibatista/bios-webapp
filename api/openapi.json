@@ -806,6 +806,250 @@
         ]
       }
     },
+    "/locations/states": {
+      "get": {
+        "description": "As 27 UFs, com o código do IBGE, em ordem alfabética de nome. Vem do catálogo em disco: nenhuma consulta vai ao IBGE.",
+        "operationId": "listStates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Unidades da federação",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IbgeStateList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Lista as unidades da federação",
+        "tags": [
+          "Localidades"
+        ]
+      }
+    },
+    "/locations/states/{uf}/cities": {
+      "get": {
+        "description": "Só os municípios da UF informada. `search` filtra pelo trecho digitado, sem distinguir acento, caixa ou pontuação, e também alcança grafias usadas por outras fontes (`parati` encontra Paraty). Quem começa pelo trecho vem primeiro. Sem `search`, a lista vem em ordem alfabética.",
+        "operationId": "listCities",
+        "parameters": [
+          {
+            "name": "uf",
+            "required": true,
+            "in": "path",
+            "description": "Sigla da UF",
+            "schema": {
+              "description": "Sigla da UF",
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "description": "Página solicitada (a partir de 1)",
+            "schema": {
+              "default": 1,
+              "description": "Página solicitada (a partir de 1)",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "page_size",
+            "required": false,
+            "in": "query",
+            "description": "Quantidade de itens por página (máximo de 100)",
+            "schema": {
+              "default": 20,
+              "description": "Quantidade de itens por página (máximo de 100)",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Trecho do nome do município; acentos, caixa e pontuação são ignorados",
+            "schema": {
+              "description": "Trecho do nome do município; acentos, caixa e pontuação são ignorados",
+              "type": "string",
+              "maxLength": 60
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Página de municípios",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IbgeCityList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Lista os municípios de uma UF",
+        "tags": [
+          "Localidades"
+        ]
+      }
+    },
+    "/locations/postal-codes/{cep}": {
+      "get": {
+        "description": "Devolve logradouro, bairro, município e UF do CEP, nunca número nem complemento. Consulta o ViaCEP enviando só o CEP, com prazo de 3 segundos, e guarda a resposta em cache. Em 404 ou 503, a pessoa preenche o endereço à mão: a consulta nunca impede gravar a conta. CEP geral de município vem sem logradouro nem bairro. Limite próprio por IP (padrão: 20 consultas por minuto, `THROTTLE_POSTAL_CODE_LIMIT`), no lugar do limite global.",
+        "operationId": "lookupPostalCode",
+        "parameters": [
+          {
+            "name": "cep",
+            "required": true,
+            "in": "path",
+            "description": "CEP, com ou sem hífen",
+            "schema": {
+              "description": "CEP, com ou sem hífen",
+              "type": "string",
+              "pattern": "^\\d{5}-?\\d{3}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Endereço do CEP",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostalAddress"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "UNPROCESSABLE_ENTITY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "TOO_MANY_REQUESTS",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "SERVICE_UNAVAILABLE",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "jwt": []
+          }
+        ],
+        "summary": "Consulta o endereço de um CEP",
+        "tags": [
+          "Localidades"
+        ]
+      }
+    },
     "/auth/login": {
       "post": {
         "description": "Devolve um access token JWT de vida curta e um refresh token opaco de uso único. Cinco senhas incorretas seguidas bloqueiam o IP ou a conta por 15 minutos.",
@@ -1982,11 +2226,22 @@
             "name": "city",
             "required": false,
             "in": "query",
-            "description": "Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado",
+            "description": "Nome inteiro do município, exige `uf`; acentos, caixa e pontuação são ignorados",
             "schema": {
-              "description": "Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado",
+              "description": "Nome inteiro do município, exige `uf`; acentos, caixa e pontuação são ignorados",
               "type": "string",
               "maxLength": 100
+            }
+          },
+          {
+            "name": "city_ibge_code",
+            "required": false,
+            "in": "query",
+            "description": "Código IBGE do município, exige `uf`. Alcança também as grafias usadas por outras fontes",
+            "schema": {
+              "description": "Código IBGE do município, exige `uf`. Alcança também as grafias usadas por outras fontes",
+              "type": "string",
+              "pattern": "^\\d{7}$"
             }
           },
           {
@@ -2129,11 +2384,22 @@
             "name": "city",
             "required": false,
             "in": "query",
-            "description": "Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado",
+            "description": "Nome inteiro do município, exige `uf`; acentos, caixa e pontuação são ignorados",
             "schema": {
-              "description": "Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado",
+              "description": "Nome inteiro do município, exige `uf`; acentos, caixa e pontuação são ignorados",
               "type": "string",
               "maxLength": 100
+            }
+          },
+          {
+            "name": "city_ibge_code",
+            "required": false,
+            "in": "query",
+            "description": "Código IBGE do município, exige `uf`. Alcança também as grafias usadas por outras fontes",
+            "schema": {
+              "description": "Código IBGE do município, exige `uf`. Alcança também as grafias usadas por outras fontes",
+              "type": "string",
+              "pattern": "^\\d{7}$"
             }
           },
           {
@@ -2287,11 +2553,22 @@
             "name": "city",
             "required": false,
             "in": "query",
-            "description": "Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado",
+            "description": "Nome inteiro do município, exige `uf`; acentos, caixa e pontuação são ignorados",
             "schema": {
-              "description": "Município; acentos, caixa e pontuação são ignorados. Sem a UF, casa o município de qualquer estado",
+              "description": "Nome inteiro do município, exige `uf`; acentos, caixa e pontuação são ignorados",
               "type": "string",
               "maxLength": 100
+            }
+          },
+          {
+            "name": "city_ibge_code",
+            "required": false,
+            "in": "query",
+            "description": "Código IBGE do município, exige `uf`. Alcança também as grafias usadas por outras fontes",
+            "schema": {
+              "description": "Código IBGE do município, exige `uf`. Alcança também as grafias usadas por outras fontes",
+              "type": "string",
+              "pattern": "^\\d{7}$"
             }
           },
           {
@@ -3227,6 +3504,11 @@
             "maxLength": 100,
             "description": "Cidade"
           },
+          "city_ibge_code": {
+            "description": "Código IBGE do município escolhido. Quando vem, precisa ser da UF informada, e o nome passa a ser o do catálogo",
+            "type": "string",
+            "pattern": "^\\d{7}$"
+          },
           "state": {
             "type": "string",
             "enum": [
@@ -3437,6 +3719,134 @@
           "domain"
         ],
         "description": "Domínio a incluir na blacklist"
+      },
+      "IbgeStateList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IbgeState"
+            },
+            "description": "UFs, por nome"
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false,
+        "description": "Unidades da federação"
+      },
+      "IbgeState": {
+        "type": "object",
+        "properties": {
+          "ibge_code": {
+            "type": "string",
+            "description": "Código IBGE da UF"
+          },
+          "acronym": {
+            "type": "string",
+            "description": "Sigla da UF"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome oficial da UF"
+          }
+        },
+        "required": [
+          "ibge_code",
+          "acronym",
+          "name"
+        ],
+        "additionalProperties": false,
+        "description": "Unidade da federação"
+      },
+      "IbgeCityList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IbgeCity"
+            },
+            "description": "Itens da página"
+          },
+          "pagination": {
+            "$ref": "#/components/schemas/PaginationMeta"
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "additionalProperties": false,
+        "description": "Página de municípios"
+      },
+      "IbgeCity": {
+        "type": "object",
+        "properties": {
+          "ibge_code": {
+            "type": "string",
+            "description": "Código IBGE do município, com 7 dígitos"
+          },
+          "name": {
+            "type": "string",
+            "description": "Nome oficial do município"
+          },
+          "uf": {
+            "type": "string",
+            "description": "Sigla da UF"
+          }
+        },
+        "required": [
+          "ibge_code",
+          "name",
+          "uf"
+        ],
+        "additionalProperties": false,
+        "description": "Município"
+      },
+      "PostalAddress": {
+        "type": "object",
+        "properties": {
+          "postal_code": {
+            "type": "string",
+            "description": "CEP, só com os dígitos"
+          },
+          "street": {
+            "nullable": true,
+            "description": "Logradouro; nulo em CEP geral de município",
+            "type": "string"
+          },
+          "neighborhood": {
+            "nullable": true,
+            "description": "Bairro; nulo em CEP geral de município",
+            "type": "string"
+          },
+          "city": {
+            "type": "string",
+            "description": "Nome do município"
+          },
+          "city_ibge_code": {
+            "nullable": true,
+            "description": "Código IBGE do município; nulo quando não está no catálogo",
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "description": "Sigla da UF"
+          }
+        },
+        "required": [
+          "postal_code",
+          "street",
+          "neighborhood",
+          "city",
+          "city_ibge_code",
+          "state"
+        ],
+        "additionalProperties": false,
+        "description": "Endereço de um CEP"
       },
       "LoginRequest": {
         "type": "object",

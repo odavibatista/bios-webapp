@@ -7,6 +7,7 @@ import type {
   SectorEvolution,
 } from '../api/generated';
 import type { CompanyFacts } from './company-analytics';
+import type { LocationRows } from './location-catalog';
 import {
   CompanyArchive,
   type ArchivedCompany,
@@ -181,6 +182,7 @@ export class StaticCompanyArchive extends CompanyArchive {
   private movementList?: Promise<CompanyMovementItem[]>;
   private factList?: Promise<Map<string, CompanyFacts>>;
   private baseSummary?: Promise<CompanyAnalytics>;
+  private locationRows?: Promise<LocationRows>;
   private readonly shards = new Map<string, Promise<Shard>>();
 
   entries(): Promise<readonly CompanyEntry[]> {
@@ -203,6 +205,15 @@ export class StaticCompanyArchive extends CompanyArchive {
     );
 
     return this.baseSummary;
+  }
+
+  locations(): Promise<LocationRows> {
+    this.locationRows ??= this.required<LocationRows>('locations').catch((error: unknown) => {
+      this.locationRows = undefined;
+      throw error;
+    });
+
+    return this.locationRows;
   }
 
   facts(): Promise<ReadonlyMap<string, CompanyFacts>> {

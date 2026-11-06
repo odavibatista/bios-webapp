@@ -28,7 +28,8 @@ import { capturedBody, capturedError, capturesOf, notInPresentation } from './mo
  * (conferidas nos testes contra as pesquisas reais capturadas).
  */
 
-type SearchQuery = NonNullable<SearchCompaniesData['query']>;
+/** `cityNames`: o município escolhido, com o nome oficial e as grafias de outras fontes. */
+type SearchQuery = NonNullable<SearchCompaniesData['query']> & { cityNames?: readonly string[] };
 
 /** CNPJ sem pontuação e em maiúsculas, como a API o normaliza (UC06, regra 8). */
 export function normalizeCnpj(value: string): string {
@@ -185,13 +186,20 @@ export function searchCriteriaError(
   now: number,
   { criterionRequired = true } = {},
 ): ApiError | null {
-  const { name, uf, city, cnae, ods, order, min_score, min_confidence } = query ?? {};
-  const noCriterion = [name, uf, city, cnae, ods].every(
+  const { name, uf, city, city_ibge_code, cnae, ods, order, min_score, min_confidence } =
+    query ?? {};
+  const noCriterion = [name, uf, city, city_ibge_code, cnae, ods].every(
     (value) => value === undefined || value === '',
   );
 
   if (criterionRequired && noCriterion) {
     return capturedError('searchCompanies/sem-criterio', path, now);
+  }
+  if ((city !== undefined || city_ibge_code !== undefined) && uf === undefined) {
+    return capturedError('searchCompanies/ordem-sem-ods', path, now, {
+      message: 'Informe a UF do município.',
+      details: [{ path: 'uf', message: 'Informe a UF do município.' }],
+    });
   }
   if (name !== undefined && !words(name).some((word) => word.length >= 3)) {
     return capturedError('searchCompanies/nome-curto', path, now);
@@ -242,9 +250,10 @@ export function matchEntries(
   entries: readonly CompanyEntry[],
   query: SearchQuery | undefined,
 ): CompanyEntry[] {
-  const { name, uf, city, cnae, ods, order, min_score, min_confidence } = query ?? {};
+  const { name, uf, city, cityNames, cnae, ods, order, min_score, min_confidence } = query ?? {};
   const nameWords = words(name);
-  const cityName = city === undefined ? undefined : words(city).join(' ');
+  const wantedCities = cityNames ?? (city === undefined ? undefined : [city]);
+  const cities = wantedCities && new Set(wantedCities.map((item) => words(item).join(' ')));
   const wantedUf = uf?.toUpperCase();
   const cnaeDigits = cnae?.replace(/\D/g, '');
   const scoreOf = (entry: CompanyEntry) => (ods === undefined ? undefined : entry.scores[ods]);
@@ -258,7 +267,7 @@ export function matchEntries(
       (min_score === undefined || (score?.score_value != null && score.score_value >= min_score)) &&
       (min_confidence === undefined ||
         (score?.confidence_value != null && score.confidence_value >= min_confidence)) &&
-      (cityName === undefined || words(entry.city).join(' ') === cityName) &&
+      (cities === undefined || cities.has(words(entry.city).join(' '))) &&
       nameWords.every((word) => wordsOf(entry).some((candidate) => candidate.startsWith(word)))
     );
   });

@@ -27,6 +27,10 @@ the main screen opens without downloading the index. The generator runs with
 `node --experimental-strip-types`, because it reuses those rules from the app code, and takes the dump
 and the bios-core-api folder.
 
+`locations.json.gz` holds the 27 states and the 5,571 IBGE municipalities, for the municipality selector (RF38), and
+is downloaded when the field is used. It comes from the bios-core-api catalog:
+`node scripts/build-locations-data.mjs <bios-core-api>`.
+
 - **One capture per file:** `src/app/core/mocks/fixtures/<operationId>/<scenario>.ts`, with
   `satisfies CapturedResponse<...>` over the generated type of the operation and status. If the API
   changes the shape of a response, `typecheck` rejects the old capture. The XLSX spreadsheet sits next

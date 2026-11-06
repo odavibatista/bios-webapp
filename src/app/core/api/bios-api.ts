@@ -103,6 +103,10 @@ export abstract class BiosApi {
     input?: ApiInput<Api.GetCompanyAnalyticsData>,
   ): Promise<Api.GetCompanyAnalyticsResponse>;
 
+  // Localidades (UC05, UC08).
+  abstract listStates(input?: ApiInput<Api.ListStatesData>): Promise<Api.ListStatesResponse>;
+  abstract listCities(input: ApiInput<Api.ListCitiesData>): Promise<Api.ListCitiesResponse>;
+
   // ODS e setores (UC07, UC10).
   abstract listOds(input?: ApiInput<Api.ListOdsData>): Promise<Api.ListOdsResponse>;
   abstract listSectors(input?: ApiInput<Api.ListSectorsData>): Promise<Api.ListSectorsResponse>;

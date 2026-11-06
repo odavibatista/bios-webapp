@@ -9,6 +9,8 @@ import { TabStorage } from '../session/tab-storage';
 import type { CaptureKey } from './fixtures';
 import { MOCK_API_CONFIG } from './mock-config';
 import { CompanyArchive, type ArchivedCompany } from './company-archive';
+import { LocationCatalog } from './location-catalog';
+import { LOCATION_FIXTURE } from './location-fixture';
 import type * as MockData from './mock-data';
 import { MockFiles } from './mock-files';
 import { MockMailbox, type MockEmail } from './mock-mailbox';
@@ -152,6 +154,7 @@ export class MockBiosApi extends BiosApi {
   private readonly storage = inject(TabStorage, { optional: true });
 
   private data?: typeof MockData;
+  private locations?: Promise<LocationCatalog>;
   /** A carga em andamento, para chamadas simultâneas esperarem a mesma, e não semearem de novo. */
   private loading?: Promise<void>;
   private sequence = 0;
@@ -767,7 +770,9 @@ export class MockBiosApi extends BiosApi {
 
       if (error) throw error;
 
-      if (!this.archive) return this.d.capturedAnalytics(input?.query);
+      const query = await this.withCityNames(input?.query, path);
+
+      if (!this.archive) return this.d.capturedAnalytics(query);
 
       const criteria = Object.values(input?.query ?? {}).some(
         (value) => value !== undefined && value !== '',
@@ -781,7 +786,7 @@ export class MockBiosApi extends BiosApi {
         this.archive.sectors(),
       ]);
 
-      return this.d.analyticsOf(this.d.matchEntries(entries, input?.query), facts, sectors);
+      return this.d.analyticsOf(this.d.matchEntries(entries, query), facts, sectors);
     });
   }
 
@@ -793,9 +798,11 @@ export class MockBiosApi extends BiosApi {
 
       if (error) throw error;
 
-      if (this.archive) return this.d.searchEntries(await this.archive.entries(), input?.query);
+      const query = await this.withCityNames(input?.query, path);
 
-      return this.d.capturedSearch(input?.query) ?? this.d.searchProfiles(input?.query);
+      if (this.archive) return this.d.searchEntries(await this.archive.entries(), query);
+
+      return this.d.capturedSearch(query) ?? this.d.searchProfiles(query);
     });
   }
 
@@ -807,9 +814,11 @@ export class MockBiosApi extends BiosApi {
 
       if (error) throw error;
 
-      if (this.archive) return this.generatedExport(this.archive, input?.query, path);
+      const query = await this.withCityNames(input?.query, path);
 
-      const file = this.d.capturedExportFile(input?.query);
+      if (this.archive) return this.generatedExport(this.archive, query, path);
+
+      const file = this.d.capturedExportFile(query);
 
       if (file) {
         return {
@@ -819,7 +828,7 @@ export class MockBiosApi extends BiosApi {
       }
 
       const { total } = this.d.searchProfiles({
-        ...input?.query,
+        ...query,
         page: 1,
         page_size: 1,
       }).pagination;
@@ -839,6 +848,36 @@ export class MockBiosApi extends BiosApi {
   // ------------------------------------------------------------------------------------------
   // ODS e setores (UC07, UC10)
   // ------------------------------------------------------------------------------------------
+
+  listStates() {
+    return this.run('listStates', async () => {
+      this.authenticated('/locations/states');
+
+      return { data: (await this.locationCatalog()).states };
+    });
+  }
+
+  listCities({ path: { uf }, query }: ApiInput<Api.ListCitiesData>) {
+    return this.run('listCities', async () => {
+      this.authenticated(`/locations/states/${uf}/cities`);
+
+      const { page = 1, page_size: pageSize = 20, search } = query ?? {};
+      const cities = (await this.locationCatalog()).search(uf.toUpperCase(), search);
+      const start = (page - 1) * pageSize;
+
+      return {
+        data: cities
+          .slice(start, start + pageSize)
+          .map((city) => ({ ibge_code: city.code, name: city.name, uf: city.uf })),
+        pagination: {
+          page,
+          page_size: pageSize,
+          total: cities.length,
+          total_pages: Math.ceil(cities.length / pageSize),
+        },
+      };
+    });
+  }
 
   listOds() {
     return this.run('listOds', () => {
@@ -880,6 +919,42 @@ export class MockBiosApi extends BiosApi {
   // ------------------------------------------------------------------------------------------
 
   /** A empresa na base publicada, ou o erro que a API daria (UC06, fluxos 2.1 e 3.3). */
+  /** O catálogo baixa uma vez; uma falha não fica guardada, para "Tentar de novo" funcionar. */
+  private locationCatalog(): Promise<LocationCatalog> {
+    this.locations ??= Promise.resolve(this.archive?.locations() ?? LOCATION_FIXTURE)
+      .then((rows) => new LocationCatalog(rows))
+      .catch((error: unknown) => {
+        this.locations = undefined;
+        throw error;
+      });
+
+    return this.locations;
+  }
+
+  /** Troca o código do município pelo nome oficial e pelas grafias, como a API faz. */
+  private async withCityNames<TQuery extends { uf?: string; city_ibge_code?: string }>(
+    query: TQuery | undefined,
+    path: string,
+  ): Promise<(TQuery & { cityNames?: readonly string[] }) | undefined> {
+    if (!query?.city_ibge_code) return query;
+
+    const city = (await this.locationCatalog()).find(query.city_ibge_code, query.uf ?? '');
+
+    if (!city) {
+      throw this.error('searchCompanies/ordem-sem-ods', path, {
+        message: 'O município informado não pertence à UF selecionada.',
+        details: [
+          {
+            path: 'city_ibge_code',
+            message: 'O município informado não pertence à UF selecionada.',
+          },
+        ],
+      });
+    }
+
+    return { ...query, cityNames: [city.name, ...city.aliases] };
+  }
+
   private async archivedCompany(cnpj: string, path: string): Promise<ArchivedCompany> {
     const normalized = this.d.normalizeCnpj(cnpj);
 
