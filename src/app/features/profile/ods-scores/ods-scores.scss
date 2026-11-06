@@ -185,6 +185,7 @@ h3 {
 
 .evidence-link {
   justify-self: start;
+  min-height: 1.5rem;
   padding: 0;
   border: 0;
   background: none;
@@ -198,4 +199,18 @@ h3 {
 .evidence-link:focus-visible {
   outline: 2px solid var(--mat-sys-primary);
   outline-offset: 3px;
+}
+
+// Área de toque do celular (#264): o texto segue do mesmo tamanho.
+@media (max-width: 599.98px) {
+  .evidence-link {
+    min-height: 2.75rem;
+  }
+
+  li > a {
+    display: inline-flex;
+    align-items: center;
+    justify-self: start;
+    min-height: 2.75rem;
+  }
 }
