@@ -109,6 +109,7 @@ function rangeCards(
         ? columnChart({
             label: `Gráfico de ${heading.toLowerCase()}, em faixas. Os mesmos números estão na tabela.`,
             categories: ranges.map(rangeLabel),
+            ticks: ranges.map(({ from }) => rangeNumber(from)),
             series: [{ name: 'Empresas', values: ranges.map(({ count }) => count) }],
             headers: ['Faixa', 'Empresas'],
             sentence: (range, _series, count) =>
