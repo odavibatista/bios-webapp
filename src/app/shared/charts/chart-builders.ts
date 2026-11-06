@@ -86,22 +86,55 @@ function itemTooltip(items: readonly ChartItem[], sentence: ItemsChart['sentence
 export function donutChart(chart: DonutChart): ChartSpec {
   const items = foldCategories(chart.items, MAX_SLICES);
   const colors = sliceColors(items, chart.order);
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+  const tenths = items.map((item) => (total > 0 ? (item.value / total) * 1000 : 0));
+  const rounded = tenths.map((value) => Math.floor(value));
+  let remainder = total > 0 ? 1000 - rounded.reduce((sum, value) => sum + value, 0) : 0;
+  const order = tenths
+    .map((value, index) => ({ index, fraction: value - rounded[index] }))
+    .filter(({ index }) => tenths[index] >= 1)
+    .sort((a, b) => b.fraction - a.fraction || a.index - b.index);
+  for (const { index } of order) {
+    if (remainder-- <= 0) break;
+    rounded[index]++;
+  }
+  const percentage = (index: number) =>
+    tenths[index] > 0 && tenths[index] < 1
+      ? 'menos de 0,1%'
+      : `${(rounded[index] / 10).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+  const percentages = new Map(items.map((item, index) => [item.label, percentage(index)]));
 
   return {
     label: chart.label,
     height: 18,
-    table: itemTable(items, chart.headers, chart.format ?? formatCount),
+    table: {
+      headers: [...chart.headers, 'Percentual'],
+      rows: items.map((item, index) => [
+        item.label,
+        (chart.format ?? formatCount)(item.value),
+        percentage(index),
+      ]),
+    },
     options: ({ text, surface }) => ({
       ...COMMON,
       color: colors,
-      tooltip: itemTooltip(items, chart.sentence),
+      tooltip: {
+        trigger: 'item',
+        confine: true,
+        formatter: ({ dataIndex }: { dataIndex: number }) => {
+          const item = items[dataIndex];
+          return item
+            ? `${escapeHtml(item.label)}<br>${formatCount(item.value)} ${escapeHtml(chart.headers[1].toLowerCase())}, ${percentage(dataIndex)}`
+            : '';
+        },
+      },
       legend: {
         bottom: 0,
         left: 'center',
         itemWidth: 12,
         itemHeight: 12,
         textStyle: { color: text },
-        formatter: (name: string) => name,
+        formatter: (name: string) => `${name} ${percentages.get(name) ?? ''}`,
       },
       series: [
         {
