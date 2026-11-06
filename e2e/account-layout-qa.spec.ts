@@ -13,6 +13,10 @@ async function signIn(page: Page) {
 test.describe('alinhamento da conta e privacidade (#254)', () => {
   for (const width of [1024, 1280, 1440, 1920, 2560]) {
     test(`as telas seguem as colunas das chaves em ${width} px`, async ({ page }) => {
+      test.skip(
+        test.info().project.name === 'celular',
+        'A largura e definida pelo caso; o projeto desktop cobre todas as larguras.',
+      );
       await page.setViewportSize({ width, height: 900 });
       await signIn(page);
       await page.goto('/conta/chaves');
