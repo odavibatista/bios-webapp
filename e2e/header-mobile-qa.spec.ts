@@ -11,6 +11,7 @@ async function signIn(page: Page) {
 
 test.describe('cabeçalho no celular (#263)', () => {
   test('em 320 × 568, fica fixo em até 20% da altura, e a conta vira ícone', async ({ page }) => {
+    test.skip(test.info().project.name === 'desktop', 'Cenário específico do projeto celular.');
     await page.setViewportSize({ width: 320, height: 568 });
     await signIn(page);
 
@@ -24,6 +25,7 @@ test.describe('cabeçalho no celular (#263)', () => {
   });
 
   test('em 750 × 340, deixa de ser fixo', async ({ page }) => {
+    test.skip(test.info().project.name === 'desktop', 'Cenário específico do projeto celular.');
     await page.setViewportSize({ width: 750, height: 340 });
     await signIn(page);
 
@@ -38,6 +40,7 @@ test.describe('cabeçalho no celular (#263)', () => {
   });
 
   test('o campo da busca usa 16 px, para o iOS não dar zoom', async ({ page }) => {
+    test.skip(test.info().project.name === 'desktop', 'Cenário específico do projeto celular.');
     await page.setViewportSize({ width: 390, height: 844 });
     await signIn(page);
 
@@ -69,6 +72,7 @@ test.describe('um único menu no celular (#249)', () => {
   }
 
   test('em 1024 px, o menu lateral continua', async ({ page }) => {
+    test.skip(test.info().project.name === 'celular', 'Cenário específico do projeto desktop.');
     await page.setViewportSize({ width: 1024, height: 800 });
     await signIn(page);
 
@@ -79,6 +83,7 @@ test.describe('um único menu no celular (#249)', () => {
 test.describe('faixa de totais e abas da pesquisa (#248)', () => {
   for (const width of [1024, 1280, 1440]) {
     test(`não se sobrepõem em ${width} px, no topo e rolando`, async ({ page }) => {
+      test.skip(test.info().project.name === 'celular', 'Largura desktop definida pelo teste.');
       await page.setViewportSize({ width, height: 900 });
       await signIn(page);
       await page.goto('/pesquisa');

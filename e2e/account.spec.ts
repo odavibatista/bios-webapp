@@ -122,6 +122,7 @@ test.describe('conta (#23)', () => {
 
   for (const width of [320, 768, 1280, 1920]) {
     test(`campos do endereço com a mesma altura em ${width} px (#269)`, async ({ page }) => {
+      test.skip(test.info().project.name === 'celular', 'Largura definida pelo teste.');
       await page.setViewportSize({ width, height: 900 });
       await openAccount(page, 'apresentacao@example.com', /Conta de Demonstração/);
 

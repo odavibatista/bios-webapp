@@ -19,6 +19,10 @@ const height = async (control: Locator) => (await control.boundingBox())?.height
 
 test.describe('perfil no toque (#264)', () => {
   test('links de evidência e botões com 44 px no celular', async ({ page }) => {
+    test.skip(
+      test.info().project.name === 'desktop',
+      'Alvos de toque são medidos no projeto celular.',
+    );
     await page.setViewportSize({ width: 390, height: 844 });
     await openProfile(page, '00990842000138');
 
@@ -36,6 +40,10 @@ test.describe('perfil no toque (#264)', () => {
   });
 
   test('"Ver evidência no perfil" com 44 px no celular', async ({ page }) => {
+    test.skip(
+      test.info().project.name === 'desktop',
+      'Alvos de toque são medidos no projeto celular.',
+    );
     await page.setViewportSize({ width: 390, height: 844 });
     await openProfile(page, '00990842000138');
 
@@ -49,6 +57,10 @@ test.describe('perfil no toque (#264)', () => {
 
   for (const width of [320, 1280]) {
     test(`nenhum link isolado abaixo de 24 px em ${width} px`, async ({ page }) => {
+      test.skip(
+        test.info().project.name === 'desktop',
+        'Alvos de toque são medidos no projeto celular.',
+      );
       await page.setViewportSize({ width, height: 900 });
       await openProfile(page, '00990842000138');
 

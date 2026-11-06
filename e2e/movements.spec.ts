@@ -99,6 +99,7 @@ test.describe('tela principal com as movimentações (#168)', () => {
   });
 
   test('a busca única no cabeçalho cabe nas larguras móvel e desktop', async ({ page }) => {
+    test.skip(test.info().project.name === 'celular', 'Larguras definidas pelo próprio teste.');
     for (const width of [390, 1024, 1100, 1280, 1440]) {
       await page.setViewportSize({ width, height: 800 });
       await expect(page.getByRole('banner').getByRole('search')).toBeInViewport();
@@ -116,6 +117,7 @@ test.describe('tela principal com as movimentações (#168)', () => {
   });
 
   test('a busca permanece no cabeçalho ao alternar entre Empresas e Pesquisa', async ({ page }) => {
+    test.skip(test.info().project.name === 'celular', 'Larguras definidas pelo próprio teste.');
     for (const width of [390, 1024, 1280, 1440]) {
       await page.setViewportSize({ width, height: 800 });
       for (const route of ['/empresas', '/pesquisa']) {

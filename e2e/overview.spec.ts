@@ -85,6 +85,7 @@ test.describe('panorama de dados (#234)', () => {
     test(`a rosca mostra percentuais em ${width} px e repete os valores na tabela (#251)`, async ({
       page,
     }) => {
+      test.skip(test.info().project.name === 'celular', 'Largura definida pelo teste.');
       await page.setViewportSize({ width, height: 900 });
       await signIn(page, '/pesquisa');
       const card = page.locator('bios-chart-card', {
@@ -122,6 +123,7 @@ test.describe('panorama de dados (#234)', () => {
     test(`sem rolagem horizontal em ${width} px, com a tela acessível`, async ({
       page,
     }, testInfo) => {
+      test.skip(testInfo.project.name === 'celular', 'Largura definida pelo teste.');
       await page.setViewportSize({ width, height: 900 });
       await signIn(page, '/pesquisa');
 

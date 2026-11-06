@@ -25,6 +25,7 @@ test.describe('perfil da empresa (#24)', () => {
   test('em 1280 por 800, o índice aparece antes dos dados completos sem rolagem horizontal', async ({
     page,
   }) => {
+    test.skip(test.info().project.name === 'celular', 'Largura desktop definida pelo teste.');
     await page.setViewportSize({ width: 1280, height: 800 });
     await signIn(page);
     await toolbarField(page).fill('00.990.842/0001-38');
