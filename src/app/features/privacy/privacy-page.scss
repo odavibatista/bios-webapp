@@ -1,7 +1,12 @@
 :host {
   display: block;
-  max-width: 70ch;
-  margin: 0 auto;
+  width: 100%;
+}
+
+.lead,
+section p,
+section li {
+  max-width: 75ch;
 }
 
 h1 {
