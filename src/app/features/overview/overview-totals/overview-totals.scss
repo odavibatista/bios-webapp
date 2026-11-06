@@ -2,14 +2,16 @@
   display: block;
 }
 
+// Flex, e não grade: os blocos da última fileira se esticam até fechar a linha.
 .tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin: 0;
 }
 
 .tiles > div {
+  flex: 1 1 9.5rem;
   min-width: 0;
   min-height: 4.75rem;
   box-sizing: border-box;
