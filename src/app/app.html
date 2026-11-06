@@ -21,6 +21,13 @@
   </div>
 </mat-toolbar>
 
+@if (failedUrl(); as url) {
+  <div class="navigation-failure" role="alert">
+    <span>Não foi possível abrir a tela. Confira a conexão.</span>
+    <button type="button" (click)="retryNavigation(url)">Tentar de novo</button>
+  </div>
+}
+
 <main #main id="conteudo" class="content" [class.signed-in]="signedIn()" tabindex="-1">
   <router-outlet />
 </main>

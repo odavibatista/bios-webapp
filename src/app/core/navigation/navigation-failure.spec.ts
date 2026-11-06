@@ -1,18 +1,17 @@
 import { DOCUMENT } from '@angular/common';
 import { runInInjectionContext, EnvironmentInjector } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { NavigationError, Router } from '@angular/router';
-import { Subject } from 'rxjs';
-import { handleNavigationFailure, isChunkFailure } from './navigation-failure';
+import { NavigationError } from '@angular/router';
+import {
+  handleNavigationFailure,
+  isChunkFailure,
+  NavigationFailureNotice,
+} from './navigation-failure';
 
 const CHUNK = new TypeError('Failed to fetch dynamically imported module: /chunk-ABC.js');
 
 describe('falha ao abrir uma tela', () => {
-  const action = new Subject<void>();
-  const open = vi.fn(() => ({ onAction: () => action }));
   const assign = vi.fn();
-  const navigateByUrl = vi.fn();
   let view: {
     navigator: { onLine: boolean };
     location: { assign: typeof assign };
@@ -30,13 +29,11 @@ describe('falha ao abrir uma tela', () => {
     sessionStorage.clear();
     view = { navigator: { onLine: true }, location: { assign }, sessionStorage };
     TestBed.configureTestingModule({
-      providers: [
-        { provide: DOCUMENT, useValue: { defaultView: view } },
-        { provide: MatSnackBar, useValue: { open } },
-        { provide: Router, useValue: { navigateByUrl } },
-      ],
+      providers: [{ provide: DOCUMENT, useValue: { defaultView: view } }],
     });
   });
+
+  const notified = () => TestBed.inject(NavigationFailureNotice).url();
 
   it.each([
     ['Failed to fetch dynamically imported module: /a.js'],
@@ -52,14 +49,14 @@ describe('falha ao abrir uma tela', () => {
     fail(new Error('Guarda recusou'));
 
     expect(assign).not.toHaveBeenCalled();
-    expect(open).not.toHaveBeenCalled();
+    expect(notified()).toBeNull();
   });
 
   it('depois de um deploy, recarrega uma vez, na tela pedida', () => {
     fail();
 
     expect(assign).toHaveBeenCalledExactlyOnceWith('/setores');
-    expect(open).not.toHaveBeenCalled();
+    expect(notified()).toBeNull();
   });
 
   it('a recarga não vira laço: a segunda falha avisa', () => {
@@ -67,22 +64,16 @@ describe('falha ao abrir uma tela', () => {
     fail();
 
     expect(assign).toHaveBeenCalledOnce();
-    expect(open).toHaveBeenCalledOnce();
+    expect(notified()).toBe('/setores');
   });
 
-  it('sem conexão, avisa, e "Tentar de novo" repete a navegação', () => {
+  it('sem conexão, avisa sem recarregar', () => {
     view.navigator.onLine = false;
 
     fail();
-    action.next();
 
     expect(assign).not.toHaveBeenCalled();
-    expect(open).toHaveBeenCalledWith(
-      'Não foi possível abrir a tela. Confira a conexão.',
-      'Tentar de novo',
-      { duration: 0 },
-    );
-    expect(navigateByUrl).toHaveBeenCalledWith('/setores');
+    expect(notified()).toBe('/setores');
   });
 
   it('com o armazenamento bloqueado, avisa em vez de arriscar um laço', () => {
@@ -95,6 +86,6 @@ describe('falha ao abrir uma tela', () => {
     fail();
 
     expect(assign).not.toHaveBeenCalled();
-    expect(open).toHaveBeenCalledOnce();
+    expect(notified()).toBe('/setores');
   });
 });

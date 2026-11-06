@@ -1,7 +1,6 @@
 import { DOCUMENT } from '@angular/common';
-import { inject } from '@angular/core';
-import { MatSnackBar } from '@angular/material/snack-bar';
-import { type NavigationError, Router } from '@angular/router';
+import { inject, Injectable, signal } from '@angular/core';
+import type { NavigationError } from '@angular/router';
 
 const RELOADED_AT = 'bios.recarga-por-arquivo';
 /** Dentro deste prazo, uma nova falha não recarrega de novo: o arquivo não veio mesmo. */
@@ -12,6 +11,15 @@ const CHUNK_FAILURE =
 
 export function isChunkFailure(error: unknown): boolean {
   return error instanceof Error && CHUNK_FAILURE.test(`${error.name} ${error.message}`);
+}
+
+/**
+ * A tela que não abriu, para o aviso do `App`. O aviso mora no pacote inicial, sem Material: ele
+ * existe para quando os arquivos carregados sob demanda não chegam.
+ */
+@Injectable({ providedIn: 'root' })
+export class NavigationFailureNotice {
+  readonly url = signal<string | null>(null);
 }
 
 /** Lê e grava fora do alcance de quem bloqueia o armazenamento: sem ele, só não recarrega. */
@@ -36,10 +44,8 @@ function reloadedRecently(view: Window, now: number): boolean {
 export function handleNavigationFailure({ url, error }: NavigationError): void {
   if (!isChunkFailure(error)) return;
 
-  const document = inject(DOCUMENT);
-  const router = inject(Router);
-  const snackBar = inject(MatSnackBar);
-  const view = document.defaultView;
+  const notice = inject(NavigationFailureNotice);
+  const view = inject(DOCUMENT).defaultView;
 
   if (view?.navigator.onLine && !reloadedRecently(view, Date.now())) {
     view.location.assign(url);
@@ -47,10 +53,5 @@ export function handleNavigationFailure({ url, error }: NavigationError): void {
     return;
   }
 
-  snackBar
-    .open('Não foi possível abrir a tela. Confira a conexão.', 'Tentar de novo', { duration: 0 })
-    .onAction()
-    .subscribe(() => {
-      void router.navigateByUrl(url);
-    });
+  notice.url.set(url);
 }
