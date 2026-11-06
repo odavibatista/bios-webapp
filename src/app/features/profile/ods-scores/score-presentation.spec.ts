@@ -1,5 +1,5 @@
 import type { CompanyOdsScore } from '../../../core/api/generated';
-import { presentScore } from './score-presentation';
+import { presentScore, presentSectorAverage } from './score-presentation';
 
 const SCORE: CompanyOdsScore = {
   ods_number: 13,
@@ -63,5 +63,15 @@ describe('presentScore', () => {
     ['NO_DATA', 'Ainda não há dados suficientes'],
   ] as const)('cobertura %s é explicada sem veredito', (coverage_status, text) => {
     expect(presentScore({ ...SCORE, coverage_status }).coverageLabel).toContain(text);
+  });
+});
+
+describe('presentSectorAverage', () => {
+  it('situa a média na mesma escala do índice', () => {
+    expect(presentSectorAverage(-50)).toEqual({ label: '-50', position: 25 });
+  });
+
+  it('sem média publicada, não há marca', () => {
+    expect(presentSectorAverage(undefined)).toBeNull();
   });
 });

@@ -12,10 +12,31 @@ import type { MockApiConfig } from '../../../core/mocks/mock-config';
 import { MockFiles } from '../../../core/mocks/mock-files';
 import { CompanySearch, NO_CRITERION_MESSAGE } from './company-search';
 
+/** O jsdom não tem `IntersectionObserver`, que os cards do panorama usam. */
+class NoopObserver {
+  observe(): void {
+    // nada a observar no jsdom
+  }
+  unobserve(): void {
+    // idem
+  }
+  disconnect(): void {
+    // idem
+  }
+}
+
 /** Abre `/pesquisa` com a URL dada, já com sessão no mock, e espia a pesquisa. */
 async function openSearch(
   url = '/pesquisa',
-  { narrow = false, config = {} }: { narrow?: boolean; config?: Partial<MockApiConfig> } = {},
+  {
+    narrow = false,
+    config = {},
+    beforeOpen,
+  }: {
+    narrow?: boolean;
+    config?: Partial<MockApiConfig>;
+    beforeOpen?: (api: BiosApi) => void;
+  } = {},
 ) {
   TestBed.configureTestingModule({
     providers: [
@@ -34,9 +55,21 @@ async function openSearch(
   TestBed.inject(InMemoryApiCredentials).setAccessToken(session.access_token);
   const search = vi.spyOn(api, 'searchCompanies');
   const exportFile = vi.spyOn(api, 'exportCompaniesXlsx');
+  beforeOpen?.(api);
   const harness = await RouterTestingHarness.create(url);
 
   return { harness, search, exportFile, user: userEvent.setup(), router: TestBed.inject(Router) };
+}
+
+/** A pesquisa responde, e o panorama falha uma vez. */
+async function openFailingOverview() {
+  const opened = await openSearch('/pesquisa?nome=SIDERMIN&visao=panorama', {
+    beforeOpen: (api) => {
+      vi.spyOn(api, 'getCompanyAnalytics').mockRejectedValueOnce(new Error('sem rede'));
+    },
+  });
+
+  return opened;
 }
 
 async function resultRows() {
@@ -53,10 +86,17 @@ async function expectRows(count: number) {
 }
 
 describe('CompanySearch', () => {
+  beforeEach(() => {
+    vi.stubGlobal('IntersectionObserver', NoopObserver);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
   it('sem critério, não pesquisa e explica que é preciso ao menos um', async () => {
     const { search, user, router } = await openSearch();
 
-    expect(screen.getByText('Escolha ao menos um critério e pesquise.')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: 'Pesquisar' }));
 
     expect((await screen.findByRole('alert')).textContent).toContain(NO_CRITERION_MESSAGE);
@@ -420,7 +460,73 @@ describe('CompanySearch', () => {
     await vi.waitFor(() => {
       expect(router.url).toBe('/pesquisa');
     });
+    expect(await screen.findByRole('heading', { name: 'Panorama' })).toBeTruthy();
+  });
+
+  it('sem critério, abre o panorama da base; a outra aba explica o que falta', async () => {
+    await openSearch();
+
+    expect(await screen.findByRole('heading', { name: 'Situação cadastral' })).toBeTruthy();
+    expect(await screen.findByText('Empresas na base')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'Resultados' })).toBeNull();
+  });
+
+  it('a aba de resultados, escolhida na URL, explica que falta um critério', async () => {
+    await openSearch('/pesquisa?visao=resultados');
+
     expect(await screen.findByText('Escolha ao menos um critério e pesquise.')).toBeTruthy();
+  });
+
+  it('com critério, abre a lista, e os totais já são os do recorte', async () => {
+    const { harness } = await openSearch('/pesquisa?nome=SIDERMIN');
+
+    await expectRows(1);
+    await harness.fixture.whenStable();
+
+    const companies = await screen.findByText('Empresas na base');
+
+    await vi.waitFor(() => {
+      expect(companies.nextElementSibling?.textContent).toBe('1');
+    });
+  });
+
+  it('pesquisar pelo panorama mantém a aba e a escolha na URL', async () => {
+    const { user, router } = await openSearch('/pesquisa?visao=panorama');
+
+    await user.type(screen.getByLabelText('Nome da empresa'), 'SIDERMIN');
+    await user.click(screen.getByRole('button', { name: 'Pesquisar' }));
+
+    await vi.waitFor(() => {
+      expect(router.url).toBe('/pesquisa?nome=SIDERMIN&visao=panorama');
+    });
+    expect(await screen.findByRole('heading', { name: 'Panorama' })).toBeTruthy();
+  });
+
+  it('trocar de aba ou de página não refaz o panorama', async () => {
+    const analytics = vi.fn();
+    const { user, search } = await openSearch('/pesquisa?uf=MG', {
+      beforeOpen: (api) => {
+        analytics.mockImplementation(api.getCompanyAnalytics.bind(api));
+        api.getCompanyAnalytics = analytics;
+      },
+    });
+
+    await expectRows(4);
+    const searches = search.mock.calls.length;
+
+    await user.click(screen.getByRole('tab', { name: 'Panorama' }));
+    await screen.findByRole('heading', { name: 'Panorama' });
+
+    expect(analytics).toHaveBeenCalledTimes(1);
+    expect(search).toHaveBeenCalledTimes(searches);
+  });
+
+  it('falha no panorama não derruba a lista e oferece nova tentativa', async () => {
+    const { user } = await openFailingOverview();
+
+    expect(await screen.findByRole('button', { name: 'Tentar de novo' })).toBeTruthy();
+    await user.click(screen.getByRole('tab', { name: 'Resultados' }));
+    await expectRows(1);
   });
 
   it('em tela estreita, a lista vira cartões', async () => {

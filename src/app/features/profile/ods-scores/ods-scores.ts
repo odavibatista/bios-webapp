@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, input } from '@an
 import type { CompanyFullProfileResponse } from '../../../core/api/generated';
 import { retryHint } from '../environmental-evidences/evidence-presentation';
 import { presentExplanation } from './explanation-presentation';
-import { presentScore } from './score-presentation';
+import { presentScore, presentSectorAverage } from './score-presentation';
 
 /** Índices independentes por ODS, lidos do mesmo perfil que as evidências (UC07, RF10 e RF11). */
 @Component({
@@ -14,12 +14,15 @@ import { presentScore } from './score-presentation';
 })
 export class OdsScores {
   readonly profile = input.required<CompanyFullProfileResponse>();
+  /** A média do setor por ODS, quando publicada. Só situa o valor: não julga a empresa. */
+  readonly sectorAverages = input<Readonly<Record<number, number>>>({});
   private readonly document = inject(DOCUMENT);
 
   protected readonly scores = computed(() =>
     this.profile()
       .ods_scores.map((score) => ({
         ...presentScore(score),
+        sector: presentSectorAverage(this.sectorAverages()[score.ods_number]),
         explanation: presentExplanation(score, this.profile().evidences),
       }))
       .sort((a, b) => a.ods_number - b.ods_number),

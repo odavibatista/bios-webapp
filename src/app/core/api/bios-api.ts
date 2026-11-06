@@ -95,6 +95,14 @@ export abstract class BiosApi {
     input?: ApiInput<Api.ExportCompaniesXlsxData>,
   ): Promise<ExportedFile>;
 
+  // Evolução do índice e panorama (UC07, UC19).
+  abstract getCompanyIndexEvolution(
+    input: ApiInput<Api.GetCompanyIndexEvolutionData>,
+  ): Promise<Api.GetCompanyIndexEvolutionResponse>;
+  abstract getCompanyAnalytics(
+    input?: ApiInput<Api.GetCompanyAnalyticsData>,
+  ): Promise<Api.GetCompanyAnalyticsResponse>;
+
   // ODS e setores (UC07, UC10).
   abstract listOds(input?: ApiInput<Api.ListOdsData>): Promise<Api.ListOdsResponse>;
   abstract listSectors(input?: ApiInput<Api.ListSectorsData>): Promise<Api.ListSectorsResponse>;

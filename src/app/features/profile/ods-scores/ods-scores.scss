@@ -110,6 +110,27 @@ h3 {
   transform: translate(-50%, -50%);
 }
 
+// Losango, e não círculo: a forma separa a média do setor do índice da empresa, sem cor.
+.sector-mark,
+.sector-key {
+  width: 0.625rem;
+  height: 0.625rem;
+  border: 2px solid var(--mat-sys-surface);
+  background: var(--mat-sys-on-surface);
+  transform: rotate(45deg);
+}
+
+.sector-mark {
+  position: absolute;
+  top: 50%;
+  margin: -0.4375rem 0 0 -0.4375rem;
+}
+
+.sector-key {
+  display: inline-block;
+  margin-right: 0.375rem;
+}
+
 .ticks {
   display: flex;
   justify-content: space-between;

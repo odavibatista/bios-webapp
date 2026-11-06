@@ -46,6 +46,11 @@ import { describeError, formatWait } from '../errors/describe-error';
       color: var(--mat-sys-on-error-container);
     }
 
+    // Texto longo não esmaga o ícone.
+    mat-icon {
+      flex: none;
+    }
+
     p {
       margin: 0 0 0.5rem;
     }

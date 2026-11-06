@@ -36,6 +36,24 @@ describe('OdsScores', () => {
     expect(region.textContent).not.toMatch(/índice geral|é sustentável|não é sustentável/i);
   });
 
+  it('marca a média do setor no medidor, sem comparar nem julgar', async () => {
+    const odsNumber = PROFILE.ods_scores.find((item) => item.score_value !== null)?.ods_number ?? 0;
+    const { container } = await render(OdsScores, {
+      inputs: { profile: PROFILE, sectorAverages: { [odsNumber]: -37.5 } },
+    });
+
+    expect(container.querySelectorAll('.sector-mark')).toHaveLength(1);
+    expect(screen.getByText('Média do setor: -37,5')).toBeTruthy();
+    expect(container.textContent).not.toMatch(/acima|abaixo|melhor|pior/i);
+  });
+
+  it('setor sem média publicada não tem marca', async () => {
+    const { container } = await render(OdsScores, { inputs: { profile: PROFILE } });
+
+    expect(container.querySelector('.sector-mark')).toBeNull();
+    expect(screen.queryByText(/Média do setor/)).toBeNull();
+  });
+
   it('índice pendente não exibe número nem escala e explica o prazo de recálculo', async () => {
     await render(OdsScores, { inputs: { profile: PENDING } });
 

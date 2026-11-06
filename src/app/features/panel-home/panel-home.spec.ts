@@ -5,7 +5,11 @@ import { userEvent } from '@testing-library/user-event';
 import { ApiError } from '../../core/api/api-error';
 import { BiosApi } from '../../core/api/bios-api';
 import { PRESENTATION_MODE } from '../../core/presentation-mode';
-import type { CompanyMovementItem, ListCompanyMovementsResponse } from '../../core/api/generated';
+import type {
+  CompanyAnalytics,
+  CompanyMovementItem,
+  ListCompanyMovementsResponse,
+} from '../../core/api/generated';
 import { SessionStore } from '../../core/session/session-store';
 import {
   MOVEMENTS_PAGE_SIZE,
@@ -46,6 +50,7 @@ function page(
 
 describe('PanelHome', () => {
   const listCompanyMovements = vi.fn<BiosApi['listCompanyMovements']>();
+  const getCompanyAnalytics = vi.fn<BiosApi['getCompanyAnalytics']>();
 
   async function renderHome(
     inputs: { pagina?: string; categoria?: string } = {},
@@ -55,7 +60,7 @@ describe('PanelHome', () => {
       inputs,
       providers: [
         provideRouter([]),
-        { provide: BiosApi, useValue: { listCompanyMovements } },
+        { provide: BiosApi, useValue: { listCompanyMovements, getCompanyAnalytics } },
         { provide: PRESENTATION_MODE, useValue: presentation },
       ],
       configureTestBed: () => {
@@ -72,6 +77,8 @@ describe('PanelHome', () => {
 
   beforeEach(() => {
     listCompanyMovements.mockReset();
+    getCompanyAnalytics.mockReset();
+    getCompanyAnalytics.mockRejectedValue(new Error('sem rede'));
     listCompanyMovements.mockResolvedValue(page([item('33592510000154', 'Empresa Um')]));
   });
 
@@ -79,6 +86,28 @@ describe('PanelHome', () => {
     await renderHome();
 
     expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Olá, Conta');
+  });
+
+  it('resume a base e leva ao panorama', async () => {
+    getCompanyAnalytics.mockResolvedValue({
+      companies: 110372,
+      totals: { confirmed_evidences: 3, fine_notices: 1, fine_amount: 9, area_hectares: 1 },
+      ods: [],
+    } as unknown as CompanyAnalytics);
+
+    await renderHome();
+
+    expect(await screen.findByText('110.372')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Ver o panorama completo' }).getAttribute('href')).toBe(
+      '/pesquisa?visao=panorama',
+    );
+  });
+
+  it('sem os totais, a lista segue sozinha', async () => {
+    await renderHome();
+
+    expect(await screen.findByText('Empresa Um')).toBeTruthy();
+    expect(screen.queryByRole('heading', { name: 'A base em números' })).toBeNull();
   });
 
   it('na apresentação usa saudação neutra', async () => {
