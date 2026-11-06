@@ -1,18 +1,12 @@
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
-
-const USER = 'apresentacao@example.com';
-const PASSWORD = 'Apresentacao2026';
 
 test.describe('tela principal com as movimentações (#168)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/entrar');
-    await page.getByRole('textbox', { name: 'E-mail' }).fill(USER);
-    await page.getByRole('textbox', { name: 'Senha' }).fill(PASSWORD);
-    await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-    await expect(page).toHaveURL('/painel');
+    await signIn(page);
   });
 
-  test('o login leva às movimentações, com sentido, causa e data', async ({ page }) => {
+  test('a tela principal mostra as movimentações, com sentido, causa e data', async ({ page }) => {
     await expect(page).toHaveTitle('Painel — BIOS');
     await expect(page.getByRole('heading', { name: 'Movimentações recentes' })).toBeVisible();
 

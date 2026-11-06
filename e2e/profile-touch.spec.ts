@@ -1,12 +1,9 @@
 import type { Locator, Page } from '@playwright/test';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 async function openProfile(page: Page, cnpj: string) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
+  await signIn(page);
   const field = page.getByRole('banner').getByLabel('Buscar empresa por CNPJ ou nome');
 
   await field.fill(cnpj);

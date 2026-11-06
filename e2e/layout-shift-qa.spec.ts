@@ -1,3 +1,4 @@
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 const SCREENS = ['/painel', '/empresas/00990842000138', '/setores?cnae=47&ods=15'];
@@ -16,13 +17,7 @@ test.describe('conteúdo sem saltos ao carregar (#260)', () => {
   for (const path of SCREENS) {
     test(`CLS abaixo de 0,1 em ${path}`, async ({ page }) => {
       await page.addInitScript(MEASURE_SHIFTS);
-      await page.goto('/entrar');
-      await page.getByLabel('E-mail').fill('apresentacao@example.com');
-      await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-      await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-      await expect(page).toHaveURL('/painel');
-
-      await page.goto(path);
+      await signIn(page, path);
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
       await page.waitForTimeout(1500);
 

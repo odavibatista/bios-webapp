@@ -1,16 +1,11 @@
 import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
-
-const PASSWORD = 'Apresentacao2026';
 
 /** Entra e abre "Minha conta" pelo menu da barra, sem recarregar. */
 async function openAccount(page: Page, email: string, name: RegExp) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill(email);
-  await page.getByLabel('Senha', { exact: true }).fill(PASSWORD);
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
+  await signIn(page, '/painel', email);
 
   await page.getByRole('banner').getByRole('button', { name }).click();
   await page.getByRole('menuitem', { name: 'Minha conta' }).click();

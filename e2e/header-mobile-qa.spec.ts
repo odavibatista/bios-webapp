@@ -1,13 +1,5 @@
-import type { Page } from '@playwright/test';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
-
-async function signIn(page: Page) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
-}
 
 test.describe('cabeçalho no celular (#263)', () => {
   test('em 320 × 568, fica fixo em até 20% da altura, e a conta vira ícone', async ({ page }) => {

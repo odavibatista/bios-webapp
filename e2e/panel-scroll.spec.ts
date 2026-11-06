@@ -1,14 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expectNoHorizontalScroll } from './support/accessibility';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
-
-async function signIn(page: Page, email: string): Promise<void> {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill(email);
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
-}
 
 async function openInPanel(page: Page, path: string): Promise<void> {
   await page.evaluate((target) => {
@@ -22,7 +15,7 @@ async function openInPanel(page: Page, path: string): Promise<void> {
 test('pesquisa, setores e chaves mantêm a rolagem dentro das tabelas', async ({
   page,
 }, testInfo) => {
-  await signIn(page, 'apresentacao@example.com');
+  await signIn(page, '/painel', 'apresentacao@example.com');
   const widths = testInfo.project.name === 'celular' ? [390] : [1024, 1280, 1440];
 
   for (const path of [
@@ -52,7 +45,7 @@ test('pesquisa, setores e chaves mantêm a rolagem dentro das tabelas', async ({
 });
 
 test('domínios bloqueados mantêm a rolagem dentro da tabela', async ({ page }, testInfo) => {
-  await signIn(page, 'administracao@example.com');
+  await signIn(page, '/painel', 'administracao@example.com');
   await openInPanel(page, '/admin/dominios-bloqueados');
   await expect(page.locator('.table-scroll')).toBeVisible();
 

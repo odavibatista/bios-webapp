@@ -1,17 +1,10 @@
 import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
 import { openPanelArea } from './support/panel-menu';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 /** Entra com a conta de demonstração e chega ao painel. */
-async function signIn(page: Page) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
-}
-
 /** Campo completo da página de consulta. */
 function cnpjField(page: Page) {
   return page.getByRole('main').getByLabel('CNPJ ou nome da empresa', { exact: true });

@@ -1,15 +1,8 @@
 import type { Page } from '@playwright/test';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 const ATTEMPTS = 5;
-
-async function signIn(page: Page) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
-}
 
 const scrollTop = (page: Page) => page.evaluate(() => Math.round(window.scrollY));
 
@@ -79,6 +72,7 @@ test.describe('arquivo do app que não carrega (#262)', () => {
 
   test('sem conexão, avisa e oferece tentar de novo', async ({ page, context }) => {
     await signIn(page);
+    await expect(page.locator('bios-movement-card').first()).toBeVisible();
     await page.route(CHUNK, (route) =>
       isChunk(route.request().url()) ? route.abort() : route.continue(),
     );

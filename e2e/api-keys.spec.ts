@@ -1,15 +1,12 @@
 import type { Page } from '@playwright/test';
 import { expectAccessible } from './support/accessibility';
 import { openPanelArea } from './support/panel-menu';
+import { signIn } from './support/session';
 import { expect, test } from './support/test';
 
 /** Entra e abre as chaves pelo menu do painel, sem recarregar. */
 async function openApiKeys(page: Page) {
-  await page.goto('/entrar');
-  await page.getByLabel('E-mail').fill('apresentacao@example.com');
-  await page.getByLabel('Senha', { exact: true }).fill('Apresentacao2026');
-  await page.getByRole('button', { name: 'Entrar', exact: true }).click();
-  await expect(page).toHaveURL('/painel');
+  await signIn(page);
 
   await openPanelArea(page, /Chaves de API/);
   await expect(page).toHaveURL('/conta/chaves');
