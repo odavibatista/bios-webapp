@@ -41,7 +41,7 @@
     "material-symbols": "^0.48.2",
     "ngx-echarts": "^22.0.0",
     "rxjs": "~7.8.0",
-    "tslib": "^2.3.0",
+    "tslib": "^2.9.1",
     "write-excel-file": "^4.1.1"
   },
   "devDependencies": {
