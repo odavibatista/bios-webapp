@@ -20,7 +20,7 @@
   &:focus {
     position: static;
     align-self: flex-start;
-    margin: 0.5rem 1rem;
+    margin: calc(0.5rem + var(--bios-safe-top)) 1rem 0.5rem max(1rem, var(--bios-safe-left));
   }
 }
 
@@ -29,7 +29,12 @@
   top: 0;
   z-index: 1000;
   height: auto;
-  min-height: 64px;
+  // O verde cobre a faixa da barra de status do iPhone, e o conteúdo da barra começa abaixo dela.
+  // Sem isso, o conteúdo da página aparece rolando por trás da barra de status, acima do cabeçalho.
+  // A barra do Material usa `border-box`: a altura mínima soma a faixa.
+  min-height: calc(64px + var(--bios-safe-top));
+  padding-top: var(--bios-safe-top);
+  padding-inline: max(16px, var(--bios-safe-left)) max(16px, var(--bios-safe-right));
   background: var(--bios-brand-green);
   color: #fff;
   // Cor do texto da barra pelo token do Material, que o `mat-toolbar` repassa aos botões de texto
@@ -131,7 +136,8 @@
   flex: 1;
   box-sizing: border-box;
   min-height: 100dvh;
-  width: min(1500px, 100% - 2rem);
+  // Em paisagem, o entalhe do iPhone fica numa das laterais: a margem cresce até sair dele.
+  width: min(1500px, 100% - 2 * max(1rem, var(--bios-safe-left), var(--bios-safe-right)));
   margin: 0 auto;
   padding: 2rem 0;
 
@@ -143,7 +149,8 @@
 // Sem Material nem overlay: o aviso precisa funcionar quando os outros arquivos não chegam.
 .navigation-failure {
   position: fixed;
-  inset: auto 1rem 1rem;
+  inset: auto max(1rem, var(--bios-safe-right)) calc(1rem + var(--bios-safe-bottom))
+    max(1rem, var(--bios-safe-left));
   z-index: 1001;
   display: flex;
   flex-wrap: wrap;
@@ -169,7 +176,9 @@
 }
 
 .footer {
-  padding: 1rem;
+  // Embaixo, o texto não fica sob o indicador de início do iPhone.
+  padding: 1rem max(1rem, var(--bios-safe-right)) calc(1rem + var(--bios-safe-bottom))
+    max(1rem, var(--bios-safe-left));
   background: var(--bios-brand-paper);
   color: var(--bios-brand-moss);
   font: var(--mat-sys-body-small);
