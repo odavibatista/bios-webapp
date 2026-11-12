@@ -71,4 +71,49 @@ test.describe('cabeçalho na área da barra de status do iPhone', () => {
     expect((await header.boundingBox())?.height ?? 0).toBeLessThanOrEqual(568 * 0.2);
     await expect(header).toHaveCSS('padding-top', '0px');
   });
+
+  test('em navegador embutido, que prende o cabeçalho abaixo da própria barra, o verde cobre a faixa de cima', async ({
+    page,
+  }) => {
+    await signIn(page);
+
+    const header = page.getByRole('banner');
+
+    await expect(header.getByRole('button', { name: /Conta de Demonstração/ })).toBeVisible();
+    // Simula o navegador do Telegram no iPhone: a barra dele, translúcida, ocupa o topo da tela e o
+    // cabeçalho fica preso logo abaixo dela, com a faixa reservada valendo zero. O `pointer-events`
+    // deixa o teste encontrar o verde estendido pelo ponto da tela.
+    await page.addStyleTag({
+      content:
+        '.topbar { top: 120px !important } .topbar::before { pointer-events: auto !important }',
+    });
+    await page.evaluate(() => {
+      window.scrollTo(0, 600);
+    });
+
+    expect((await header.boundingBox())?.y).toBe(120);
+    const coveredRows = await page.evaluate(() =>
+      [2, 60, 118].map(
+        (y) => !!document.elementFromPoint(window.innerWidth / 2, y)?.closest('[role="banner"]'),
+      ),
+    );
+    expect(coveredRows).toEqual([true, true, true]);
+  });
+
+  test('o link para pular ao conteúdo, focado no topo, fica por cima do verde estendido', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.keyboard.press('Tab');
+
+    const skipLink = page.getByRole('link', { name: 'Pular para o conteúdo' });
+
+    await expect(skipLink).toBeFocused();
+    const box = await skipLink.boundingBox();
+    const onTop = await page.evaluate(
+      ([x, y]) => document.elementFromPoint(x, y)?.textContent?.trim(),
+      [(box?.x ?? 0) + (box?.width ?? 0) / 2, (box?.y ?? 0) + (box?.height ?? 0) / 2],
+    );
+    expect(onTop).toBe('Pular para o conteúdo');
+  });
 });
