@@ -40,6 +40,14 @@ export const routes: Routes = [
         loadComponent: () => import('./features/privacy/privacy-page').then((m) => m.PrivacyPage),
       },
       {
+        // Referência da API (RF17) com o Scalar, respondida no navegador na apresentação.
+        path: 'documentacao-api',
+        title: 'Documentação da API — BIOS',
+        data: { public: true },
+        loadComponent: () =>
+          import('./features/api-reference/api-reference-page').then((m) => m.ApiReferencePage),
+      },
+      {
         // `LOGIN_PATH`: para onde o guard e a renovação da sessão mandam quem não tem sessão.
         path: 'entrar',
         title: 'Entrar — BIOS',
