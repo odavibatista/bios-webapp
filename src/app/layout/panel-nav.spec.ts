@@ -7,6 +7,7 @@ describe('menu do painel por papel', () => {
       'Pesquisa',
       'Setores',
       'Chaves de API',
+      'Documentação da API',
       'Conta',
     ]);
   });

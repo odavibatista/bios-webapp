@@ -1,0 +1,22 @@
+<section class="notice" aria-labelledby="titulo-referencia-api">
+  <h1 id="titulo-referencia-api">Documentação da API</h1>
+  <p>
+    A referência completa da API do BIOS: rotas, parâmetros, schemas, autenticação e exemplos de
+    código em várias linguagens. Na versão de apresentação, o botão de testar envia a requisição a
+    uma reprodução da API no navegador, com respostas reais capturadas. As rotas privadas usam o
+    token de quem entrou, e a API pública (<code>/v1</code>) aceita uma chave gerada em
+    <a routerLink="/conta/chaves">Chaves de API</a>.
+  </p>
+</section>
+
+@switch (state()) {
+  @case ('loading') {
+    <p class="status" role="status">Carregando a documentação…</p>
+  }
+  @case ('failed') {
+    <p class="status" role="alert">
+      Não foi possível abrir a documentação. Confira a conexão e recarregue a página.
+    </p>
+  }
+}
+<div #host class="reference" [class.hidden]="state() !== 'ready'"></div>

@@ -19,6 +19,7 @@ export const PANEL_NAV: readonly PanelNavItem[] = [
   { label: 'Pesquisa', icon: 'manage_search', path: '/pesquisa', roles: EVERYONE },
   { label: 'Setores', icon: 'monitoring', path: '/setores', roles: EVERYONE },
   { label: 'Chaves de API', icon: 'key', path: '/conta/chaves', roles: EVERYONE },
+  { label: 'Documentação da API', icon: 'menu_book', path: '/documentacao-api', roles: EVERYONE },
   { label: 'Conta', icon: 'person', path: '/conta', roles: EVERYONE, exact: true },
   {
     label: 'Administração',
