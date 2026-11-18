@@ -607,6 +607,42 @@ describe('MockBiosApi', () => {
       });
     });
 
+    it('a chave já cadastrada vale na API pública com o segredo da criação capturada', async () => {
+      const mock = TestBed.inject(MockBiosApi);
+      const seed = 'bios_ZvdVkOaC_segredo-de-demonstracao';
+
+      await expect(mock.activeApiKeyValue()).resolves.toBe(seed);
+      clock += 60_000;
+      await expect(mock.getPublicCompanyProfile('04735087000104', seed)).resolves.toMatchObject({
+        cnpj: '04735087000104',
+      });
+      expect((await api.listApiKeys()).data[0]).toMatchObject({
+        prefix: 'bios_ZvdVkOaC',
+        last_used_at: new Date(clock).toISOString(),
+      });
+
+      // Revogada, deixa de valer, como as geradas.
+      await api.revokeApiKey({ path: { id: (await api.listApiKeys()).data[0]?.id ?? '' } });
+      await expectError(
+        mock.getPublicCompanyProfile('04735087000104', seed),
+        401,
+        'INVALID_API_KEY',
+      );
+      await expect(mock.activeApiKeyValue()).resolves.toBeNull();
+    });
+
+    it('a referência da API abre com a chave ativa mais recente de quem entrou', async () => {
+      const mock = TestBed.inject(MockBiosApi);
+
+      clock += 60_000;
+      const created = await api.createApiKey({ body: { name: 'Integração' } });
+
+      await expect(mock.activeApiKeyValue()).resolves.toBe(created.key);
+      await mock.withAccessToken(null, async () => {
+        await expect(mock.activeApiKeyValue()).resolves.toBeNull();
+      });
+    });
+
     it('chave ausente, inventada ou revogada recebe o mesmo 401 da API pública', async () => {
       const mock = TestBed.inject(MockBiosApi);
       const created = await api.createApiKey({ body: { name: 'Integração' } });
