@@ -15,6 +15,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { RouterLink } from '@angular/router';
 import { BiosApi } from '../../../core/api/bios-api';
 import { PRESENTATION_MODE } from '../../../core/presentation-mode';
 import type { ApiKeyResponse } from '../../../core/api/generated';
@@ -44,6 +45,7 @@ import { showCreatedKey } from '../created-key-dialog/created-key-dialog';
     MatFormFieldModule,
     MatInputModule,
     ReactiveFormsModule,
+    RouterLink,
     TableScroll,
   ],
   templateUrl: './api-keys-page.html',
