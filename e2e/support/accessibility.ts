@@ -13,6 +13,12 @@ export const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'
 const FOCUS_TRAP_SENTINELS = '.cdk-focus-trap-anchor';
 
 /**
+ * Anotação de teste que tira um seletor da análise. Só para componente de terceiros que o app
+ * não controla, com o motivo no próprio teste; o resto da página continua analisado.
+ */
+export const AXE_EXCLUDE = 'axe-exclude';
+
+/**
  * Roda a análise de acessibilidade (axe) na página como ela está agora e falha com qualquer
  * violação de nível A ou AA (NFIN01). O resultado completo vai como anexo do teste, para ser
  * lido no relatório do Playwright; a falha lista regra, impacto e elementos afetados.
@@ -22,10 +28,13 @@ export async function expectAccessible(
   testInfo: TestInfo,
   step = 'página',
 ): Promise<void> {
-  const results = await new AxeBuilder({ page })
-    .withTags(WCAG_TAGS)
-    .exclude(FOCUS_TRAP_SENTINELS)
-    .analyze();
+  const builder = new AxeBuilder({ page }).withTags(WCAG_TAGS).exclude(FOCUS_TRAP_SENTINELS);
+
+  for (const { type, description } of testInfo.annotations) {
+    if (type === AXE_EXCLUDE && description) builder.exclude(description);
+  }
+
+  const results = await builder.analyze();
 
   await testInfo.attach(`acessibilidade (axe) — ${step}`, {
     body: JSON.stringify(results.violations, null, 2),
