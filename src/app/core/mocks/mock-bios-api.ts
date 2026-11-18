@@ -148,8 +148,8 @@ function invalidApiKey(path: string, now: number): ApiError {
   });
 }
 
-/** A chave inteira que `createApiKey` devolve na demonstração: o prefixo e o segredo. */
-const DEMO_API_KEY = /^(bios_D(\d{7}))_segredo-de-demonstracao-(\d+)$/;
+/** O prefixo das chaves geradas na demonstração: `bios_D` e a sequência, com 7 dígitos. */
+const DEMO_KEY_PREFIX = /^bios_D(\d{7})$/;
 
 /** Erros da consulta de CEP: código e texto copiados das exceções da API. */
 const CEP_NOT_FOUND = {
@@ -600,7 +600,7 @@ export class MockBiosApi extends BiosApi {
 
       this.apiKeys.push(key);
 
-      return { ...this.keyView(key), key: `${key.prefix}_segredo-de-demonstracao-${sequence}` };
+      return { ...this.keyView(key), key: this.fullKey(key) };
     });
   }
 
@@ -714,8 +714,28 @@ export class MockBiosApi extends BiosApi {
   }
 
   /**
+   * A chave inteira mais recente e ativa de quem entrou, para a referência da API já abrir com
+   * ela na rota pública: a última gerada nesta demonstração ou, sem nenhuma, a já cadastrada.
+   * Sem sessão ou sem chave ativa, nada.
+   */
+  async activeApiKeyValue(): Promise<string | null> {
+    await this.load();
+
+    try {
+      const { account } = this.authenticated('/api-keys');
+      // Em ordem de criação: a cadastrada entra primeiro, e as geradas, depois dela.
+      const newest = this.activeApiKeys(account.id).at(-1);
+
+      return newest ? this.fullKey(newest) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * O perfil pela API pública (UC12), autenticado por chave de API, e não por sessão. Vale uma
-   * chave gerada nesta demonstração e ainda ativa, que passa a ter o último uso registrado.
+   * chave ativa, a já cadastrada ou uma gerada nesta demonstração, que passa a ter o último uso
+   * registrado.
    */
   getPublicCompanyProfile(cnpj: string, apiKey: string | null) {
     return this.run('getCompanyProfile', async () => {
@@ -1192,11 +1212,25 @@ export class MockBiosApi extends BiosApi {
 
   /** A chave ativa que confere com o valor enviado: prefixo e segredo, como a API confere. */
   private activeKeyFor(value: string | null): ApiKey | undefined {
-    const match = DEMO_API_KEY.exec(value?.trim() ?? '');
+    const sent = value?.trim() ?? '';
 
-    if (!match || Number(match[2]) !== Number(match[3])) return undefined;
+    if (!sent) return undefined;
 
-    return this.apiKeys.find((key) => !key.revoked && key.prefix === match[1]);
+    return this.apiKeys.find((key) => !key.revoked && this.fullKey(key) === sent);
+  }
+
+  /**
+   * A chave inteira, prefixo e segredo. A já cadastrada tem o segredo da criação capturada na
+   * API; as geradas na demonstração terminam com a sequência do prefixo.
+   */
+  private fullKey(key: ApiKey): string {
+    const generated = DEMO_KEY_PREFIX.exec(key.prefix);
+
+    if (generated) return `${key.prefix}_segredo-de-demonstracao-${Number(generated[1])}`;
+
+    const captured = this.d.capturedBody<Api.CreateApiKeyResponse>('createApiKey/sucesso');
+
+    return captured.prefix === key.prefix ? captured.key : '';
   }
 
   private keyView(key: ApiKey): Api.ApiKeyResponse {

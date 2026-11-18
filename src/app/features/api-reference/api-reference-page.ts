@@ -9,8 +9,9 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { ApiCredentials } from '../../core/api/api-credentials';
+import seedKeyCreation from '../../core/mocks/fixtures/createApiKey/sucesso';
 import { MockBiosApi } from '../../core/mocks/mock-bios-api';
 import {
   createPresentationFetch,
@@ -26,6 +27,29 @@ export const OPENAPI_DOCUMENT_URL = 'openapi/openapi.json';
 export const SCALAR_STYLESHEET_URL = 'scalar-api-reference.css';
 /** Caminho anunciado como servidor: o que começa por ele é respondido no navegador. */
 export const PRESENTATION_API_PATH = '/api';
+/** Classe do `<main>` enquanto a página existe: a referência ocupa a largura toda da tela. */
+export const FULL_WIDTH_CLASS = 'full-width';
+
+/**
+ * A apresentação da referência, só no app: entra depois da descrição do documento, que segue
+ * igual à da API. A chave citada é a já cadastrada na conta de demonstração, com o segredo da
+ * criação capturada na API. O link para Chaves de API navega pelo próprio app.
+ */
+export function presentationDescription(
+  apiDescription: unknown,
+  seedKey: string = seedKeyCreation.body.key,
+): string {
+  return [
+    typeof apiDescription === 'string' ? apiDescription : '',
+    'A referência completa da API do BIOS: rotas, parâmetros, schemas, autenticação e exemplos ' +
+      'de código em várias linguagens. Na versão de apresentação, o botão de testar envia a ' +
+      'requisição a uma reprodução da API no navegador, com respostas reais capturadas. As rotas ' +
+      'privadas usam o token de quem entrou, e a API pública (`/v1`) aceita a chave já ' +
+      `cadastrada, \`${seedKey}\`, ou uma gerada em [Chaves de API](/conta/chaves).`,
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+}
 
 type State = 'loading' | 'ready' | 'failed';
 
@@ -37,7 +61,6 @@ type State = 'loading' | 'ready' | 'failed';
  */
 @Component({
   selector: 'bios-api-reference-page',
-  imports: [RouterLink],
   templateUrl: './api-reference-page.html',
   styleUrl: './api-reference-page.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -46,6 +69,7 @@ export class ApiReferencePage {
   private readonly document = inject(DOCUMENT);
   private readonly api = inject(MockBiosApi);
   private readonly credentials = inject(ApiCredentials);
+  private readonly router = inject(Router);
   private readonly host = viewChild.required<ElementRef<HTMLElement>>('host');
   protected readonly state = signal<State>('loading');
 
@@ -58,8 +82,35 @@ export class ApiReferencePage {
       for (const cleanup of this.cleanups.splice(0)) cleanup();
     });
     afterNextRender(() => {
+      this.cleanups.push(this.fullWidth(), this.followAppLinks());
       void this.mount();
     });
+  }
+
+  /** O `<main>` do app deixa a largura máxima e as margens enquanto a referência está aberta. */
+  private fullWidth(): () => void {
+    const main = this.document.querySelector('main');
+
+    main?.classList.add(FULL_WIDTH_CLASS);
+
+    return () => main?.classList.remove(FULL_WIDTH_CLASS);
+  }
+
+  /** Links do próprio app dentro da referência (`/conta/chaves`) navegam sem recarregar. */
+  private followAppLinks(): () => void {
+    const host = this.host().nativeElement;
+    const listener = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest?.('a[href^="/"]');
+      const href = link?.getAttribute('href');
+
+      if (!href || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      event.preventDefault();
+      void this.router.navigateByUrl(href);
+    };
+
+    host.addEventListener('click', listener);
+
+    return () => host.removeEventListener('click', listener);
   }
 
   private async mount(): Promise<void> {
@@ -68,13 +119,14 @@ export class ApiReferencePage {
 
     try {
       this.cleanups.push(this.stylesheet());
-      const [{ createApiReference }, spec] = await Promise.all([
+      const [{ createApiReference }, spec, apiKey] = await Promise.all([
         import('@scalar/api-reference'),
         view.fetch(OPENAPI_DOCUMENT_URL).then((response) => {
           if (!response.ok) throw new Error(`OpenAPI: ${response.status}`);
 
           return response.json() as Promise<OpenApiDocument & Record<string, unknown>>;
         }),
+        this.api.activeApiKeyValue(),
       ]);
 
       if (this.destroyed) return;
@@ -84,6 +136,12 @@ export class ApiReferencePage {
       const reference = createApiReference(this.host().nativeElement, {
         content: {
           ...spec,
+          info: {
+            ...(spec['info'] as Record<string, unknown>),
+            description: presentationDescription(
+              (spec['info'] as { description?: unknown })?.description,
+            ),
+          },
           servers: [
             {
               url: baseUrl,
@@ -113,15 +171,15 @@ export class ApiReferencePage {
         persistAuth: false,
         documentDownloadType: 'both',
         defaultHttpClient: { targetKey: 'js', clientKey: 'fetch' },
-        // Quem entrou pela demonstração já tem um token: as rotas privadas respondem de primeira.
-        ...(token
-          ? {
-              authentication: {
-                preferredSecurityScheme: 'jwt',
-                securitySchemes: { jwt: { token } },
-              },
-            }
-          : {}),
+        // Quem entrou pela demonstração já tem um token, e a rota pública já vem com a chave
+        // ativa mais recente da conta: as duas respondem de primeira. Sem esquema preferido, cada
+        // rota usa o que o OpenAPI declara para ela (jwt nas privadas, a chave na pública).
+        authentication: {
+          securitySchemes: {
+            ...(token ? { jwt: { token } } : {}),
+            ...(apiKey ? { 'api-key': { value: apiKey } } : {}),
+          },
+        },
       });
 
       this.cleanups.push(() => reference.destroy());
