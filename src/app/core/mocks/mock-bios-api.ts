@@ -134,6 +134,23 @@ function apiKeyLimitReached(path: string, now: number): ApiError {
   });
 }
 
+/**
+ * Chave ausente, malformada, desconhecida ou revogada na API pública (`InvalidApiKeyException`):
+ * a API dá a mesma resposta para todos os casos, e o mock também.
+ */
+function invalidApiKey(path: string, now: number): ApiError {
+  return new ApiError(401, {
+    statusCode: 401,
+    code: 'INVALID_API_KEY',
+    message: 'Chave de API ausente, inválida ou revogada.',
+    timestamp: new Date(now).toISOString(),
+    path,
+  });
+}
+
+/** A chave inteira que `createApiKey` devolve na demonstração: o prefixo e o segredo. */
+const DEMO_API_KEY = /^(bios_D(\d{7}))_segredo-de-demonstracao-(\d+)$/;
+
 /** Erros da consulta de CEP: código e texto copiados das exceções da API. */
 const CEP_NOT_FOUND = {
   code: 'POSTAL_CODE_NOT_FOUND',
@@ -169,6 +186,8 @@ export class MockBiosApi extends BiosApi {
   /** A carga em andamento, para chamadas simultâneas esperarem a mesma, e não semearem de novo. */
   private loading?: Promise<void>;
   private sequence = 0;
+  /** O token de uma requisição da referência da API, enquanto ela é atendida. */
+  private requestToken: string | null | undefined;
   private readonly accounts: Account[] = [];
   private readonly linkTokens: LinkToken[] = [];
   private readonly sessions: Session[] = [];
@@ -694,6 +713,24 @@ export class MockBiosApi extends BiosApi {
     });
   }
 
+  /**
+   * O perfil pela API pública (UC12), autenticado por chave de API, e não por sessão. Vale uma
+   * chave gerada nesta demonstração e ainda ativa, que passa a ter o último uso registrado.
+   */
+  getPublicCompanyProfile(cnpj: string, apiKey: string | null) {
+    return this.run('getCompanyProfile', async () => {
+      const path = `/v1/companies/${cnpj}`;
+      const key = this.activeKeyFor(apiKey);
+
+      if (!key) throw invalidApiKey(path, this.now());
+      key.last_used_at = this.isoNow();
+
+      if (!this.archive) return this.d.companyProfile(cnpj, this.now());
+
+      return (await this.archivedCompany(cnpj, path)).profile;
+    });
+  }
+
   getScoreExplanation({ path: params }: ApiInput<Api.GetScoreExplanationData>) {
     return this.run('getScoreExplanation', async () => {
       const path = `/companies/${params.cnpj}/scores/${params.odsNumber}/explanation`;
@@ -1153,6 +1190,15 @@ export class MockBiosApi extends BiosApi {
     return this.apiKeys.filter((key) => key.accountId === accountId && !key.revoked);
   }
 
+  /** A chave ativa que confere com o valor enviado: prefixo e segredo, como a API confere. */
+  private activeKeyFor(value: string | null): ApiKey | undefined {
+    const match = DEMO_API_KEY.exec(value?.trim() ?? '');
+
+    if (!match || Number(match[2]) !== Number(match[3])) return undefined;
+
+    return this.apiKeys.find((key) => !key.revoked && key.prefix === match[1]);
+  }
+
   private keyView(key: ApiKey): Api.ApiKeyResponse {
     return {
       id: key.id,
@@ -1163,9 +1209,23 @@ export class MockBiosApi extends BiosApi {
     };
   }
 
+  /**
+   * Atende uma chamada com o token que veio na própria requisição (o `Authorization` que a
+   * referência da API envia), e não com o da sessão das telas. Vale só durante a chamada.
+   */
+  async withAccessToken<T>(token: string | null, call: () => Promise<T>): Promise<T> {
+    this.requestToken = token;
+    try {
+      return await call();
+    } finally {
+      this.requestToken = undefined;
+    }
+  }
+
   /** Conta e sessão do access token atual, ou o 401 que a API daria. */
   private authenticated(path: string): { account: Account; session: Session } {
-    const token = this.credentials.accessToken();
+    const token =
+      this.requestToken !== undefined ? this.requestToken : this.credentials.accessToken();
     const session = this.sessions.find(
       (item) => !item.revoked && item.accessToken === token && item.accessExpiresAt > this.now(),
     );
