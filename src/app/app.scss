@@ -164,6 +164,13 @@
   &:focus {
     outline: none;
   }
+
+  // Documentação da API: a referência vai de uma borda à outra da tela, logo abaixo do
+  // cabeçalho. Só o entalhe do iPhone em paisagem fica de fora.
+  &.full-width {
+    width: 100%;
+    padding: 0 var(--bios-safe-right) 0 var(--bios-safe-left);
+  }
 }
 
 // Sem Material nem overlay: o aviso precisa funcionar quando os outros arquivos não chegam.

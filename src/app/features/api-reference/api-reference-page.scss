@@ -2,36 +2,14 @@
   display: block;
 }
 
-.notice {
-  margin: 1.5rem 0 1rem;
-  max-width: 72rem;
-
-  h1 {
-    margin: 0 0 0.5rem;
-    font: var(--mat-sys-headline-small);
-    color: var(--mat-sys-primary);
-  }
-
-  p {
-    margin: 0;
-    font: var(--mat-sys-body-large);
-    color: var(--mat-sys-on-surface-variant);
-  }
-}
-
 .status {
-  margin: 2rem 0;
+  margin: 0;
+  padding: 2rem max(1rem, var(--bios-safe-right)) 2rem max(1rem, var(--bios-safe-left));
   font: var(--mat-sys-body-large);
 }
 
-// A referência ocupa a largura do conteúdo; as bordas acompanham o tema do BIOS.
-.reference {
-  border: 1px solid var(--mat-sys-outline-variant);
-  border-radius: var(--mat-sys-corner-medium);
-  overflow: clip;
-  margin-bottom: 2rem;
-
-  &.hidden {
-    display: none;
-  }
+// A referência vai de uma borda à outra da tela, sem moldura: o fundo e as divisórias são os
+// do próprio Scalar, no tema do BIOS, e nada fica em branco nas laterais durante a rolagem.
+.reference.hidden {
+  display: none;
 }

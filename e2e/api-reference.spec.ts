@@ -82,6 +82,43 @@ test.describe('documentação da API (RF17)', () => {
     await closeClient(page);
   });
 
+  test('a rota pública já vem com a chave cadastrada, e o link de Chaves de API fica no app', async ({
+    page,
+  }) => {
+    excludeScalarThirdParty();
+    await signIn(page, '/documentacao-api#tag/api-p%C3%BAblica/GET/v1/companies/{cnpj}');
+    const test = page.getByRole('button', {
+      name: /Testar Requisição\s*\(get \/v1\/companies\/\{cnpj\}\)/,
+    });
+
+    await expect(test).toBeVisible({ timeout: 30_000 });
+    // A introdução, que vem do app e não da API, diz qual é a chave cadastrada, e a rota já
+    // vem com ela preenchida.
+    const seedKey = 'bios_ZvdVkOaC_segredo-de-demonstracao';
+
+    await expect(
+      page.getByRole('region', { name: 'Introdução' }).getByText(seedKey),
+    ).toBeAttached();
+    await expect(page.locator('.credential-value', { hasText: seedKey }).first()).toBeAttached();
+    await test.click();
+
+    const client = page.getByRole('dialog', { name: 'Cliente de API' });
+
+    // A chave passa: nos e2e não há a base publicada, então o CNPJ de exemplo (fora das capturas)
+    // responde 404, e não o 401 de chave inválida. O 200 com o perfil fica nos testes do mock.
+    await client.getByRole('button', { name: /Enviar requisição get/ }).click();
+    await expect(client.getByText(/404 Not Found/)).toBeVisible();
+    await expect(client).not.toContainText('INVALID_API_KEY');
+    await closeClient(page);
+
+    // O link da introdução navega pelo próprio app, e a chave aparece usada.
+    await page.locator('a[href="/conta/chaves"]').first().click();
+    await expect(page).toHaveURL('/conta/chaves');
+    await expect(page.getByRole('row', { name: /Planilha de fornecedores/ })).not.toContainText(
+      'Nunca',
+    );
+  });
+
   test('sem sessão, a página abre e a rota privada responde 401, como a API', async ({ page }) => {
     excludeScalarThirdParty();
     await page.goto('/documentacao-api#tag/%C3%ADndices-por-ods/GET/ods');
