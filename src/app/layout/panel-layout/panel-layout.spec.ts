@@ -49,6 +49,7 @@ describe('PanelLayout', () => {
       'manage_search Pesquisa',
       'monitoring Setores',
       'key Chaves de API',
+      'menu_book Documentação da API',
       'person Conta',
     ]);
   });

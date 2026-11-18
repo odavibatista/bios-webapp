@@ -26,6 +26,7 @@
             "browser": "src/main.ts",
             "tsConfig": "tsconfig.app.json",
             "inlineStyleLanguage": "scss",
+            "allowedCommonJsDependencies": ["extend", "@vercel/oidc"],
             "assets": [
               {
                 "glob": "**/*",
@@ -35,12 +36,22 @@
                 "glob": "**/*.xlsx",
                 "input": "src/app/core/mocks/fixtures",
                 "output": "mocks"
+              },
+              {
+                "glob": "openapi.json",
+                "input": "api",
+                "output": "openapi"
               }
             ],
             "styles": [
               "@fontsource-variable/inter/index.css",
               "src/styles/icons.css",
-              "src/styles.scss"
+              "src/styles.scss",
+              {
+                "input": "node_modules/@scalar/api-reference/dist/style.css",
+                "bundleName": "scalar-api-reference",
+                "inject": false
+              }
             ]
           },
           "configurations": {

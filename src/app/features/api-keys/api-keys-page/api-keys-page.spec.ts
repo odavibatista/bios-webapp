@@ -1,3 +1,4 @@
+import { provideRouter } from '@angular/router';
 import { render, screen, within } from '@testing-library/angular';
 import { userEvent } from '@testing-library/user-event';
 import { ApiError } from '../../../core/api/api-error';
@@ -77,6 +78,7 @@ async function renderPage(initial: ApiKeyResponse[] = [SEED, USED], presentation
   const api = fakeApi(initial);
   const result = await render(ApiKeysPage, {
     providers: [
+      provideRouter([]),
       { provide: BiosApi, useValue: api },
       { provide: PRESENTATION_MODE, useValue: presentation },
     ],
@@ -256,13 +258,11 @@ describe('ApiKeysPage', () => {
     expect(usage.textContent).toContain('/docs');
   });
 
-  it('na apresentação aponta para o OpenAPI publicado', async () => {
+  it('na apresentação aponta para a documentação da API dentro do próprio app', async () => {
     await renderPage([SEED, USED], true);
 
-    const link = screen.getByRole('link', { name: 'arquivo OpenAPI publicado' });
-    expect(link.getAttribute('href')).toBe(
-      'https://github.com/odavibatista/bios-webapp/blob/main/api/openapi.json',
-    );
+    const link = screen.getByRole('link', { name: 'documentação da API' });
+    expect(link.getAttribute('href')).toBe('/documentacao-api');
     expect(screen.queryByText('/docs')).toBeNull();
   });
 

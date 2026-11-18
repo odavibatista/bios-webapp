@@ -3,6 +3,7 @@ import { InMemoryApiCredentials } from '../api/api-credentials';
 import { ApiError } from '../api/api-error';
 import { BiosApi } from '../api/bios-api';
 import type { MockApiConfig } from './mock-config';
+import { MockBiosApi } from './mock-bios-api';
 import { MockFiles } from './mock-files';
 import { MockMailbox } from './mock-mailbox';
 import { provideMockBiosApi } from './provide-mock-bios-api';
@@ -590,6 +591,72 @@ describe('MockBiosApi', () => {
       const [newest] = (await api.listApiKeys()).data;
       await api.revokeApiKey({ path: { id: newest?.id ?? '' } });
       await expect(api.createApiKey({ body: { name: 'Agora cabe' } })).resolves.toBeTruthy();
+    });
+
+    it('a chave gerada vale na API pública (UC12) e registra o último uso', async () => {
+      const mock = TestBed.inject(MockBiosApi);
+      const created = await api.createApiKey({ body: { name: 'Integração' } });
+
+      clock += 60_000;
+      const profile = await mock.getPublicCompanyProfile('04735087000104', created.key);
+
+      expect(profile.cnpj).toBe('04735087000104');
+      expect((await api.listApiKeys()).data.find((key) => key.id === created.id)).toMatchObject({
+        name: 'Integração',
+        last_used_at: new Date(clock).toISOString(),
+      });
+    });
+
+    it('chave ausente, inventada ou revogada recebe o mesmo 401 da API pública', async () => {
+      const mock = TestBed.inject(MockBiosApi);
+      const created = await api.createApiKey({ body: { name: 'Integração' } });
+      const forged = created.key.replace(/\d+$/, (n) => String(Number(n) + 1));
+
+      for (const key of [null, '', 'bios_qualquer_coisa', forged]) {
+        const error = await expectError(
+          mock.getPublicCompanyProfile('04735087000104', key),
+          401,
+          'INVALID_API_KEY',
+        );
+
+        expect(error.message).toBe('Chave de API ausente, inválida ou revogada.');
+      }
+
+      await api.revokeApiKey({ path: { id: created.id } });
+      await expectError(
+        mock.getPublicCompanyProfile('04735087000104', created.key),
+        401,
+        'INVALID_API_KEY',
+      );
+    });
+  });
+
+  describe('token da requisição (referência da API)', () => {
+    it('atende com o token enviado, e não com o da sessão das telas', async () => {
+      const mock = TestBed.inject(MockBiosApi);
+      const session = await signIn();
+
+      await expectError(
+        mock.withAccessToken('token-inventado', () => api.getOwnAccount()),
+        401,
+        'NOT_AUTHENTICATED',
+      );
+      await expect(
+        mock.withAccessToken(session.access_token, () => api.getOwnAccount()),
+      ).resolves.toMatchObject({ email: USER });
+    });
+
+    it('sem token na requisição, a rota privada dá 401 mesmo com a sessão das telas aberta', async () => {
+      const mock = TestBed.inject(MockBiosApi);
+
+      await signIn();
+      await expectError(
+        mock.withAccessToken(null, () => api.getOwnAccount()),
+        401,
+        'NOT_AUTHENTICATED',
+      );
+      // Terminada a chamada, as telas voltam a usar a própria sessão.
+      await expect(api.getOwnAccount()).resolves.toMatchObject({ email: USER });
     });
   });
 
